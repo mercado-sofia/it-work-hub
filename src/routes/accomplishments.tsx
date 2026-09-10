@@ -24,7 +24,7 @@ export const Route = createFileRoute("/accomplishments")({
       },
     ],
   }),
-  component: Accomplishments;
+  component: Accomplishments,
 });
 
 function Accomplishments() {
