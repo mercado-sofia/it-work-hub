@@ -14,7 +14,193 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      modules: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      request_comments: {
+        Row: {
+          author_name: string
+          comment: string
+          created_at: string
+          id: string
+          is_it: boolean
+          request_id: string
+        }
+        Insert: {
+          author_name: string
+          comment: string
+          created_at?: string
+          id?: string
+          is_it?: boolean
+          request_id: string
+        }
+        Update: {
+          author_name?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          is_it?: boolean
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_status: string
+          note: string | null
+          old_status: string | null
+          request_id: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_status: string
+          note?: string | null
+          old_status?: string | null
+          request_id: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_status?: string
+          note?: string | null
+          old_status?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_status_history_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requests: {
+        Row: {
+          actual_behavior: string | null
+          affected_module: string
+          attachments: Json
+          decline_reason: string | null
+          department: string
+          description: string
+          expected_behavior: string | null
+          id: string
+          it_priority: string | null
+          linked_task_id: string | null
+          requester_email: string
+          requester_name: string
+          requester_urgency: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          reviewed_at: string | null
+          status: string
+          steps_to_reproduce: string | null
+          submitted_at: string
+          ticket_number: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          actual_behavior?: string | null
+          affected_module: string
+          attachments?: Json
+          decline_reason?: string | null
+          department: string
+          description: string
+          expected_behavior?: string | null
+          id?: string
+          it_priority?: string | null
+          linked_task_id?: string | null
+          requester_email: string
+          requester_name: string
+          requester_urgency?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          steps_to_reproduce?: string | null
+          submitted_at?: string
+          ticket_number: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          actual_behavior?: string | null
+          affected_module?: string
+          attachments?: Json
+          decline_reason?: string | null
+          department?: string
+          description?: string
+          expected_behavior?: string | null
+          id?: string
+          it_priority?: string | null
+          linked_task_id?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_urgency?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          steps_to_reproduce?: string | null
+          submitted_at?: string
+          ticket_number?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
