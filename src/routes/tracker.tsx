@@ -48,6 +48,7 @@ import {
 import { ActivityDialogShell } from "@/components/ActivityDialogShell";
 import { CategoryField } from "@/components/CategoryField";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
+import { KanbanView } from "@/components/KanbanView";
 import { SprintView } from "@/components/SprintView";
 import {
   CATEGORIES,
@@ -1026,74 +1027,3 @@ function TableView({
   );
 }
 
-function KanbanView({ tasks, readOnly, onUpdate, onEdit }: EditProps) {
-  return (
-    <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:snap-none">
-      {STATUSES.map((status) => {
-        const items = tasks.filter((task) => task.status === status);
-        return (
-          <div
-            key={status}
-            className="min-w-[min(17rem,85vw)] snap-start rounded-lg border border-border bg-card lg:min-w-0"
-          >
-            <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
-              <StatusBadge status={status} />
-              <span className="text-xs font-semibold tabular-nums text-muted-foreground">
-                {items.length}
-              </span>
-            </div>
-            <div className="space-y-3 p-3">
-              {items.map((task) => (
-                <div key={task.id} className="rounded-md border border-border p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-medium leading-snug">{task.title}</p>
-                    {!readOnly && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-                        onClick={() => onEdit(task)}
-                        aria-label="Edit activity"
-                      >
-                        <Pencil className="size-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{task.category}</p>
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <PriorityBadge priority={task.priority} />
-                    <span className="text-xs text-muted-foreground">{task.assignee}</span>
-                  </div>
-                  <ProgressBar value={task.progress} className="mt-3" />
-                  <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                    {task.progress}% • target {formatDate(task.targetDate)}
-                  </p>
-                  {!readOnly && (
-                    <Select
-                      value={task.status}
-                      onValueChange={(v) => onUpdate(task.id, { status: v as Status })}
-                    >
-                      <SelectTrigger className="mt-3 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUSES.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-              ))}
-              {items.length === 0 && (
-                <p className="py-6 text-center text-xs text-muted-foreground">No items</p>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}

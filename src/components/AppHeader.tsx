@@ -335,7 +335,7 @@ function BackupMenu({
             Backup
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuContent align="end" className="w-max">
           <DropdownMenuLabel>Data backup</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={() => exportBackup()}>Download JSON backup</DropdownMenuItem>
