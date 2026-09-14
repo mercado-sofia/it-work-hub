@@ -459,7 +459,7 @@ export function SprintView({
                   className="min-w-[min(17rem,85vw)] snap-start rounded-lg border border-border bg-card xl:min-w-0"
                 >
                   <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
-                    <StatusBadge status={status} />
+                    <StatusBadge status={status} variant="plain" />
                     <span className="text-xs font-semibold tabular-nums text-muted-foreground">
                       {items.length}
                     </span>
@@ -548,7 +548,7 @@ export function SprintView({
                   </p>
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <PriorityBadge priority={task.priority} />
-                    <StatusBadge status={task.status} />
+                    <StatusBadge status={task.status} variant="plain" />
                   </div>
                   {canMutateSprint && (
                     <Button

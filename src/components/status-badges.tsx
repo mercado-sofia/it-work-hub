@@ -9,6 +9,14 @@ const statusStyles: Record<Status, string> = {
   "On Hold": "bg-destructive/10 text-destructive border-destructive/25",
 };
 
+const statusTextStyles: Record<Status, string> = {
+  "Not Started": "text-muted-foreground",
+  "In Progress": "text-muted-foreground",
+  "For Testing": "text-muted-foreground",
+  Completed: "text-primary",
+  "On Hold": "text-muted-foreground",
+};
+
 const priorityStyles: Record<Priority, string> = {
   Critical: "bg-destructive text-destructive-foreground border-destructive",
   High: "bg-warning-soft text-warning border-warning/30",
@@ -19,7 +27,22 @@ const priorityStyles: Record<Priority, string> = {
 const base =
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap";
 
-export function StatusBadge({ status, className }: { status: Status; className?: string }) {
+export function StatusBadge({
+  status,
+  className,
+  variant = "badge",
+}: {
+  status: Status;
+  className?: string;
+  variant?: "badge" | "plain";
+}) {
+  if (variant === "plain") {
+    return (
+      <span className={cn("whitespace-nowrap text-xs font-normal", statusTextStyles[status], className)}>
+        {status}
+      </span>
+    );
+  }
   return <span className={cn(base, statusStyles[status], className)}>{status}</span>;
 }
 
