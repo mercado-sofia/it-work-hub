@@ -1,9 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useRef, useState, type RefObject } from "react";
 import {
+  Database,
   Download,
+  FileInput,
+  FileJson,
   FileSpreadsheet,
   FileText,
+  HardDrive,
   Loader2,
   Menu,
   Moon,
@@ -323,6 +327,8 @@ function BackupMenu({
 }) {
   if (!canWrite) return null;
 
+  const itemClass = "gap-2 py-1 text-xs [&>svg]:size-3.5";
+
   return (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -335,14 +341,19 @@ function BackupMenu({
             Backup
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-max">
-          <DropdownMenuLabel>Data backup</DropdownMenuLabel>
+        <DropdownMenuContent align="end" className="flex w-max flex-col gap-1.5 p-1.5">
+          <DropdownMenuLabel className="text-xs">Data backup</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={() => exportBackup()}>Download JSON backup</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => fileRef.current?.click()}>
+          <DropdownMenuItem onSelect={() => exportBackup()} className={itemClass}>
+            <FileJson />
+            Download JSON backup
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => fileRef.current?.click()} className={itemClass}>
+            <FileInput />
             Restore from JSON
           </DropdownMenuItem>
           <DropdownMenuItem
+            className={itemClass}
             onSelect={() => {
               const imported = importLegacyBrowserData();
               toast.success(
@@ -350,14 +361,17 @@ function BackupMenu({
               );
             }}
           >
+            <HardDrive />
             Import from this browser
           </DropdownMenuItem>
           <DropdownMenuItem
+            className={itemClass}
             onSelect={() => {
               loadSampleData();
               toast.success("Sample activities loaded");
             }}
           >
+            <Database />
             Load sample data
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -374,6 +388,8 @@ function ExportMenu({
   runExport: (kind: "xlsx" | "pdf") => void;
   fullWidth?: boolean;
 }) {
+  const itemClass = "items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -382,20 +398,20 @@ function ExportMenu({
           Export
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Leadership handouts</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="flex w-56 flex-col gap-1.5 p-1.5">
+        <DropdownMenuLabel className="text-xs">Leadership handouts</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => void runExport("xlsx")} className="gap-2">
-          <FileSpreadsheet className="size-4" />
+        <DropdownMenuItem onSelect={() => void runExport("xlsx")} className={itemClass}>
+          <FileSpreadsheet />
           <div>
-            <p className="text-sm font-medium">Export to Excel (.xlsx)</p>
+            <p className="text-xs font-medium">Export to Excel (.xlsx)</p>
             <p className="text-xs text-muted-foreground">Summary, tracker, and monthly accomplishments</p>
           </div>
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => void runExport("pdf")} className="gap-2">
-          <FileText className="size-4" />
+        <DropdownMenuItem onSelect={() => void runExport("pdf")} className={itemClass}>
+          <FileText />
           <div>
-            <p className="text-sm font-medium">Executive PDF handout</p>
+            <p className="text-xs font-medium">Executive PDF handout</p>
             <p className="text-xs text-muted-foreground">1–2 page status brief</p>
           </div>
         </DropdownMenuItem>
