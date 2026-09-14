@@ -4,94 +4,353 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
-import { SEED_TASKS, type Task } from "@/data/tasks";
-
-const STORAGE_KEY = "it-tracker-tasks-v1";
-const MODE_KEY = "it-tracker-mode-v1";
+import {
+  CATEGORIES,
+  isClosedStatus,
+  mergeCategories,
+  type Sprint,
+  type Staff,
+  type Task,
+} from "@/data/tasks";
+import {
+  createSampleLocalData,
+  loadLastExportAt,
+  loadLocalData,
+  loadMode,
+  makeBackup,
+  parseBackup,
+  peekLegacyBrowserData,
+  saveLastExportAt,
+  saveLocalData,
+  saveMode,
+  type BackupPayload,
+} from "@/lib/local-db";
+import { applyTaskRules, isSprintNameTaken, nextSprintId, nextTaskId, todayISO } from "@/lib/task-rules";
 
 export type AppMode = "management" | "editor";
 
+const EXPORT_REMIND_DAYS = 30;
+
 type Store = {
   tasks: Task[];
+  sprints: Sprint[];
+  staff: Staff[];
+  categories: string[];
   hydrated: boolean;
   mode: AppMode;
-  setMode: (m: AppMode) => void;
-  addTask: (task: Omit<Task, "id" | "lastUpdated">) => void;
+  setMode: (mode: AppMode) => void;
+  canWrite: boolean;
+  needsExportReminder: boolean;
+  dismissExportReminder: () => void;
+  markExported: () => void;
+  addTask: (task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => void;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
-  resetTasks: () => void;
+  addSprint: (sprint: Omit<Sprint, "id">) => string;
+  updateSprint: (id: string, patch: Partial<Sprint>) => void;
+  deleteSprint: (id: string) => void;
+  setActiveSprint: (id: string) => void;
+  completeSprint: (id: string, incompleteDestination: "backlog" | string) => void;
+  addStaff: (name: string) => string;
+  addCategory: (name: string) => string;
+  exportBackup: () => void;
+  importBackup: (payload: BackupPayload) => void;
+  importLegacyBrowserData: () => boolean;
+  loadSampleData: () => void;
 };
 
 const TaskContext = createContext<Store | null>(null);
 
-const today = () => new Date().toISOString().slice(0, 10);
+function persist(tasks: Task[], sprints: Sprint[], staff: Staff[], categories: string[]) {
+  saveLocalData({ tasks, sprints, staff, categories });
+}
+
+function exportIsStale(lastExportAt: string | null, hasData: boolean) {
+  if (!hasData) return false;
+  if (!lastExportAt) return true;
+  const then = new Date(lastExportAt).getTime();
+  if (Number.isNaN(then)) return true;
+  return Date.now() - then > EXPORT_REMIND_DAYS * 24 * 60 * 60 * 1000;
+}
 
 export function TaskProvider({ children }: { children: ReactNode }) {
-  const [tasks, setTasks] = useState<Task[]>(SEED_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
+  const [categories, setCategories] = useState<string[]>([...CATEGORIES]);
   const [mode, setModeState] = useState<AppMode>("editor");
   const [hydrated, setHydrated] = useState(false);
+  const [lastExportAt, setLastExportAt] = useState<string | null>(null);
+  const [reminderDismissed, setReminderDismissed] = useState(false);
+  const persistEnabled = useRef(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setTasks(JSON.parse(raw) as Task[]);
-      const m = localStorage.getItem(MODE_KEY);
-      if (m === "management" || m === "editor") setModeState(m);
-    } catch {
-      /* ignore corrupt storage */
-    }
+    const data = loadLocalData();
+    setTasks(data.tasks);
+    setSprints(data.sprints);
+    setStaff(data.staff);
+    setCategories(data.categories);
+    setModeState(loadMode());
+    setLastExportAt(loadLastExportAt());
+    persistEnabled.current = false;
     setHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hydrated) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-    } catch {
-      /* storage full or unavailable */
+    if (!persistEnabled.current) {
+      persistEnabled.current = true;
+      return;
     }
-  }, [tasks, hydrated]);
+    persist(tasks, sprints, staff, categories);
+  }, [tasks, sprints, staff, categories, hydrated]);
 
-  const setMode = useCallback((m: AppMode) => {
-    setModeState(m);
-    try {
-      localStorage.setItem(MODE_KEY, m);
-    } catch {
-      /* ignore */
-    }
+  const setMode = useCallback((next: AppMode) => {
+    setModeState(next);
+    saveMode(next);
   }, []);
 
-  const addTask = useCallback((task: Omit<Task, "id" | "lastUpdated">) => {
-    setTasks((prev) => [
+  const addTask = useCallback((task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => {
+    const today = todayISO();
+    const created = applyTaskRules(
       {
         ...task,
-        id: `T-${Math.floor(Math.random() * 9000 + 1000)}-${prev.length + 1}`,
-        lastUpdated: today(),
+        id: nextTaskId(tasks),
+        lastUpdated: today,
+        completedOn: null,
       },
-      ...prev,
-    ]);
-  }, []);
+      {},
+      today,
+    );
+    setTasks((prev) => [created, ...prev]);
+    setCategories((prev) => mergeCategories(prev, [created.category]));
+  }, [tasks]);
 
   const updateTask = useCallback((id: string, patch: Partial<Task>) => {
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, ...patch, lastUpdated: today() } : task,
-      ),
+      prev.map((task) => (task.id === id ? applyTaskRules(task, patch) : task)),
     );
+    if (patch.category) {
+      const category = patch.category;
+      setCategories((prev) => mergeCategories(prev, [category]));
+    }
   }, []);
 
   const deleteTask = useCallback((id: string) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
   }, []);
 
-  const resetTasks = useCallback(() => setTasks(SEED_TASKS), []);
+  const addSprint = useCallback((sprint: Omit<Sprint, "id">) => {
+    const name = sprint.name.trim();
+    if (!name) throw new Error("Sprint name is required.");
+    if (isSprintNameTaken(sprints, name)) {
+      throw new Error(`A sprint named ${name} already exists.`);
+    }
+    const id = nextSprintId(sprints);
+    setSprints((prev) => {
+      const next: Sprint = { ...sprint, id, name };
+      if (next.status === "Active") {
+        return [next, ...prev.map((s) => (s.status === "Active" ? { ...s, status: "Planned" as const } : s))];
+      }
+      return [next, ...prev];
+    });
+    return id;
+  }, [sprints]);
+
+  const updateSprint = useCallback((id: string, patch: Partial<Sprint>) => {
+    const nextPatch = patch.name !== undefined ? { ...patch, name: patch.name.trim() } : patch;
+    if (nextPatch.name !== undefined) {
+      if (!nextPatch.name) throw new Error("Sprint name is required.");
+      if (isSprintNameTaken(sprints, nextPatch.name, id)) {
+        throw new Error(`A sprint named ${nextPatch.name} already exists.`);
+      }
+    }
+    setSprints((prev) =>
+      prev.map((sprint) => {
+        if (sprint.id !== id) {
+          if (nextPatch.status === "Active" && sprint.status === "Active") {
+            return { ...sprint, status: "Planned" };
+          }
+          return sprint;
+        }
+        return { ...sprint, ...nextPatch };
+      }),
+    );
+  }, [sprints]);
+
+  const deleteSprint = useCallback((id: string) => {
+    setTasks((prev) =>
+      prev.map((task) => (task.sprintId === id ? applyTaskRules(task, { sprintId: null }) : task)),
+    );
+    setSprints((prev) => prev.filter((sprint) => sprint.id !== id));
+  }, []);
+
+  const setActiveSprint = useCallback((id: string) => {
+    updateSprint(id, { status: "Active" });
+  }, [updateSprint]);
+
+  const completeSprint = useCallback((id: string, incompleteDestination: "backlog" | string) => {
+    const dest = incompleteDestination === "backlog" ? null : incompleteDestination;
+    setTasks((prev) =>
+      prev.map((task) => {
+        if (task.sprintId !== id || isClosedStatus(task.status)) return task;
+        return applyTaskRules(task, { sprintId: dest });
+      }),
+    );
+    setSprints((prev) =>
+      prev.map((sprint) => (sprint.id === id ? { ...sprint, status: "Completed" as const } : sprint)),
+    );
+  }, []);
+
+  const addStaff = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("Name is required.");
+    const existing = staff.find((person) => person.name.toLowerCase() === trimmed.toLowerCase());
+    if (existing) return existing.name;
+    const created: Staff = {
+      id: crypto.randomUUID(),
+      name: trimmed,
+      active: true,
+      sortOrder: staff.length,
+    };
+    setStaff((prev) => [...prev, created]);
+    return created.name;
+  }, [staff]);
+
+  const addCategory = useCallback((name: string) => {
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("Category name is required.");
+    if (trimmed.toLowerCase() === "support/ticketing") {
+      throw new Error("Support/Ticketing is no longer used.");
+    }
+    const existing = categories.find((category) => category.toLowerCase() === trimmed.toLowerCase());
+    if (existing) return existing;
+    setCategories((prev) => [...prev, trimmed]);
+    return trimmed;
+  }, [categories]);
+
+  const markExported = useCallback(() => {
+    const iso = new Date().toISOString();
+    saveLastExportAt(iso);
+    setLastExportAt(iso);
+    setReminderDismissed(false);
+  }, []);
+
+  const exportBackup = useCallback(() => {
+    const payload = makeBackup(tasks, sprints, staff, categories);
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `TrackHub-backup-${todayISO()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    markExported();
+  }, [categories, markExported, staff, sprints, tasks]);
+
+  const importBackup = useCallback((payload: BackupPayload) => {
+    const parsed = parseBackup(payload);
+    setTasks(parsed.tasks);
+    setSprints(parsed.sprints);
+    setStaff(parsed.staff);
+    setCategories(mergeCategories(CATEGORIES, parsed.categories, parsed.tasks.map((task) => task.category)));
+  }, []);
+
+  const importLegacyBrowserData = useCallback(() => {
+    const legacy = peekLegacyBrowserData();
+    if (!legacy) return false;
+    const names = [...new Set(legacy.tasks.map((t) => t.assignee).filter(Boolean))];
+    setTasks(legacy.tasks);
+    setSprints(legacy.sprints);
+    setStaff(
+      names.map((name, index) => ({
+        id: crypto.randomUUID(),
+        name,
+        active: true,
+        sortOrder: index,
+      })),
+    );
+    setCategories(mergeCategories(CATEGORIES, legacy.tasks.map((task) => task.category)));
+    return true;
+  }, []);
+
+  const loadSampleData = useCallback(() => {
+    const data = createSampleLocalData();
+    setTasks(data.tasks);
+    setSprints(data.sprints);
+    setStaff(data.staff);
+    setCategories(data.categories);
+  }, []);
+
+  const dismissExportReminder = useCallback(() => {
+    setReminderDismissed(true);
+  }, []);
+
+  const canWrite = mode === "editor";
+  const needsExportReminder =
+    hydrated && !reminderDismissed && exportIsStale(lastExportAt, tasks.length > 0);
 
   const value = useMemo(
-    () => ({ tasks, hydrated, mode, setMode, addTask, updateTask, deleteTask, resetTasks }),
-    [tasks, hydrated, mode, setMode, addTask, updateTask, deleteTask, resetTasks],
+    () => ({
+      tasks,
+      sprints,
+      staff,
+      categories,
+      hydrated,
+      mode,
+      setMode,
+      canWrite,
+      needsExportReminder,
+      dismissExportReminder,
+      markExported,
+      addTask,
+      updateTask,
+      deleteTask,
+      addSprint,
+      updateSprint,
+      deleteSprint,
+      setActiveSprint,
+      completeSprint,
+      addStaff,
+      addCategory,
+      exportBackup,
+      importBackup,
+      importLegacyBrowserData,
+      loadSampleData,
+    }),
+    [
+      tasks,
+      sprints,
+      staff,
+      categories,
+      hydrated,
+      mode,
+      setMode,
+      canWrite,
+      needsExportReminder,
+      dismissExportReminder,
+      markExported,
+      addTask,
+      updateTask,
+      deleteTask,
+      addSprint,
+      updateSprint,
+      deleteSprint,
+      setActiveSprint,
+      completeSprint,
+      addStaff,
+      addCategory,
+      exportBackup,
+      importBackup,
+      importLegacyBrowserData,
+      loadSampleData,
+    ],
   );
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

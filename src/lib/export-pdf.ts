@@ -7,10 +7,11 @@ import {
   getPriorityActivities,
   formatDate,
 } from "@/lib/metrics";
+import { completionDate } from "@/lib/task-rules";
 
-const NAVY: [number, number, number] = [30, 41, 59];
+const BRAND: [number, number, number] = [59, 107, 255];
 const SLATE: [number, number, number] = [100, 116, 139];
-const LIGHT: [number, number, number] = [241, 245, 249];
+const LIGHT: [number, number, number] = [244, 247, 254];
 
 export async function exportExecutivePdf(tasks: Task[]) {
   const { jsPDF } = await import("jspdf");
@@ -22,7 +23,7 @@ export async function exportExecutivePdf(tasks: Task[]) {
   const metrics = getMetrics(tasks);
 
   // Header band
-  doc.setFillColor(...NAVY);
+  doc.setFillColor(...BRAND);
   doc.rect(0, 0, pageW, 74, "F");
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
@@ -36,17 +37,18 @@ export async function exportExecutivePdf(tasks: Task[]) {
     52,
   );
 
-  // KPI tiles
+  // KPI tiles — project work only
   const tiles = [
-    ["Total Activities", String(metrics.total)],
+    ["Activities", String(metrics.total)],
     ["Completed", String(metrics.completed)],
     ["In Progress", String(metrics.inProgress)],
-    ["Pending / On Hold", String(metrics.pending)],
+    ["On Hold", String(metrics.onHold)],
   ];
   const gap = 12;
   const tileW = (pageW - margin * 2 - gap * 3) / 4;
   let y = 96;
   tiles.forEach((tile, i) => {
+    const [label, value] = tile;
     const x = margin + i * (tileW + gap);
     doc.setFillColor(...LIGHT);
     doc.setDrawColor(214, 222, 232);
@@ -54,29 +56,28 @@ export async function exportExecutivePdf(tasks: Task[]) {
     doc.setTextColor(...SLATE);
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    doc.text(tile[0].toUpperCase(), x + 10, y + 18);
-    doc.setTextColor(...NAVY);
+    doc.text((label ?? "").toUpperCase(), x + 10, y + 18);
+    doc.setTextColor(...BRAND);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(20);
-    doc.text(tile[1], x + 10, y + 44);
+    doc.text(value ?? "", x + 10, y + 44);
   });
 
-  // Department progress bar
   y += 78;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(...NAVY);
-  doc.text("Overall Department Progress", margin, y);
+  doc.setTextColor(...BRAND);
+  doc.text("Overall Progress", margin, y);
   doc.setFont("helvetica", "normal");
   doc.text(`${metrics.overall}%`, pageW - margin - 26, y);
   const barW = pageW - margin * 2;
   doc.setFillColor(226, 232, 240);
   doc.roundedRect(margin, y + 8, barW, 10, 5, 5, "F");
-  doc.setFillColor(...NAVY);
+  doc.setFillColor(...BRAND);
   doc.roundedRect(margin, y + 8, Math.max(6, (barW * metrics.overall) / 100), 10, 5, 5, "F");
 
   const tableTheme = {
-    headStyles: { fillColor: NAVY, textColor: 255, fontSize: 9, halign: "left" as const },
+    headStyles: { fillColor: BRAND, textColor: 255, fontSize: 9, halign: "left" as const },
     bodyStyles: { fontSize: 8.5, textColor: [40, 48, 62] as [number, number, number] },
     alternateRowStyles: { fillColor: LIGHT },
     styles: { cellPadding: 5, lineColor: [226, 232, 240] as [number, number, number], lineWidth: 0.4 },
@@ -115,10 +116,10 @@ export async function exportExecutivePdf(tasks: Task[]) {
   autoTable(doc, {
     ...tableTheme,
     startY: (doc as any).lastAutoTable.finalY + 20,
-    head: [["Key Accomplishments", "Owner", "Completed", "Result"]],
+    head: [["Key Project Accomplishments", "Owner", "Completed", "Result"]],
     body: getCompleted(tasks)
       .slice(0, 6)
-      .map((t) => [t.title, t.assignee, formatDate(t.lastUpdated), t.remarks]),
+      .map((t) => [t.title, t.assignee, formatDate(completionDate(t) || t.lastUpdated), t.remarks]),
     columnStyles: { 0: { cellWidth: 150 }, 3: { cellWidth: 165 } },
   });
 

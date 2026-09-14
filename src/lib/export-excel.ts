@@ -1,4 +1,4 @@
-import type { Task } from "@/data/tasks";
+import type { Sprint, Task } from "@/data/tasks";
 import {
   getBlockers,
   getCategoryStats,
@@ -7,29 +7,35 @@ import {
   getPriorityActivities,
   monthLabel,
 } from "@/lib/metrics";
+import { completionDate } from "@/lib/task-rules";
 
-const NAVY = "FF1E293B";
-const NAVY_LIGHT = "FF334155";
-const STRIPE = "FFF1F5F9";
+const BRAND = "FF3B6BFF";
+const BRAND_LIGHT = "FF6B8FFF";
+const STRIPE = "FFF4F7FE";
 
 type Row = (string | number)[];
 
-export async function exportWorkbook(tasks: Task[]) {
+export async function exportWorkbook(tasks: Task[], sprints: Sprint[] = []) {
   const ExcelJS = (await import("exceljs")).default;
   const wb = new ExcelJS.Workbook();
   wb.creator = "IT Work Monitoring & Tracking System";
   wb.created = new Date();
 
+  const sprintName = (id: string | null) => {
+    if (!id) return "Backlog";
+    return sprints.find((s) => s.id === id)?.name ?? id;
+  };
+
   const metrics = getMetrics(tasks);
   const generated = new Date().toLocaleString("en-US");
 
-  const styleHeader = (ws: any, rowNumber: number, fill = NAVY) => {
+  const styleHeader = (ws: any, rowNumber: number, fill = BRAND) => {
     const row = ws.getRow(rowNumber);
     row.eachCell((cell: any) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
       cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
       cell.alignment = { vertical: "middle", horizontal: "left" };
-      cell.border = { bottom: { style: "thin", color: { argb: NAVY_LIGHT } } };
+      cell.border = { bottom: { style: "thin", color: { argb: BRAND_LIGHT } } };
     });
     row.height = 22;
   };
@@ -58,7 +64,7 @@ export async function exportWorkbook(tasks: Task[]) {
 
   const title = (ws: any, text: string) => {
     const row = ws.addRow([text]);
-    row.font = { bold: true, size: 14, color: { argb: NAVY } };
+    row.font = { bold: true, size: 14, color: { argb: BRAND } };
     row.height = 24;
   };
 
@@ -71,10 +77,10 @@ export async function exportWorkbook(tasks: Task[]) {
   s1.addRow(["Metric", "Value"]);
   styleHeader(s1, s1.rowCount);
   const m0 = s1.rowCount + 1;
-  s1.addRow(["Total Activities", metrics.total]);
+  s1.addRow(["Activities", metrics.total]);
   s1.addRow(["Completed", metrics.completed]);
   s1.addRow(["In Progress / For Testing", metrics.inProgress]);
-  s1.addRow(["Pending / On Hold", metrics.pending]);
+  s1.addRow(["On Hold", metrics.onHold]);
   s1.addRow(["Overall Progress", `${metrics.overall}%`]);
   stripe(s1, m0, s1.rowCount);
   s1.addRow([]);
@@ -119,6 +125,7 @@ export async function exportWorkbook(tasks: Task[]) {
     "ID",
     "Activity",
     "Category",
+    "Sprint",
     "Assigned To",
     "Priority",
     "Status",
@@ -126,6 +133,7 @@ export async function exportWorkbook(tasks: Task[]) {
     "Date Started",
     "Target Completion",
     "Last Updated",
+    "Completed On",
     "Remarks / Blockers",
   ];
   s2.addRow(headers2);
@@ -134,6 +142,7 @@ export async function exportWorkbook(tasks: Task[]) {
     t.id,
     t.title,
     t.category,
+    sprintName(t.sprintId),
     t.assignee,
     t.priority,
     t.status,
@@ -141,6 +150,7 @@ export async function exportWorkbook(tasks: Task[]) {
     t.dateStarted,
     t.targetDate,
     t.lastUpdated,
+    t.completedOn ?? "",
     t.remarks,
   ]);
   rows2.forEach((r) => s2.addRow(r));
@@ -157,11 +167,11 @@ export async function exportWorkbook(tasks: Task[]) {
   const a0 = s3.rowCount + 1;
   for (const task of getCompleted(tasks)) {
     s3.addRow([
-      monthLabel(task.lastUpdated),
+      monthLabel(completionDate(task) || task.lastUpdated),
       task.title,
       task.category,
       task.assignee,
-      task.lastUpdated,
+      completionDate(task) || task.lastUpdated,
       task.remarks,
     ]);
   }

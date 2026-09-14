@@ -1,118 +1,85 @@
-# IT Work Hub
+# TrackHub
 
-Copy and paste this complete, unified prompt directly into Lovable to build the full application from scratch:
+IT work monitoring and tracking for the department — a simple place to see what is in progress, what is blocked, and what got done.
 
-"Build a modern, corporate IT Work Monitoring and Tracking System with built-in export capabilities for leadership status reporting.
+---
 
-1. Data Structure & State
+## What it is
 
-Implement a task/activity data model containing:
+TrackHub is an internal system for IT staff and leadership. It keeps project work in one view so the team can update status day to day, and management can review progress without digging through spreadsheets.
 
-Task Name / Activity Title
+Work lives in the browser on this device. It is not stored on a shared server, so backups matter if you want a copy you can restore later.
 
+---
 
+## Who it is for
 
-Category (Support/Ticketing, Odoo Development, Solarista Compass, Hardware/Network/Infrastructure, IT Consulting, Maintenance/Operations)
+- **IT team** — log activities, update progress, and keep remarks current.
+- **Leadership** — scan overall status, priorities, blockers, and completed work.
 
-Assigned To (IT Staff Name)
+Switch between **IT Editor** (full editing) and **Management** (read-only) from the header.
 
-Priority (Critical, High, Medium, Low)
+---
 
-Status (Not Started, In Progress, For Testing, Completed, On Hold)
+## Pages
 
-Progress Percentage (0–100% slider or input)
+### Dashboard
 
-Date Started
+A snapshot of department work:
 
+- Counts for activities, completed, in progress, and on hold
+- Overall completion
+- Work by category
+- Current priority projects
+- Overdue items and blockers
 
+### Master Tracker
 
-Target Completion Date
+The full activity list. Search and filter by category, status, priority, assignee, or sprint. Open work in one of three views:
 
+- **Table** — spreadsheet-style list for scanning and editing
+- **Kanban** — columns by status
+- **Sprint** — planned, active, and completed sprints, with work assigned to each
 
+From here you can add, edit, or remove activities (in Editor mode).
 
-Last Updated Date (auto-updates or manual)
+### Accomplishments
 
-Remarks / Current Situation / Blockers
+A log of completed work, grouped by month. Filter by date range when you need a reporting window for leadership.
 
+---
 
+## What you track
 
-Pre-populate the app with realistic sample data across all categories and statuses.
+Each activity includes:
 
-2. Views & Navigation
+- Title and category
+- Owner
+- Priority and status
+- Progress (0–100%)
+- Start date, target date, and last update
+- Remarks, situation, or blockers
+- Optional sprint
 
-Executive Management Dashboard:
+**Status:** Not Started · In Progress · For Testing · Completed · On Hold
 
-KPI Summary Cards: Total Activities, Completed, In Progress, and Pending / On Hold.
+**Priority:** Critical · High · Medium · Low
 
-Overall Progress Bar: Visual aggregate completion rate for all active work.
+**Default categories:** Odoo Development · Solarista Compass · Hardware/Network · IT Consulting · Maintenance/Operations
 
-Work by Category: Visual breakdown showing task counts and completion rate per category (Support, Odoo, Solarista, Network, Maintenance).
+You can add your own categories and staff names as the team grows.
 
-Current Priority Activities: Clean table showing ongoing high-priority tasks with assigned staff, progress bars, target dates, and status badges.
+---
 
-Blockers & On-Hold Callout: Dedicated alert card listing stalled items, root causes, and required next steps.
+## Reports
 
-Master Task Tracker:
+Use **Export** in the header when you need a handout:
 
-Toggle between Table View and Kanban Board (grouped by Status).
+- **Excel** — management summary, full tracker, and monthly accomplishments
+- **PDF** — a short IT status and accomplishment brief for leadership
 
-Search bar and multi-select filters for Category, Status, Priority, and Assignee.
+Use **Backup** to download or restore a JSON copy of your data, or to load sample activities while you explore the app.
 
-Inline editing, status updating, and an 'Add New Activity' modal form.
+---
 
-Accomplishments & Reports View:
-
-Filterable log of 'Completed' tasks grouped by month or date range to serve as executive accomplishment reports.
-
-3. Export & Handout Engine (XLSX & PDF)
-
-Add an 'Export & Reports' dropdown button at the top header containing:
-
-Export to Excel (.xlsx):
-
-Use a client-side Excel library (e.g., xlsx or exceljs).
-
-Generate a multi-sheet formatted workbook:
-
-Sheet 1: 'Management Summary' — Summary metrics, category counts, active priorities, and blocker notes.
-
-Sheet 2: 'Detailed IT Tracker' — Full list of all activities with headers, dates, status badges, and remarks.
-
-Sheet 3: 'Monthly Accomplishments' — Log of completed tasks.
-
-Include professional formatting: navy blue headers with bold white text, alternating row shading, and auto-adjusted column widths.
-
-Executive PDF Handout:
-
-Use a printable/PDF engine (e.g., jspdf, html2pdf.js, or browser print stylesheet).
-
-Generate a clean, corporate 1-to-2 page 'IT Status & Accomplishment Brief' suitable for executive leadership.
-
-Include document title, generated timestamp, KPI overview tiles, the department progress bar, top active projects, and highlighted accomplishments.
-
-4. UI & Styling
-
-Professional enterprise aesthetic using a clean navy/slate and neutral color palette with clean badges for priorities and statuses.
-
-Include a toggle preview for 'Management Mode' (Read-Only Executive View) vs. 'IT Editor Mode'.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d7f34061-0595-46b0-b42b-5208f7fadcd7).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+Continue building this project in [Lovable](https://lovable.dev/projects/d7f34061-0595-46b0-b42b-5208f7fadcd7).

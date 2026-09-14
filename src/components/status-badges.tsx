@@ -37,9 +37,58 @@ export function ProgressBar({ value, className }: { value: number; className?: s
   return (
     <div className={cn("h-2 w-full overflow-hidden rounded-full bg-muted", className)}>
       <div
-        className="h-full rounded-full bg-primary transition-all"
+        className="h-full rounded-full bg-primary"
         style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
       />
+    </div>
+  );
+}
+
+export function CircularProgress({
+  value,
+  size = 160,
+  strokeWidth = 12,
+  className,
+}: {
+  value: number;
+  size?: number;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  const clamped = Math.max(0, Math.min(100, value));
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (clamped / 100) * circumference;
+
+  return (
+    <div
+      className={cn("relative inline-grid place-items-center", className)}
+      style={{ width: size, height: size }}
+    >
+      <svg width={size} height={size} className="-rotate-90" aria-hidden>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className="stroke-muted"
+          strokeWidth={strokeWidth}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className="stroke-primary"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center">
+        <p className="font-display text-3xl font-semibold tabular-nums leading-none">{clamped}%</p>
+      </div>
     </div>
   );
 }
