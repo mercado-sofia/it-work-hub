@@ -165,8 +165,22 @@
     border-color: var(--color-border);
     animation: none !important;
     animation-duration: 0s !important;
+  }
+
+  *:not(.landing-choice-card):not(.landing-choice-arrow):not(.bootstrap-panel):not(.bootstrap-back),
+  *:not(.landing-choice-card):not(.landing-choice-arrow):not(.bootstrap-panel):not(.bootstrap-back)::before,
+  *:not(.landing-choice-card):not(.landing-choice-arrow):not(.bootstrap-panel):not(.bootstrap-back)::after {
     transition-duration: 0s !important;
     transition-delay: 0s !important;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
   }
 
   body {
@@ -214,6 +228,55 @@
     cursor: pointer;
     opacity: 0.55;
   }
+}
+
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"],
+input[type="time"] {
+  accent-color: var(--primary);
+}
+
+input[type="date"]:focus,
+input[type="datetime-local"]:focus,
+input[type="month"]:focus,
+input[type="week"]:focus,
+input[type="time"]:focus,
+input[type="date"]:focus-visible,
+input[type="datetime-local"]:focus-visible,
+input[type="month"]:focus-visible,
+input[type="week"]:focus-visible,
+input[type="time"]:focus-visible {
+  outline: none;
+  border-color: var(--input);
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field:focus,
+input[type="date"]::-webkit-datetime-edit-month-field:focus,
+input[type="date"]::-webkit-datetime-edit-day-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-year-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-month-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-day-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-hour-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-minute-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-second-field:focus,
+input[type="datetime-local"]::-webkit-datetime-edit-ampm-field:focus,
+input[type="month"]::-webkit-datetime-edit-year-field:focus,
+input[type="month"]::-webkit-datetime-edit-month-field:focus,
+input[type="week"]::-webkit-datetime-edit-week-field:focus,
+input[type="week"]::-webkit-datetime-edit-year-field:focus,
+input[type="time"]::-webkit-datetime-edit-hour-field:focus,
+input[type="time"]::-webkit-datetime-edit-minute-field:focus,
+input[type="time"]::-webkit-datetime-edit-second-field:focus,
+input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
+  background-color: color-mix(in oklch, var(--primary) 16%, transparent) !important;
+  color: var(--foreground) !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  forced-color-adjust: none;
 }
 
 [data-sonner-toaster].toaster.group {
@@ -267,4 +330,107 @@
 
 [data-rich-colors="true"][data-sonner-toast][data-type="error"] [data-icon] {
   color: var(--destructive);
+}
+
+@layer utilities {
+  .landing-choice-card {
+    border-color: var(--color-border);
+    transform: translateY(0);
+    box-shadow: 0 0 0 0 transparent;
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .landing-choice-card:hover,
+  .landing-choice-card:focus-visible {
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -18px color-mix(in oklab, var(--color-primary) 55%, transparent);
+  }
+
+  .landing-choice-arrow {
+    display: inline-block;
+    transform: translateX(0);
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .landing-choice-card:hover .landing-choice-arrow,
+  .landing-choice-card:focus-visible .landing-choice-arrow,
+  .help-path-cta:hover .landing-choice-arrow,
+  .help-path-cta:focus-visible .landing-choice-arrow {
+    transform: translateX(3px);
+  }
+
+  .bootstrap-back:hover .landing-choice-arrow,
+  .bootstrap-back:focus-visible .landing-choice-arrow {
+    transform: translateX(-3px);
+  }
+
+  .bootstrap-stage {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .bootstrap-panel {
+    position: absolute;
+    inset: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(0);
+    transition:
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 320ms ease,
+      visibility 0s linear 320ms;
+  }
+
+  .bootstrap-panel.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(0);
+    transition:
+      transform 480ms cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 280ms ease 40ms,
+      visibility 0s;
+  }
+
+  .bootstrap-panel.is-park-left {
+    transform: translateX(-2.75rem);
+  }
+
+  .bootstrap-panel.is-park-right {
+    transform: translateX(2.75rem);
+  }
+
+  .bootstrap-back {
+    color: inherit;
+    background-color: transparent;
+    transition: color 180ms ease;
+  }
+
+  .bootstrap-back:hover,
+  .bootstrap-back:focus-visible {
+    background-color: transparent;
+    color: var(--color-primary);
+  }
+}
+
+@media print {
+  details.accomplishment-month:not([open]) > *:not(summary) {
+    display: block !important;
+  }
+
+  details.accomplishment-month > summary {
+    list-style: none;
+  }
+
+  details.accomplishment-month .month-chevron {
+    display: none;
+  }
 }

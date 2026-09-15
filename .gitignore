@@ -19,6 +19,9 @@ dist-ssr
 .env.*
 !.env.example
 
+# Local intake fallback (when Lovable Cloud env vars are not set)
+.data/
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

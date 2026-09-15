@@ -10,53 +10,175 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AccomplishmentsRouteImport } from './routes/accomplishments'
-import { Route as TrackerRouteImport } from './routes/tracker'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as RequestRouteImport } from './routes/request'
+import { Route as AppAccomplishmentsRouteImport } from './routes/_app/accomplishments'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppRequestsRouteImport } from './routes/_app/requests'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppTrackerRouteImport } from './routes/_app/tracker'
+import { Route as RequestIndexRouteImport } from './routes/request.index'
+import { Route as RequestStatusRouteImport } from './routes/request.status'
+import { Route as AppRequestsIndexRouteImport } from './routes/_app/requests.index'
+import { Route as AppRequestsTicketRouteImport } from './routes/_app/requests.$ticket'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AccomplishmentsRoute = AccomplishmentsRouteImport.update({
-  id: '/accomplishments',
-  path: '/accomplishments',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrackerRoute = TrackerRouteImport.update({
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestRoute = RequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppAccomplishmentsRoute = AppAccomplishmentsRouteImport.update({
+  id: '/accomplishments',
+  path: '/accomplishments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRequestsRoute = AppRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTrackerRoute = AppTrackerRouteImport.update({
   id: '/tracker',
   path: '/tracker',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AppRoute,
+} as any)
+const RequestIndexRoute = RequestIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => RequestRoute,
+} as any)
+const RequestStatusRoute = RequestStatusRouteImport.update({
+  id: '/status',
+  path: '/status',
+  getParentRoute: () => RequestRoute,
+} as any)
+const AppRequestsIndexRoute = AppRequestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRequestsRoute,
+} as any)
+const AppRequestsTicketRoute = AppRequestsTicketRouteImport.update({
+  id: '/$ticket',
+  path: '/$ticket',
+  getParentRoute: () => AppRequestsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/accomplishments': typeof AccomplishmentsRoute
-  '/tracker': typeof TrackerRoute
+  '/login': typeof LoginRoute
+  '/request': typeof RequestRouteWithChildren
+  '/accomplishments': typeof AppAccomplishmentsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/requests': typeof AppRequestsRouteWithChildren
+  '/settings': typeof AppSettingsRoute
+  '/tracker': typeof AppTrackerRoute
+  '/request/status': typeof RequestStatusRoute
+  '/request/': typeof RequestIndexRoute
+  '/requests/$ticket': typeof AppRequestsTicketRoute
+  '/requests/': typeof AppRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/accomplishments': typeof AccomplishmentsRoute
-  '/tracker': typeof TrackerRoute
+  '/login': typeof LoginRoute
+  '/accomplishments': typeof AppAccomplishmentsRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/settings': typeof AppSettingsRoute
+  '/tracker': typeof AppTrackerRoute
+  '/request/status': typeof RequestStatusRoute
+  '/request': typeof RequestIndexRoute
+  '/requests/$ticket': typeof AppRequestsTicketRoute
+  '/requests': typeof AppRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/accomplishments': typeof AccomplishmentsRoute
-  '/tracker': typeof TrackerRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/request': typeof RequestRouteWithChildren
+  '/_app/accomplishments': typeof AppAccomplishmentsRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/requests': typeof AppRequestsRouteWithChildren
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/tracker': typeof AppTrackerRoute
+  '/request/status': typeof RequestStatusRoute
+  '/request/': typeof RequestIndexRoute
+  '/_app/requests/$ticket': typeof AppRequestsTicketRoute
+  '/_app/requests/': typeof AppRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/accomplishments' | '/tracker'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/request'
+    | '/accomplishments'
+    | '/dashboard'
+    | '/requests'
+    | '/settings'
+    | '/tracker'
+    | '/request/status'
+    | '/request/'
+    | '/requests/$ticket'
+    | '/requests/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/accomplishments' | '/tracker'
-  id: '__root__' | '/' | '/accomplishments' | '/tracker'
+  to:
+    | '/'
+    | '/login'
+    | '/accomplishments'
+    | '/dashboard'
+    | '/settings'
+    | '/tracker'
+    | '/request/status'
+    | '/request'
+    | '/requests/$ticket'
+    | '/requests'
+  id:
+    | '__root__'
+    | '/'
+    | '/_app'
+    | '/login'
+    | '/request'
+    | '/_app/accomplishments'
+    | '/_app/dashboard'
+    | '/_app/requests'
+    | '/_app/settings'
+    | '/_app/tracker'
+    | '/request/status'
+    | '/request/'
+    | '/_app/requests/$ticket'
+    | '/_app/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AccomplishmentsRoute: typeof AccomplishmentsRoute
-  TrackerRoute: typeof TrackerRoute
+  AppRoute: typeof AppRouteWithChildren
+  LoginRoute: typeof LoginRoute
+  RequestRoute: typeof RequestRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -68,27 +190,143 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/accomplishments': {
-      id: '/accomplishments'
-      path: '/accomplishments'
-      fullPath: '/accomplishments'
-      preLoaderRoute: typeof AccomplishmentsRouteImport
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tracker': {
-      id: '/tracker'
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/request': {
+      id: '/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof RequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/accomplishments': {
+      id: '/_app/accomplishments'
+      path: '/accomplishments'
+      fullPath: '/accomplishments'
+      preLoaderRoute: typeof AppAccomplishmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/requests': {
+      id: '/_app/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/tracker': {
+      id: '/_app/tracker'
       path: '/tracker'
       fullPath: '/tracker'
-      preLoaderRoute: typeof TrackerRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AppTrackerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/request/': {
+      id: '/request/'
+      path: '/'
+      fullPath: '/request/'
+      preLoaderRoute: typeof RequestIndexRouteImport
+      parentRoute: typeof RequestRoute
+    }
+    '/request/status': {
+      id: '/request/status'
+      path: '/status'
+      fullPath: '/request/status'
+      preLoaderRoute: typeof RequestStatusRouteImport
+      parentRoute: typeof RequestRoute
+    }
+    '/_app/requests/': {
+      id: '/_app/requests/'
+      path: '/'
+      fullPath: '/requests/'
+      preLoaderRoute: typeof AppRequestsIndexRouteImport
+      parentRoute: typeof AppRequestsRoute
+    }
+    '/_app/requests/$ticket': {
+      id: '/_app/requests/$ticket'
+      path: '/$ticket'
+      fullPath: '/requests/$ticket'
+      preLoaderRoute: typeof AppRequestsTicketRouteImport
+      parentRoute: typeof AppRequestsRoute
     }
   }
 }
 
+interface AppRequestsRouteChildren {
+  AppRequestsTicketRoute: typeof AppRequestsTicketRoute
+  AppRequestsIndexRoute: typeof AppRequestsIndexRoute
+}
+
+const AppRequestsRouteChildren: AppRequestsRouteChildren = {
+  AppRequestsTicketRoute: AppRequestsTicketRoute,
+  AppRequestsIndexRoute: AppRequestsIndexRoute,
+}
+
+const AppRequestsRouteWithChildren = AppRequestsRoute._addFileChildren(
+  AppRequestsRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAccomplishmentsRoute: typeof AppAccomplishmentsRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppRequestsRoute: typeof AppRequestsRouteWithChildren
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppTrackerRoute: typeof AppTrackerRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAccomplishmentsRoute: AppAccomplishmentsRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppRequestsRoute: AppRequestsRouteWithChildren,
+  AppSettingsRoute: AppSettingsRoute,
+  AppTrackerRoute: AppTrackerRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
+interface RequestRouteChildren {
+  RequestStatusRoute: typeof RequestStatusRoute
+  RequestIndexRoute: typeof RequestIndexRoute
+}
+
+const RequestRouteChildren: RequestRouteChildren = {
+  RequestStatusRoute: RequestStatusRoute,
+  RequestIndexRoute: RequestIndexRoute,
+}
+
+const RequestRouteWithChildren =
+  RequestRoute._addFileChildren(RequestRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AccomplishmentsRoute: AccomplishmentsRoute,
-  TrackerRoute: TrackerRoute,
+  AppRoute: AppRouteWithChildren,
+  LoginRoute: LoginRoute,
+  RequestRoute: RequestRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

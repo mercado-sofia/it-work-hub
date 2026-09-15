@@ -6,8 +6,10 @@ import {
   getMetrics,
   getPriorityActivities,
   monthLabel,
+  formatPeriodLabel,
+  formatReportDate,
 } from "@/lib/metrics";
-import { completionDate } from "@/lib/task-rules";
+import { completionDate, activityDisplayId, todayISO } from "@/lib/task-rules";
 
 const BRAND = "FF3B6BFF";
 const BRAND_LIGHT = "FF6B8FFF";
@@ -139,7 +141,7 @@ export async function exportWorkbook(tasks: Task[], sprints: Sprint[] = []) {
   s2.addRow(headers2);
   styleHeader(s2, 1);
   const rows2: Row[] = tasks.map((t) => [
-    t.id,
+    activityDisplayId(t),
     t.title,
     t.category,
     sprintName(t.sprintId),
@@ -182,7 +184,71 @@ export async function exportWorkbook(tasks: Task[], sprints: Sprint[] = []) {
   const blob = new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  downloadBlob(blob, `IT-Work-Tracker-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  downloadBlob(blob, `IT-Work-Tracker-${todayISO()}.xlsx`);
+}
+
+export async function exportAccomplishmentsWorkbook(
+  tasks: Task[],
+  options: {
+    from?: string | undefined;
+    to?: string | undefined;
+    all?: boolean | undefined;
+  } = {},
+) {
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "IT Work Monitoring & Tracking System";
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet("Accomplishments");
+  const titleRow = ws.addRow(["IT Accomplishments"]);
+  titleRow.font = { bold: true, size: 14, color: { argb: BRAND } };
+  titleRow.height = 24;
+  ws.addRow([`${formatPeriodLabel(options)}  •  Generated ${new Date().toLocaleString("en-US")}`]);
+  ws.addRow([]);
+  ws.addRow(["Month", "Activity", "Owner", "Completed", "Result"]);
+  const header = ws.getRow(ws.rowCount);
+  header.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND } };
+    cell.alignment = { vertical: "middle", horizontal: "left" };
+    cell.border = { bottom: { style: "thin", color: { argb: BRAND_LIGHT } } };
+  });
+  header.height = 22;
+
+  const bodyStart = ws.rowCount + 1;
+  for (const task of tasks) {
+    ws.addRow([
+      monthLabel(completionDate(task) || task.lastUpdated),
+      task.title,
+      task.assignee,
+      formatReportDate(completionDate(task)),
+      task.remarks.trim() || "No result recorded",
+    ]);
+  }
+  for (let i = bodyStart; i <= ws.rowCount; i++) {
+    if ((i - bodyStart) % 2 === 1) {
+      ws.getRow(i).eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: STRIPE } };
+      });
+    }
+    ws.getRow(i).alignment = { vertical: "top", wrapText: true };
+  }
+  ws.columns.forEach((col) => {
+    let width = 10;
+    col.eachCell?.({ includeEmpty: false }, (cell) => {
+      const len = String(cell.value ?? "").length + 2;
+      if (len > width) width = len;
+    });
+    col.width = Math.min(width, 55);
+  });
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  const slug = options.all || (!options.from && !options.to) ? "all-time" : `${options.from ?? "start"}-to-${options.to ?? "now"}`;
+  downloadBlob(blob, `IT-Accomplishments-${slug}.xlsx`);
 }
 
 export function downloadBlob(blob: Blob, filename: string) {

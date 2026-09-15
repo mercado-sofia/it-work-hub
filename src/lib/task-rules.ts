@@ -1,6 +1,12 @@
 import { STATUSES, isClosedStatus, type Status, type Task } from "@/data/tasks";
 
-export const todayISO = () => new Date().toISOString().slice(0, 10);
+function pad2(value: number) {
+  return String(value).padStart(2, "0");
+}
+
+/** Local calendar date as YYYY-MM-DD (not UTC). */
+export const todayISO = (date = new Date()) =>
+  `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}`;
 
 export function completionDate(task: Task): string {
   if (task.completedOn) return task.completedOn;
@@ -42,6 +48,11 @@ export function applyTaskRules(base: Task, patch: Partial<Task>, today = todayIS
   }
 
   return next;
+}
+
+export function activityDisplayId(task: { id: string; requestRef?: string | null }): string {
+  const ticket = task.requestRef?.trim();
+  return ticket || task.id;
 }
 
 export function nextTaskId(tasks: { id: string }[]): string {

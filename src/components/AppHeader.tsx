@@ -9,10 +9,10 @@ import {
   FileText,
   HardDrive,
   Loader2,
+  LogOut,
   Menu,
   Moon,
-  Pencil,
-  ShieldCheck,
+  Settings,
   Sun,
   Upload,
   X,
@@ -34,20 +34,18 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { parseBackup } from "@/lib/local-db";
+import { parseBackup, type BackupPayload } from "@/lib/local-db";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { useTasks } from "@/lib/task-store";
+import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 const nav = [
-  { to: "/", label: "Dashboard" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/tracker", label: "Master Tracker" },
+  { to: "/requests", label: "Requests" },
   { to: "/accomplishments", label: "Accomplishments" },
-] as const;
-
-const modes = [
-  { id: "management", label: "Management", icon: ShieldCheck },
-  { id: "editor", label: "IT Editor", icon: Pencil },
 ] as const;
 
 export function AppHeader() {
@@ -55,7 +53,6 @@ export function AppHeader() {
     tasks,
     sprints,
     mode,
-    setMode,
     canWrite,
     needsExportReminder,
     dismissExportReminder,
@@ -65,10 +62,23 @@ export function AppHeader() {
     importLegacyBrowserData,
     loadSampleData,
   } = useTasks();
+  const { user, logout, signingOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [busy, setBusy] = useState<"xlsx" | "pdf" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [backupConfirm, setBackupConfirm] = useState<
+    { kind: "restore"; payload: BackupPayload } | { kind: "legacy" } | { kind: "sample" } | null
+  >(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const signOut = async () => {
+    if (signingOut) return;
+    try {
+      await logout();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not sign out. Please try again.");
+    }
+  };
 
   const runExport = async (kind: "xlsx" | "pdf") => {
     setBusy(kind);
@@ -79,7 +89,9 @@ export function AppHeader() {
         toast.success("Excel workbook downloaded");
       } else {
         const { exportExecutivePdf } = await import("@/lib/export-pdf");
-        await exportExecutivePdf(tasks);
+        const { getSettingsFn } = await import("@/lib/request-functions");
+        const settings = await getSettingsFn();
+        await exportExecutivePdf(tasks, settings.departmentName);
         toast.success("Executive brief downloaded");
       }
       markExported();
@@ -95,11 +107,27 @@ export function AppHeader() {
     canWrite,
     fileRef,
     exportBackup,
-    importLegacyBrowserData,
-    loadSampleData,
+    onRequestLegacyImport: () => setBackupConfirm({ kind: "legacy" }),
+    onRequestSampleData: () => setBackupConfirm({ kind: "sample" }),
+  };
+
+  const confirmBackup = () => {
+    if (!backupConfirm) return;
+    if (backupConfirm.kind === "restore") {
+      importBackup(backupConfirm.payload);
+      toast.success("Backup restored");
+    } else if (backupConfirm.kind === "legacy") {
+      const imported = importLegacyBrowserData();
+      toast.success(imported ? "Imported data from this browser" : "No previous browser data to import");
+    } else {
+      loadSampleData();
+      toast.success("Sample activities loaded");
+    }
+    setBackupConfirm(null);
   };
 
   return (
+    <>
     <header className="sticky top-0 z-40 border-b border-border/70 bg-card text-foreground print:hidden">
       {needsExportReminder && (
         <div className="flex items-start justify-center gap-3 border-b border-border bg-warning-soft px-4 py-1.5 text-xs text-foreground sm:items-center sm:px-6">
@@ -112,7 +140,7 @@ export function AppHeader() {
           </p>
           <button
             type="button"
-            className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground"
+            className="shrink-0 cursor-pointer rounded p-0.5 text-muted-foreground hover:text-foreground"
             aria-label="Dismiss backup reminder"
             onClick={dismissExportReminder}
           >
@@ -133,7 +161,7 @@ export function AppHeader() {
           <Menu className="size-5" />
         </Button>
 
-        <Link to="/" className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
+        <Link to="/dashboard" className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <img src="/it-logo.png" alt="TrackHub" className="size-9 rounded-full object-cover" />
           <div className="min-w-0 leading-tight">
             <p className="text-sm font-semibold tracking-tight text-foreground">TrackHub</p>
@@ -159,8 +187,7 @@ export function AppHeader() {
               if (!file) return;
               void file.text().then((text) => {
                 try {
-                  importBackup(parseBackup(JSON.parse(text)));
-                  toast.success("Backup restored");
+                  setBackupConfirm({ kind: "restore", payload: parseBackup(JSON.parse(text)) });
                 } catch (error) {
                   toast.error(error instanceof Error ? error.message : "Import failed.");
                 }
@@ -171,10 +198,15 @@ export function AppHeader() {
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           <div className="hidden items-center gap-2 lg:flex">
-            <ModeToggle mode={mode} setMode={setMode} />
             <BackupMenu {...backupProps} />
             <ExportMenu busy={busy} runExport={runExport} />
           </div>
+          <UserMenu
+            name={user?.displayName ?? "IT"}
+            role={user?.role ?? "staff"}
+            signingOut={signingOut}
+            onLogout={signOut}
+          />
           <Button
             type="button"
             variant="outline"
@@ -198,7 +230,7 @@ export function AppHeader() {
             <SheetTitle>Menu</SheetTitle>
             <SheetDescription>
               <span className="sm:hidden">Navigate and export.</span>
-              <span className="hidden sm:inline">Navigate, switch mode, and export data.</span>
+              <span className="hidden sm:inline">Navigate and export data.</span>
             </SheetDescription>
           </SheetHeader>
 
@@ -215,8 +247,19 @@ export function AppHeader() {
           </nav>
 
           <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Mode</p>
-            <ModeToggle mode={mode} setMode={setMode} stacked />
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</p>
+            <p className="px-3 text-sm font-medium">{user?.displayName}</p>
+            <p className="px-3 text-xs capitalize text-muted-foreground">{user?.role}</p>
+            <NavLink to="/settings" label="Settings" stacked onNavigate={() => setMenuOpen(false)} />
+            <Button
+              variant="outline"
+              className="w-full justify-start gap-2"
+              disabled={signingOut}
+              onClick={() => void signOut()}
+            >
+              {signingOut ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+              {signingOut ? "Signing out…" : "Sign out"}
+            </Button>
           </div>
 
           <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
@@ -228,13 +271,42 @@ export function AppHeader() {
 
       {mode === "management" && (
         <div className="border-t border-[#060d28] bg-[#0B1438] px-4 py-1.5 text-center text-xs font-medium text-white sm:px-6">
-          <span className="sm:hidden">Management Mode — read-only. Switch to IT Editor to make changes.</span>
-          <span className="hidden sm:inline">
-            Management Mode — read-only executive view. Switch to IT Editor Mode to make changes.
-          </span>
+          <span className="sm:hidden">Management — read-only view.</span>
+          <span className="hidden sm:inline">Management — read-only executive view.</span>
         </div>
       )}
     </header>
+
+    <ConfirmDialog
+      open={backupConfirm !== null}
+      onOpenChange={(open) => {
+        if (!open) setBackupConfirm(null);
+      }}
+      icon={Database}
+      title={
+        backupConfirm?.kind === "restore"
+          ? "Restore Backup"
+          : backupConfirm?.kind === "legacy"
+            ? "Import Browser Data"
+            : "Load Sample Data"
+      }
+      description={
+        backupConfirm?.kind === "restore"
+          ? "You’re going to replace tracker activities, sprints, and staff in this browser with the backup file. Are you sure?"
+          : backupConfirm?.kind === "legacy"
+            ? "You’re going to replace the current tracker data in this browser with an earlier local copy, if one exists. Are you sure?"
+            : "You’re going to replace current tracker activities with sample records. Existing work in this browser will be overwritten. Are you sure?"
+      }
+      confirmLabel={
+        backupConfirm?.kind === "restore"
+          ? "Confirm restore"
+          : backupConfirm?.kind === "legacy"
+            ? "Confirm import"
+            : "Confirm load"
+      }
+      onConfirm={confirmBackup}
+    />
+    </>
   );
 }
 
@@ -244,7 +316,7 @@ function NavLink({
   stacked,
   onNavigate,
 }: {
-  to: (typeof nav)[number]["to"];
+  to: "/dashboard" | "/tracker" | "/requests" | "/accomplishments" | "/settings";
   label: string;
   stacked?: boolean;
   onNavigate?: () => void;
@@ -264,49 +336,49 @@ function NavLink({
           ? "rounded-lg bg-muted px-3 py-2.5 text-sm font-semibold text-primary"
           : "shrink-0 rounded-full px-3.5 py-1.5 text-sm font-semibold text-primary !text-primary",
       }}
-      activeOptions={{ exact: to === "/" }}
+      activeOptions={{ exact: to === "/dashboard" }}
     >
       {label}
     </Link>
   );
 }
 
-function ModeToggle({
-  mode,
-  setMode,
-  stacked,
+function UserMenu({
+  name,
+  role,
+  signingOut,
+  onLogout,
 }: {
-  mode: "management" | "editor";
-  setMode: (id: "management" | "editor") => void;
-  stacked?: boolean;
+  name: string;
+  role: string;
+  signingOut: boolean;
+  onLogout: () => Promise<void>;
 }) {
   return (
-    <div
-      className={cn(
-        "flex rounded-lg bg-muted/80 p-0.5",
-        stacked ? "flex-col gap-0.5" : "flex-row items-center rounded-full",
-      )}
-    >
-      {modes.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          type="button"
-          onClick={() => setMode(id)}
-          aria-label={label}
-          title={label}
-          className={cn(
-            "flex cursor-pointer items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium",
-            stacked
-              ? "w-full justify-start rounded-md py-2"
-              : "flex-1 justify-center rounded-full",
-            mode === id ? "bg-card text-primary" : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          <Icon className="size-3.5 shrink-0" />
-          {label}
-        </button>
-      ))}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="hidden rounded-full lg:inline-flex">
+          {name.split(" ")[0]}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-max min-w-36">
+        <DropdownMenuLabel className="space-y-0.5">
+          <p className="whitespace-nowrap">{name}</p>
+          <p className="text-xs font-normal capitalize text-muted-foreground">{role}</p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="gap-2">
+            <Settings className="size-3.5" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem className="gap-2" disabled={signingOut} onSelect={() => void onLogout()}>
+          {signingOut ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
+          {signingOut ? "Signing out…" : "Sign out"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -314,15 +386,15 @@ function BackupMenu({
   canWrite,
   fileRef,
   exportBackup,
-  importLegacyBrowserData,
-  loadSampleData,
+  onRequestLegacyImport,
+  onRequestSampleData,
   fullWidth,
 }: {
   canWrite: boolean;
   fileRef: RefObject<HTMLInputElement | null>;
   exportBackup: () => void;
-  importLegacyBrowserData: () => boolean;
-  loadSampleData: () => void;
+  onRequestLegacyImport: () => void;
+  onRequestSampleData: () => void;
   fullWidth?: boolean;
 }) {
   if (!canWrite) return null;
@@ -352,25 +424,11 @@ function BackupMenu({
             <FileInput />
             Restore from JSON
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className={itemClass}
-            onSelect={() => {
-              const imported = importLegacyBrowserData();
-              toast.success(
-                imported ? "Imported data from this browser" : "No previous browser data to import",
-              );
-            }}
-          >
+          <DropdownMenuItem className={itemClass} onSelect={onRequestLegacyImport}>
             <HardDrive />
             Import from this browser
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className={itemClass}
-            onSelect={() => {
-              loadSampleData();
-              toast.success("Sample activities loaded");
-            }}
-          >
+          <DropdownMenuItem className={itemClass} onSelect={onRequestSampleData}>
             <Database />
             Load sample data
           </DropdownMenuItem>

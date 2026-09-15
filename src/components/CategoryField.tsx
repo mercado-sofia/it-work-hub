@@ -28,7 +28,7 @@ export function CategoryField({
   const known = value && !options.some((option) => option === value) ? [...options, value] : options;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
       <Label className="text-foreground">{label}</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="min-w-0 bg-card">

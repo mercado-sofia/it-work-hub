@@ -20,16 +20,16 @@ import {
   createSampleLocalData,
   loadLastExportAt,
   loadLocalData,
-  loadMode,
   makeBackup,
   parseBackup,
   peekLegacyBrowserData,
   saveLastExportAt,
   saveLocalData,
-  saveMode,
   type BackupPayload,
 } from "@/lib/local-db";
 import { applyTaskRules, isSprintNameTaken, nextSprintId, nextTaskId, todayISO } from "@/lib/task-rules";
+import { useAuth } from "@/lib/auth";
+import { syncRequestFromTaskFn } from "@/lib/request-functions";
 
 export type AppMode = "management" | "editor";
 
@@ -47,7 +47,7 @@ type Store = {
   needsExportReminder: boolean;
   dismissExportReminder: () => void;
   markExported: () => void;
-  addTask: (task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => void;
+  addTask: (task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => Task;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   addSprint: (sprint: Omit<Sprint, "id">) => string;
@@ -78,11 +78,12 @@ function exportIsStale(lastExportAt: string | null, hasData: boolean) {
 }
 
 export function TaskProvider({ children }: { children: ReactNode }) {
+  const { canWrite } = useAuth();
+  const mode: AppMode = canWrite ? "editor" : "management";
   const [tasks, setTasks] = useState<Task[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [staff, setStaff] = useState<Staff[]>([]);
   const [categories, setCategories] = useState<string[]>([...CATEGORIES]);
-  const [mode, setModeState] = useState<AppMode>("editor");
   const [hydrated, setHydrated] = useState(false);
   const [lastExportAt, setLastExportAt] = useState<string | null>(null);
   const [reminderDismissed, setReminderDismissed] = useState(false);
@@ -94,7 +95,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setSprints(data.sprints);
     setStaff(data.staff);
     setCategories(data.categories);
-    setModeState(loadMode());
     setLastExportAt(loadLastExportAt());
     persistEnabled.current = false;
     setHydrated(true);
@@ -109,9 +109,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     persist(tasks, sprints, staff, categories);
   }, [tasks, sprints, staff, categories, hydrated]);
 
-  const setMode = useCallback((next: AppMode) => {
-    setModeState(next);
-    saveMode(next);
+  const setMode = useCallback((_next: AppMode) => {
+    /* Role from IT login replaces the local mode toggle. */
   }, []);
 
   const addTask = useCallback((task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => {
@@ -122,15 +121,18 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         id: nextTaskId(tasks),
         lastUpdated: today,
         completedOn: null,
+        requestRef: task.requestRef ?? null,
       },
       {},
       today,
     );
     setTasks((prev) => [created, ...prev]);
     setCategories((prev) => mergeCategories(prev, [created.category]));
+    return created;
   }, [tasks]);
 
   const updateTask = useCallback((id: string, patch: Partial<Task>) => {
+    const current = tasks.find((task) => task.id === id);
     setTasks((prev) =>
       prev.map((task) => (task.id === id ? applyTaskRules(task, patch) : task)),
     );
@@ -138,7 +140,13 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       const category = patch.category;
       setCategories((prev) => mergeCategories(prev, [category]));
     }
-  }, []);
+    const ticket = patch.requestRef ?? current?.requestRef;
+    if (current && ticket && patch.status && patch.status !== current.status) {
+      void syncRequestFromTaskFn({ data: { ticket, taskStatus: patch.status } }).catch(() => {
+        /* converter-machine convenience only */
+      });
+    }
+  }, [tasks]);
 
   const deleteTask = useCallback((id: string) => {
     setTasks((prev) => prev.filter((task) => task.id !== id));
@@ -292,7 +300,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setReminderDismissed(true);
   }, []);
 
-  const canWrite = mode === "editor";
   const needsExportReminder =
     hydrated && !reminderDismissed && exportIsStale(lastExportAt, tasks.length > 0);
 

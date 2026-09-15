@@ -1,6 +1,7 @@
 import { CATEGORIES, mergeCategories, type Sprint, type Staff, type Task } from "@/data/tasks";
 import { applyTaskRules } from "@/lib/task-rules";
 import { getSampleData } from "@/data/sample-data";
+import { normalizeTicket } from "@/data/requests";
 
 export const TASKS_KEY_V2 = "it-tracker-tasks-v2";
 export const TASKS_KEY_V1 = "it-tracker-tasks-v1";
@@ -63,8 +64,18 @@ export function migrateTask(raw: Record<string, unknown>): Task | null {
   const completedOn =
     typeof completedOnRaw === "string" && completedOnRaw ? completedOnRaw : null;
 
-  const { ticketRef: _ticketRef, ...rest } = raw as unknown as Task & { ticketRef?: string };
+  const { ticketRef: _ticketRef, requestRef: rawRequestRef, ...rest } = raw as unknown as Task & {
+    ticketRef?: string;
+    requestRef?: string;
+  };
   void _ticketRef;
+
+  const requestRef =
+    typeof rawRequestRef === "string" && rawRequestRef
+      ? normalizeTicket(rawRequestRef)
+      : typeof raw["ticketRef"] === "string"
+        ? normalizeTicket(String(raw["ticketRef"]))
+        : null;
 
   const draft: Task = {
     ...rest,
@@ -72,6 +83,7 @@ export function migrateTask(raw: Record<string, unknown>): Task | null {
     sprintId: typeof sprintId === "string" ? sprintId : null,
     completedOn,
     lastUpdated,
+    requestRef,
   };
 
   if (draft.status === "Completed" && !draft.completedOn) {

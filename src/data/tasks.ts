@@ -74,4 +74,5 @@ export type Task = {
   completedOn: string | null;
   remarks: string;
   sprintId: string | null;
+  requestRef?: string | null;
 };

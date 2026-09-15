@@ -27,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
+import { WorkId } from "@/components/activity-refs";
 import { STATUSES, type Status, type Task } from "@/data/tasks";
 import { formatDate } from "@/lib/metrics";
 import { cn } from "@/lib/utils";
@@ -304,6 +305,11 @@ function KanbanCardContent({
           </NoDnd>
         )}
       </div>
+      <p className="mt-1 text-xs">
+        <NoDnd>
+          <WorkId work={task} className="text-xs" />
+        </NoDnd>
+      </p>
       <p className="mt-1 text-xs text-muted-foreground">{task.category}</p>
       <div className="mt-2 flex items-center justify-between gap-2">
         <PriorityBadge priority={task.priority} />

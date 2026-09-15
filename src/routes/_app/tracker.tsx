@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   CalendarRange,
@@ -27,16 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DialogTrigger } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
@@ -48,6 +39,7 @@ import {
 import { ActivityDialogShell } from "@/components/ActivityDialogShell";
 import { CategoryField } from "@/components/CategoryField";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
+import { ActivityId, WorkId } from "@/components/activity-refs";
 import { KanbanView } from "@/components/KanbanView";
 import { SprintView } from "@/components/SprintView";
 import {
@@ -61,9 +53,16 @@ import {
 } from "@/data/tasks";
 import { useTasks } from "@/lib/task-store";
 import { formatDate } from "@/lib/metrics";
+import { activityDisplayId } from "@/lib/task-rules";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/tracker")({
+type TrackerSearch = { q?: string };
+
+export const Route = createFileRoute("/_app/tracker")({
+  validateSearch: (search: Record<string, unknown>): TrackerSearch => {
+    const q = search["q"];
+    return typeof q === "string" ? { q } : {};
+  },
   head: () => ({
     meta: [
       { title: "Master Task Tracker | IT Work Monitoring & Tracking" },
@@ -156,6 +155,7 @@ type ActivityDraft = {
   targetDate: string;
   remarks: string;
   sprintId: string | null;
+  requestRef?: string | null;
 };
 
 const emptyDraft = (assignee = ""): ActivityDraft => ({
@@ -169,6 +169,7 @@ const emptyDraft = (assignee = ""): ActivityDraft => ({
   targetDate: "",
   remarks: "",
   sprintId: null,
+  requestRef: null,
 });
 
 function taskToDraft(task: Task): ActivityDraft {
@@ -183,6 +184,7 @@ function taskToDraft(task: Task): ActivityDraft {
     targetDate: task.targetDate,
     remarks: task.remarks,
     sprintId: task.sprintId,
+    requestRef: task.requestRef ?? null,
   };
 }
 
@@ -190,10 +192,12 @@ function ActivityFormFields({
   draft,
   onChange,
   idPrefix = "activity",
+  activityId,
 }: {
   draft: ActivityDraft;
   onChange: (next: ActivityDraft) => void;
   idPrefix?: string;
+  activityId?: string | undefined;
 }) {
   const { sprints, staff, addStaff, categories, addCategory } = useTasks();
   const [newPerson, setNewPerson] = useState("");
@@ -209,11 +213,22 @@ function ActivityFormFields({
 
   return (
     <div className="grid min-w-0 lg:grid-cols-2 lg:divide-x lg:divide-border">
-      <div className="min-w-0 space-y-4 p-4 sm:p-5 lg:pr-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-title`} className="text-foreground">
-            Activity title
-          </Label>
+      <div className="min-w-0 space-y-6 p-4 sm:p-5 lg:pr-6">
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+            <Label htmlFor={`${idPrefix}-title`} className="text-foreground">
+              Activity title
+            </Label>
+            {activityId ? (
+              <p className="text-xs text-muted-foreground">
+                ID:{" "}
+                <ActivityId
+                  id={activityId}
+                  className={draft.requestRef ? "text-primary" : "text-foreground"}
+                />
+              </p>
+            ) : null}
+          </div>
           <Input
             id={`${idPrefix}-title`}
             value={draft.title}
@@ -228,7 +243,7 @@ function ActivityFormFields({
           onAdd={addCategory}
           onChange={(category) => onChange({ ...draft, category })}
         />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <Label className="text-foreground">Assigned to</Label>
           <Select
             value={draft.assignee || "unassigned"}
@@ -275,8 +290,8 @@ function ActivityFormFields({
             </Button>
           </div>
         </div>
-        <div className="grid min-w-0 grid-cols-1 gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
+        <div className="grid min-w-0 grid-cols-1 gap-6">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <Label className="text-foreground">Priority</Label>
             <Select
               value={draft.priority}
@@ -294,7 +309,7 @@ function ActivityFormFields({
               </SelectContent>
             </Select>
           </div>
-          <div className="flex min-w-0 flex-col gap-2">
+          <div className="flex min-w-0 flex-col gap-1.5">
             <Label className="text-foreground">Status</Label>
             <Select
               value={draft.status}
@@ -315,9 +330,9 @@ function ActivityFormFields({
         </div>
       </div>
 
-      <div className="min-w-0 space-y-4 border-t border-border p-4 sm:p-5 lg:border-t-0 lg:pl-6">
-        <div className="grid w-full min-w-0 grid-cols-1 gap-3">
-          <div className="flex w-full min-w-0 flex-col gap-2 overflow-hidden">
+      <div className="min-w-0 space-y-6 border-t border-border p-4 sm:p-5 lg:border-t-0 lg:pl-6">
+        <div className="grid w-full min-w-0 grid-cols-1 gap-6">
+          <div className="flex w-full min-w-0 flex-col gap-1.5 overflow-hidden">
             <Label htmlFor={`${idPrefix}-started`} className="text-foreground">
               Date started
             </Label>
@@ -329,7 +344,7 @@ function ActivityFormFields({
               className="bg-card"
             />
           </div>
-          <div className="flex w-full min-w-0 flex-col gap-2 overflow-hidden">
+          <div className="flex w-full min-w-0 flex-col gap-1.5 overflow-hidden">
             <Label htmlFor={`${idPrefix}-target`} className="text-foreground">
               Target completion
             </Label>
@@ -342,7 +357,7 @@ function ActivityFormFields({
             />
           </div>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <Label className="text-foreground">Sprint</Label>
               <Select
                 value={draft.sprintId ?? "backlog"}
@@ -363,7 +378,7 @@ function ActivityFormFields({
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-3">
               <Label className="text-foreground">Progress — {draft.progress}%</Label>
               <Slider
                 value={[draft.progress]}
@@ -372,9 +387,9 @@ function ActivityFormFields({
                 onValueChange={(vals) => onChange({ ...draft, progress: vals[0] ?? 0 })}
               />
             </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <Label htmlFor={`${idPrefix}-remarks`} className="text-foreground">
-            Remarks / current situation / blockers
+            Remarks/current situation/blockers
           </Label>
           <Textarea
             id={`${idPrefix}-remarks`}
@@ -422,6 +437,7 @@ function AddActivityDialog() {
       description="Log a new IT activity for tracking and reporting."
       shortDescription="Log a new activity."
       icon={Plus}
+      contentClassName="sm:max-w-2xl"
       trigger={
         <DialogTrigger asChild>
           <Button size="sm" className="gap-2 rounded-full">
@@ -474,7 +490,7 @@ function EditActivityDialog({
       open={open}
       onOpenChange={onOpenChange}
       title="Edit Activity"
-      description={`Update details for ${task?.id ?? "this activity"}.`}
+      description={`Update details for ${task ? activityDisplayId(task) : "this activity"}.`}
       shortDescription="Update this activity."
       icon={Pencil}
       footer={
@@ -493,16 +509,23 @@ function EditActivityDialog({
         </div>
       }
     >
-      <ActivityFormFields draft={draft} onChange={setDraft} idPrefix="edit" />
+      <ActivityFormFields
+        draft={draft}
+        onChange={setDraft}
+        idPrefix="edit"
+        activityId={task ? activityDisplayId(task) : undefined}
+      />
     </ActivityDialogShell>
   );
 }
 
 function Tracker() {
+  const { q: presetQuery } = Route.useSearch();
+  const navigate = useNavigate();
   const { tasks, sprints, staff, categories: categoryOptions, mode, updateTask, deleteTask } = useTasks();
   const readOnly = mode === "management";
   const [view, setView] = useState<"table" | "kanban" | "sprint">("table");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(presetQuery ?? "");
   const [categoryFilters, setCategoryFilters] = useState<Category[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [priorities, setPriorities] = useState<Priority[]>([]);
@@ -510,6 +533,10 @@ function Tracker() {
   const [sprintFilters, setSprintFilters] = useState<string[]>([]);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof presetQuery === "string") setQuery(presetQuery);
+  }, [presetQuery]);
 
   const sprintFilterOptions = useMemo(
     () => ["Backlog", ...sprints.map((s) => s.name)],
@@ -531,7 +558,7 @@ function Tracker() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return tasks.filter((task) => {
-      if (q && !`${task.title} ${task.remarks} ${task.assignee} ${task.id}`.toLowerCase().includes(q))
+      if (q && !`${task.title} ${task.remarks} ${task.assignee} ${task.id} ${task.requestRef ?? ""}`.toLowerCase().includes(q))
         return false;
       if (categoryFilters.length && !categoryFilters.includes(task.category)) return false;
       if (statuses.length && !statuses.includes(task.status)) return false;
@@ -593,7 +620,7 @@ function Tracker() {
                 onClick={() => setView(id)}
                 aria-label={label}
                 className={cn(
-                  "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
+                  "flex cursor-pointer items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium",
                   view === id
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -615,13 +642,18 @@ function Tracker() {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search activities, owners, remarks…"
+              placeholder="Search IDs, activities, owners…"
               className={cn("pl-9", query && "pr-9")}
             />
             {query && (
               <button
                 type="button"
-                onClick={() => setQuery("")}
+                onClick={() => {
+                  setQuery("");
+                  if (presetQuery) {
+                    void navigate({ to: "/tracker", search: {}, replace: true });
+                  }
+                }}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
                 aria-label="Clear search"
               >
@@ -777,8 +809,9 @@ function TableView({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
                 <p className="font-medium leading-snug">{task.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {task.id} • {task.category}
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                  <WorkId work={task} />
+                  <span>{task.category}</span>
                 </p>
               </div>
               {!readOnly && (
@@ -795,7 +828,7 @@ function TableView({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-destructive"
+                    className="text-muted-foreground hover:bg-transparent hover:text-destructive"
                     onClick={() => setPendingDelete(task)}
                     aria-label="Delete activity"
                   >
@@ -839,23 +872,11 @@ function TableView({
             <p className="text-xs text-muted-foreground">
               Target {formatDate(task.targetDate)}
             </p>
-            {readOnly ? (
-              task.remarks ? (
-                <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                  {task.remarks}
-                </p>
-              ) : null
-            ) : (
-              <Textarea
-                defaultValue={task.remarks}
-                rows={2}
-                className="text-xs"
-                onBlur={(e) => {
-                  if (e.target.value !== task.remarks)
-                    onUpdate(task.id, { remarks: e.target.value });
-                }}
-              />
-            )}
+            {task.remarks ? (
+              <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                {task.remarks}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
       ))}
@@ -864,10 +885,11 @@ function TableView({
     <Card className="hidden md:block">
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px] text-sm">
+          <table className="w-full min-w-[1140px] text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="min-w-72 max-w-80 px-4 py-2.5 font-medium">Activity</th>
+                <th className="whitespace-nowrap px-4 py-2.5 font-medium">ID</th>
+                <th className="min-w-72 max-w-80 px-3 py-2.5 font-medium">Activity</th>
                 <th className="px-3 py-2.5 font-medium">Sprint</th>
                 <th className="px-3 py-2.5 font-medium">Owner</th>
                 <th className="px-3 py-2.5 font-medium">Priority</th>
@@ -875,18 +897,19 @@ function TableView({
                 <th className="w-px whitespace-nowrap px-3 py-2.5 text-center font-medium">Progress</th>
                 <th className="px-3 py-2.5 font-medium">Started</th>
                 <th className="px-3 py-2.5 font-medium">Target</th>
-                <th className="px-4 py-2.5 font-medium">Remarks</th>
+                <th className="min-w-64 max-w-72 px-4 py-2.5 font-medium">Remarks</th>
                 {!readOnly && <th className="px-3 py-2.5 font-medium">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {tasks.map((task) => (
                 <tr key={task.id} className="border-b border-border align-top last:border-0">
-                  <td className="min-w-72 max-w-80 px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <WorkId work={task} />
+                  </td>
+                  <td className="min-w-72 max-w-80 px-3 py-3">
                     <p className="font-medium leading-snug">{task.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {task.id} • {task.category}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{task.category}</p>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-sm text-muted-foreground">
                     {task.sprintId
@@ -932,19 +955,13 @@ function TableView({
                   <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">
                     {formatDate(task.targetDate)}
                   </td>
-                  <td className="min-w-64 px-4 py-3">
-                    {readOnly ? (
-                      <p className="text-xs leading-relaxed text-muted-foreground">{task.remarks}</p>
+                  <td className="min-w-64 max-w-72 px-4 py-3">
+                    {task.remarks ? (
+                      <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                        {task.remarks}
+                      </p>
                     ) : (
-                      <Textarea
-                        defaultValue={task.remarks}
-                        rows={2}
-                        className="text-xs"
-                        onBlur={(e) => {
-                          if (e.target.value !== task.remarks)
-                            onUpdate(task.id, { remarks: e.target.value });
-                        }}
-                      />
+                      <span className="text-xs text-muted-foreground">—</span>
                     )}
                   </td>
                   {!readOnly && (
@@ -953,7 +970,7 @@ function TableView({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-muted-foreground hover:text-foreground"
+                          className="text-muted-foreground hover:bg-transparent hover:text-foreground"
                           onClick={() => onEdit(task)}
                           aria-label="Edit activity"
                         >
@@ -962,7 +979,7 @@ function TableView({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:bg-transparent hover:text-destructive"
                           onClick={() => setPendingDelete(task)}
                           aria-label="Delete activity"
                         >
@@ -975,7 +992,7 @@ function TableView({
               ))}
               {tasks.length === 0 && (
                 <tr>
-                  <td colSpan={readOnly ? 9 : 10} className="p-10 text-center text-sm text-muted-foreground">
+                  <td colSpan={readOnly ? 10 : 11} className="p-10 text-center text-sm text-muted-foreground">
                     {emptyMessage}
                   </td>
                 </tr>
@@ -986,43 +1003,26 @@ function TableView({
       </CardContent>
     </Card>
 
-    <AlertDialog
+    <ConfirmDialog
       open={pendingDelete !== null}
       onOpenChange={(open) => {
         if (!open) setPendingDelete(null);
       }}
-    >
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Delete activity?</AlertDialogTitle>
-          <AlertDialogDescription>
-            <span className="sm:hidden">Permanently delete this activity.</span>
-            <span className="hidden sm:inline">
-              This permanently removes{" "}
-              <span className="font-medium text-foreground">
-                {pendingDelete?.title ?? "this activity"}
-              </span>
-              . This action cannot be undone.
-            </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => {
-              if (pendingDelete) {
-                onDelete(pendingDelete.id);
-                toast.success("Activity deleted");
-              }
-              setPendingDelete(null);
-            }}
-          >
-            Delete
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      title="Delete Activity"
+      description={
+        <>
+          You’re going to delete “{pendingDelete?.title ?? "this activity"}”. Are you sure?
+        </>
+      }
+      confirmLabel="Confirm delete"
+      onConfirm={() => {
+        if (pendingDelete) {
+          onDelete(pendingDelete.id);
+          toast.success("Activity deleted");
+        }
+        setPendingDelete(null);
+      }}
+    />
     </>
   );
 }

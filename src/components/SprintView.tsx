@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,9 +34,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
+import { WorkId } from "@/components/activity-refs";
 import {
   STATUSES,
   type Sprint,
@@ -111,60 +112,56 @@ function SprintFormFields({
   idPrefix: string;
 }) {
   return (
-    <div className="grid min-w-0 sm:grid-cols-2 sm:divide-x sm:divide-border">
-      <div className="min-w-0 space-y-4 p-4 sm:p-5 sm:pr-6">
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-name`} className="text-foreground">
-            Sprint name
+    <div className="min-w-0 space-y-6 p-4 sm:p-5">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${idPrefix}-name`} className="text-foreground">
+          Sprint name
+        </Label>
+        <Input
+          id={`${idPrefix}-name`}
+          value={draft.name}
+          onChange={(e) => onChange({ ...draft, name: e.target.value })}
+          placeholder="e.g. Sprint 21"
+          className="min-w-0 bg-card"
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor={`${idPrefix}-goal`} className="text-foreground">
+          Goal
+        </Label>
+        <Textarea
+          id={`${idPrefix}-goal`}
+          rows={4}
+          value={draft.goal}
+          onChange={(e) => onChange({ ...draft, goal: e.target.value })}
+          placeholder="What should this sprint deliver?"
+          className="min-w-0 resize-none bg-card"
+        />
+      </div>
+      <div className="grid min-w-0 grid-cols-2 gap-3">
+        <div className="flex min-w-0 flex-col gap-1.5 overflow-hidden">
+          <Label htmlFor={`${idPrefix}-start`} className="text-foreground">
+            Start date
           </Label>
           <Input
-            id={`${idPrefix}-name`}
-            value={draft.name}
-            onChange={(e) => onChange({ ...draft, name: e.target.value })}
-            placeholder="e.g. Sprint 21"
-            className="min-w-0 bg-card"
+            id={`${idPrefix}-start`}
+            type="date"
+            value={draft.startDate}
+            onChange={(e) => onChange({ ...draft, startDate: e.target.value })}
+            className="bg-card"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor={`${idPrefix}-goal`} className="text-foreground">
-            Goal
+        <div className="flex min-w-0 flex-col gap-1.5 overflow-hidden">
+          <Label htmlFor={`${idPrefix}-end`} className="text-foreground">
+            End date
           </Label>
-          <Textarea
-            id={`${idPrefix}-goal`}
-            rows={4}
-            value={draft.goal}
-            onChange={(e) => onChange({ ...draft, goal: e.target.value })}
-            placeholder="What should this sprint deliver?"
-            className="min-w-0 resize-none bg-card"
+          <Input
+            id={`${idPrefix}-end`}
+            type="date"
+            value={draft.endDate}
+            onChange={(e) => onChange({ ...draft, endDate: e.target.value })}
+            className="bg-card"
           />
-        </div>
-      </div>
-      <div className="min-w-0 space-y-4 border-t border-border p-4 sm:border-t-0 sm:p-5 sm:pl-6">
-        <div className="grid min-w-0 grid-cols-1 gap-3">
-          <div className="flex w-full min-w-0 flex-col gap-2 overflow-hidden">
-            <Label htmlFor={`${idPrefix}-start`} className="text-foreground">
-              Start date
-            </Label>
-            <Input
-              id={`${idPrefix}-start`}
-              type="date"
-              value={draft.startDate}
-              onChange={(e) => onChange({ ...draft, startDate: e.target.value })}
-              className="bg-card"
-            />
-          </div>
-          <div className="flex w-full min-w-0 flex-col gap-2 overflow-hidden">
-            <Label htmlFor={`${idPrefix}-end`} className="text-foreground">
-              End date
-            </Label>
-            <Input
-              id={`${idPrefix}-end`}
-              type="date"
-              value={draft.endDate}
-              onChange={(e) => onChange({ ...draft, endDate: e.target.value })}
-              className="bg-card"
-            />
-          </div>
         </div>
       </div>
     </div>
@@ -176,7 +173,6 @@ function SprintDialog({
   onOpenChange,
   title,
   description,
-  shortDescription,
   icon,
   saveLabel,
   idPrefix,
@@ -189,14 +185,13 @@ function SprintDialog({
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
-  shortDescription?: string;
   icon: LucideIcon;
   saveLabel: string;
   idPrefix: string;
   initial: SprintDraft;
   onSave: (draft: SprintDraft) => void;
   contentClassName?: string;
-  excludeSprintId?: string;
+  excludeSprintId?: string | undefined;
 }) {
   const { sprints } = useTasks();
   const [draft, setDraft] = useState(initial);
@@ -229,9 +224,8 @@ function SprintDialog({
       onOpenChange={onOpenChange}
       title={title}
       description={description}
-      shortDescription={shortDescription}
       icon={icon}
-      contentClassName={contentClassName}
+      contentClassName={cn("sm:max-w-md", contentClassName)}
       footer={
         <>
           <Button variant="outline" className="rounded-full" onClick={() => onOpenChange(false)}>
@@ -377,8 +371,20 @@ export function SprintView({
                       <CheckCircle2 className="size-3.5" /> Complete Sprint
                     </Button>
                   )}
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
+                  <ConfirmDialog
+                    title="Delete Sprint"
+                    description={
+                      <>
+                        You’re going to delete “{selected.name}”. Assigned activities will move back to
+                        the backlog. Are you sure?
+                      </>
+                    }
+                    confirmLabel="Confirm delete"
+                    onConfirm={() => {
+                      deleteSprint(selected.id);
+                      toast.success("Sprint deleted; tasks moved to backlog");
+                    }}
+                    trigger={
                       <Button
                         size="sm"
                         variant="ghost"
@@ -386,32 +392,8 @@ export function SprintView({
                       >
                         <Trash2 className="size-3.5" /> Delete
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete {selected.name}?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          <span className="sm:hidden">Delete this sprint. Tasks return to backlog.</span>
-                          <span className="hidden sm:inline">
-                            This permanently removes the sprint. Assigned activities will be moved
-                            back to the backlog. This action cannot be undone.
-                          </span>
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          onClick={() => {
-                            deleteSprint(selected.id);
-                            toast.success("Sprint deleted; tasks moved to backlog");
-                          }}
-                        >
-                          Delete sprint
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    }
+                  />
                 </>
               )}
             </div>
@@ -481,6 +463,9 @@ export function SprintView({
                             </Button>
                           )}
                         </div>
+                        <p className="mt-1 text-xs">
+                          <WorkId work={task} className="text-xs" />
+                        </p>
                         <p className="mt-1 text-xs text-muted-foreground">{task.assignee}</p>
                         <div className="mt-2 flex items-center justify-between gap-2">
                           <PriorityBadge priority={task.priority} />
@@ -543,6 +528,9 @@ export function SprintView({
               {backlog.map((task) => (
                 <div key={task.id} className="rounded-md border border-border p-3">
                   <p className="text-sm font-medium leading-snug">{task.title}</p>
+                  <p className="mt-1 text-xs">
+                    <WorkId work={task} className="text-xs" />
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {task.category} • {task.assignee}
                   </p>
@@ -585,12 +573,10 @@ export function SprintView({
             open={createOpen}
             onOpenChange={setCreateOpen}
             title="New Sprint"
-            description="Create a time-boxed sprint and assign work from the backlog."
-            shortDescription="Create a sprint from the backlog."
+            description="Set name, goal, and dates."
             icon={Plus}
             saveLabel="Save sprint"
             idPrefix="new-sprint"
-            contentClassName="sm:max-w-2xl"
             initial={emptySprintDraft()}
             onSave={(draft) => {
               const id = addSprint({ ...draft, status: "Planned" });
@@ -602,8 +588,7 @@ export function SprintView({
             open={editOpen}
             onOpenChange={setEditOpen}
             title="Edit Sprint"
-            description="Update sprint name, goal, or dates."
-            shortDescription="Update this sprint."
+            description="Update name, goal, or dates."
             icon={Pencil}
             saveLabel="Save changes"
             idPrefix="edit-sprint"
@@ -621,7 +606,7 @@ export function SprintView({
             }}
           />
           <AlertDialog open={completeOpen} onOpenChange={setCompleteOpen}>
-            <AlertDialogContent>
+            <AlertDialogContent className="max-w-md">
               <AlertDialogHeader>
                 <AlertDialogTitle>Complete {selected?.name}?</AlertDialogTitle>
                 <AlertDialogDescription>

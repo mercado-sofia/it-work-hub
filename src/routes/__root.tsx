@@ -11,11 +11,12 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { TaskProvider } from "@/lib/task-store";
+import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
-import { AppHeader } from "@/components/AppHeader";
 import { Toaster } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getSessionFn } from "@/lib/request-functions";
+import type { SessionUser } from "@/data/requests";
 
 function NotFoundComponent() {
   return (
@@ -77,7 +78,17 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+export const Route = createRootRouteWithContext<{
+  queryClient: QueryClient;
+  session: SessionUser | null;
+}>()({
+  beforeLoad: async () => {
+    try {
+      return { session: await getSessionFn() };
+    } catch {
+      return { session: null };
+    }
+  },
   head: () => ({
     meta: [
       { charSet: "utf-8" },
@@ -134,20 +145,15 @@ function ResponsiveToaster() {
 }
 
 function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+  const { queryClient, session } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TaskProvider>
-          <div className="min-h-screen bg-background font-sans text-foreground">
-            <AppHeader />
-            <main className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
-              <Outlet />
-            </main>
-          </div>
+        <AuthProvider initialUser={session}>
+          <Outlet />
           <ResponsiveToaster />
-        </TaskProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

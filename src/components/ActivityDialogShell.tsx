@@ -21,17 +21,19 @@ export function ActivityDialogShell({
   footer,
   trigger,
   contentClassName,
+  insetClassName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
-  shortDescription?: string;
+  description?: string | undefined;
+  shortDescription?: string | undefined;
   icon: LucideIcon;
   children: ReactNode;
   footer: ReactNode;
   trigger?: ReactNode;
-  contentClassName?: string;
+  contentClassName?: string | undefined;
+  insetClassName?: string | undefined;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -42,32 +44,41 @@ export function ActivityDialogShell({
           contentClassName,
         )}
       >
-        <DialogHeader className="shrink-0 space-y-0 border-b border-border px-5 py-4 text-left">
-          <div className="flex items-start gap-3 pr-6">
-            <div className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-full border border-border text-primary">
+        <DialogHeader className={cn("shrink-0 space-y-0 border-b border-border px-5 py-4 text-left", insetClassName)}>
+          <div className={cn("flex gap-3 pr-6", description ? "items-start" : "items-center")}>
+            <div
+              className={cn(
+                "grid size-10 shrink-0 place-items-center rounded-full border border-border text-primary",
+                description && "mt-0.5",
+              )}
+            >
               <Icon className="size-4" strokeWidth={1.25} />
             </div>
-            <div className="min-w-0 space-y-1">
+            <div className="min-w-0 space-y-0.5">
               <DialogTitle className="text-sm font-semibold text-foreground sm:text-base">
                 {title}
               </DialogTitle>
-              <DialogDescription>
-                {shortDescription ? (
-                  <>
-                    <span className="sm:hidden">{shortDescription}</span>
-                    <span className="hidden sm:inline">{description}</span>
-                  </>
-                ) : (
-                  description
-                )}
-              </DialogDescription>
+              {description ? (
+                <DialogDescription className="sm:text-[13px]">
+                  {shortDescription ? (
+                    <>
+                      <span className="sm:hidden">{shortDescription}</span>
+                      <span className="hidden sm:inline">{description}</span>
+                    </>
+                  ) : (
+                    description
+                  )}
+                </DialogDescription>
+              ) : (
+                <DialogDescription className="sr-only">{title}</DialogDescription>
+              )}
             </div>
           </div>
         </DialogHeader>
         <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain">
           {children}
         </div>
-        <DialogFooter className="shrink-0 gap-2 border-t border-border bg-muted/30 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:justify-end">
+        <DialogFooter className={cn("shrink-0 gap-2 border-t border-border bg-muted/30 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:justify-end", insetClassName)}>
           {footer}
         </DialogFooter>
       </DialogContent>

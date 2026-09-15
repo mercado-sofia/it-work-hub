@@ -1,278 +1,397 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  ListChecks,
-  PauseCircle,
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowRight,
+  CircleHelp,
+  ClipboardList,
+  Moon,
+  Shield,
+  Sun,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PriorityBadge, ProgressBar, CircularProgress, StatusBadge } from "@/components/status-badges";
-import { useTasks } from "@/lib/task-store";
+import type { ReactNode } from "react";
+import { LoginPanel } from "@/components/LoginPanel";
+import { RequestForm } from "@/components/RequestForm";
+import { BackButton } from "@/components/BackButton";
+import { Button } from "@/components/ui/button";
 import {
-  formatDate,
-  getBlockers,
-  getCategoryStats,
-  getMetrics,
-  getOverdue,
-  getPriorityActivities,
-} from "@/lib/metrics";
-import { isOverdue } from "@/lib/task-rules";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { getAuthBootstrap } from "@/lib/request-functions";
+import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
+type LandingSearch = { view?: "request" | "login" };
+type BootstrapView = "start" | "request" | "login";
+
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Executive Dashboard | IT Work Monitoring & Tracking" },
-      {
-        name: "description",
-        content:
-          "Executive view of IT work: KPIs, planned activities, progress by category, and blockers.",
-      },
-      { property: "og:title", content: "Executive Dashboard | IT Work Monitoring & Tracking" },
-      {
-        property: "og:description",
-        content: "IT work progress at a glance.",
-      },
-    ],
-  }),
-  component: Dashboard,
+  validateSearch: (search: Record<string, unknown>): LandingSearch => {
+    const view = search["view"];
+    if (view === "request" || view === "login") return { view };
+    return {};
+  },
+  beforeLoad: ({ context }) => {
+    if (context.session) throw redirect({ to: "/dashboard" });
+  },
+  loader: async () => {
+    try {
+      return await getAuthBootstrap();
+    } catch {
+      return { needsBootstrap: false };
+    }
+  },
+  head: ({ match }) => {
+    const view = match.search.view;
+    if (view === "login") {
+      return {
+        meta: [
+          { title: "IT Sign in | TrackHub" },
+          { name: "description", content: "Sign in to the IT work monitoring system." },
+        ],
+      };
+    }
+    if (view === "request") {
+      return {
+        meta: [
+          { title: "Submit an IT Request" },
+          {
+            name: "description",
+            content: "Send a bug, feature, access, or support request to the IT department.",
+          },
+        ],
+      };
+    }
+    return {
+      meta: [
+        { title: "IT Request Portal | TrackHub" },
+        {
+          name: "description",
+          content: "Submit an IT request, or sign in if you are part of the IT department.",
+        },
+      ],
+    };
+  },
+  component: LandingPage,
 });
 
-function Dashboard() {
-  const { tasks, categories } = useTasks();
-  const metrics = getMetrics(tasks);
-  const categoryStats = getCategoryStats(tasks, categories);
-  const priorities = getPriorityActivities(tasks);
-  const blockers = getBlockers(tasks);
-  const overdue = getOverdue(tasks);
-
-  const kpis = [
-    { label: "Activities", value: metrics.total, icon: ListChecks },
-    { label: "Completed", value: metrics.completed, icon: CheckCircle2 },
-    { label: "In Progress", value: metrics.inProgress, icon: Clock },
-    { label: "On Hold", value: metrics.onHold, icon: PauseCircle },
-  ];
+function LandingPage() {
+  const { theme, toggleTheme } = useTheme();
+  const { view } = Route.useSearch();
+  const current: BootstrapView = view ?? "start";
+  const { needsBootstrap } = Route.useLoaderData();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-          Executive Management Dashboard
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground sm:hidden">
-          Status as of {formatDate(new Date().toISOString().slice(0, 10))}.
-        </p>
-        <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
-          IT work status as of {formatDate(new Date().toISOString().slice(0, 10))}.
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon }) => (
-          <Card key={label}>
-            <CardContent className="flex items-center justify-between gap-4 p-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-foreground">
-                  {label}
-                </p>
-                <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</p>
-              </div>
-              <Icon className="size-8 text-primary" strokeWidth={1.6} />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <Card className="flex h-full min-w-0 flex-col">
-          <CardHeader className="shrink-0 pb-2">
-            <CardTitle className="text-base">Overall Progress</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Aggregate completion across {metrics.total} activities
-            </p>
-          </CardHeader>
-          <CardContent className="flex flex-1 items-center justify-center p-5">
-            <CircularProgress
-              value={metrics.overall}
-              size={160}
-              strokeWidth={12}
-              className="sm:hidden"
-            />
-            <CircularProgress
-              value={metrics.overall}
-              size={220}
-              strokeWidth={16}
-              className="hidden sm:inline-grid"
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-0">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Work by Category</CardTitle>
-          </CardHeader>
-          <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2">
-            {categoryStats.map((stat) => (
-              <div
-                key={stat.category}
-                className="min-w-0 overflow-hidden rounded-lg border border-border p-3"
-              >
-                <div className="flex items-start gap-2">
-                  <p className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
-                    {stat.category}
-                  </p>
-                  <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-semibold tabular-nums text-secondary-foreground">
-                    {stat.count}
-                  </span>
-                </div>
-                <ProgressBar value={stat.completion} className="mt-3" />
-                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                  {stat.completion}% avg. • {stat.completed}/{stat.count} closed
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle className="text-base">Current Priority Projects</CardTitle>
-          <Link to="/tracker" className="shrink-0 text-xs font-medium text-primary hover:underline">
-            View full tracker
-          </Link>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="space-y-3 p-4 md:hidden">
-            {priorities.length === 0 && (
-              <p className="py-6 text-center text-sm text-muted-foreground">
-                No priority projects yet.
-              </p>
-            )}
-            {priorities.map((task) => (
-              <div key={task.id} className="rounded-lg border border-border p-3">
-                <p className="font-medium leading-snug">{task.title}</p>
-                <p className="text-xs text-muted-foreground">{task.category} • {task.assignee}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <PriorityBadge priority={task.priority} />
-                  <StatusBadge status={task.status} />
-                </div>
-                <ProgressBar value={task.progress} className="mt-3" />
-                <p className="mt-1 text-xs tabular-nums text-muted-foreground">{task.progress}%</p>
-                <p
-                  className={cn(
-                    "mt-2 text-xs",
-                    isOverdue(task) ? "font-medium text-destructive" : "text-muted-foreground",
-                  )}
-                >
-                  Target {formatDate(task.targetDate)}
-                  {isOverdue(task) ? " · overdue" : ""}
-                </p>
-              </div>
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-y border-border bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-5 py-2.5 font-medium">Activity</th>
-                  <th className="px-3 py-2.5 font-medium">Owner</th>
-                  <th className="px-3 py-2.5 font-medium">Priority</th>
-                  <th className="px-3 py-2.5 font-medium">Status</th>
-                  <th className="w-40 px-3 py-2.5 font-medium">Progress</th>
-                  <th className="px-5 py-2.5 font-medium">Target</th>
-                </tr>
-              </thead>
-              <tbody>
-                {priorities.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="p-10 text-center text-sm text-muted-foreground">
-                      No priority projects yet.
-                    </td>
-                  </tr>
-                )}
-                {priorities.map((task) => (
-                  <tr key={task.id} className="border-b border-border last:border-0">
-                    <td className="px-5 py-3">
-                      <p className="font-medium leading-snug">{task.title}</p>
-                      <p className="text-xs text-muted-foreground">{task.category}</p>
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3">{task.assignee}</td>
-                    <td className="px-3 py-3">
-                      <PriorityBadge priority={task.priority} />
-                    </td>
-                    <td className="px-3 py-3">
-                      <StatusBadge status={task.status} />
-                    </td>
-                    <td className="px-3 py-3">
-                      <ProgressBar value={task.progress} />
-                      <p className="mt-1 text-xs tabular-nums text-muted-foreground">
-                        {task.progress}%
-                      </p>
-                    </td>
-                    <td
-                      className={cn(
-                        "whitespace-nowrap px-5 py-3",
-                        isOverdue(task) ? "font-medium text-destructive" : "text-muted-foreground",
-                      )}
-                    >
-                      {formatDate(task.targetDate)}
-                      {isOverdue(task) ? " · overdue" : ""}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {overdue.length > 0 && (
-        <Card className="border-warning/40 bg-warning-soft/60">
-          <CardHeader className="flex-row items-center gap-2 pb-2">
-            <AlertTriangle className="size-4 text-warning" />
-            <CardTitle className="text-base">Overdue projects ({overdue.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {overdue.map((task) => (
-              <div key={task.id} className="rounded-lg border border-border bg-card p-3">
-                <p className="text-sm font-semibold">{task.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {task.assignee} • {task.status} • target {formatDate(task.targetDate)}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
-
-      <Card className="border-destructive/30 bg-destructive/5">
-        <CardHeader className="flex-row items-center gap-2 pb-2">
-          <AlertTriangle className="size-4 text-destructive" />
-          <CardTitle className="text-base text-destructive">
-            Blockers &amp; On-Hold Items ({blockers.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {blockers.length === 0 && (
-            <p className="text-sm text-muted-foreground">No stalled activities.</p>
-          )}
-          {blockers.map((task) => (
-            <div key={task.id} className="rounded-lg border border-destructive/25 bg-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold">{task.title}</p>
-                <PriorityBadge priority={task.priority} />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {task.category} • {task.assignee} • {task.progress}% complete • target{" "}
-                {formatDate(task.targetDate)}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed">{task.remarks}</p>
+    <div className="relative h-svh overflow-hidden bg-white font-sans text-foreground dark:bg-background">
+      <header className="absolute inset-x-0 top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
+        <div className="mx-auto flex h-14 max-w-4xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
+          {current !== "start" && <BackButton />}
+          <Link to="/" search={{}} className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <img src="/it-logo.png" alt="" className="size-9 rounded-full object-cover" />
+            <div className="min-w-0 leading-tight">
+              <p className="text-sm font-semibold tracking-tight">TrackHub</p>
+              <p className="hidden text-xs text-muted-foreground sm:block">IT Department</p>
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            {current === "request" && (
+              <Link
+                to="/request/status"
+                className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
+              >
+                Check status
+              </Link>
+            )}
+            <HelpDialog />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full px-2.5"
+              onClick={toggleTheme}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="h-full">
+        <div className="bootstrap-stage">
+          <section
+            className={cn("bootstrap-panel flex flex-col justify-center px-4 py-4 sm:px-6", panelClass("start", current))}
+            aria-hidden={current !== "start"}
+            inert={current !== "start"}
+          >
+            <StartChooser />
+          </section>
+          <section
+            className={cn("bootstrap-panel", panelClass("request", current))}
+            aria-hidden={current !== "request"}
+            inert={current !== "request"}
+          >
+            <RequestForm />
+          </section>
+          <section
+            className={cn("bootstrap-panel", panelClass("login", current))}
+            aria-hidden={current !== "login"}
+            inert={current !== "login"}
+          >
+            <LoginPanel needsBootstrap={needsBootstrap} />
+          </section>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+function panelClass(id: BootstrapView, current: BootstrapView) {
+  if (id === current) return "is-active";
+  if (id === "request") return "is-park-left";
+  if (id === "login") return "is-park-right";
+  return current === "request" ? "is-park-right" : "is-park-left";
+}
+
+function StartChooser() {
+  return (
+    <div className="mx-auto w-full max-w-3xl">
+      <div className="text-center">
+        <div className="relative mx-auto flex max-w-lg items-center justify-center">
+          <span className="pointer-events-none absolute inset-x-0 top-1/2 h-px bg-border" />
+          <p className="relative inline-flex rounded-full border border-border bg-white px-3 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground dark:bg-background">
+            How it works
+          </p>
+        </div>
+        <h1 className="mt-6 text-2xl font-semibold tracking-tight sm:text-3xl">
+          Get started in <span className="text-primary">2 simple steps</span>
+        </h1>
+        <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+          Submit a request if you need IT help, or sign in if you are part of the IT department.
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5">
+        <div className="relative">
+          <p className="mb-1.5 flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground sm:justify-start">
+            Submit a request
+            <ArrowDownRight className="size-3.5 shrink-0" strokeWidth={1.75} />
+          </p>
+          <ChoiceCard
+            view="request"
+            title="I need to submit a request"
+            description="No account needed. Send a bug, access, or support request and get a ticket number to track status."
+            cta="Open request form"
+          >
+            <RequestPreview />
+          </ChoiceCard>
+        </div>
+
+        <div className="relative">
+          <p className="mb-1.5 flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground sm:justify-end">
+            <ArrowDownLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+            IT Department
+          </p>
+          <ChoiceCard
+            view="login"
+            title="I am part of the IT department"
+            description="Sign in to triage incoming tickets, update the tracker, and work from the IT dashboard."
+            cta="Continue to sign in"
+          >
+            <ItPreview />
+          </ChoiceCard>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HelpDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="rounded-full px-2.5 sm:px-3">
+          <CircleHelp className="size-4" />
+          <span className="hidden sm:inline">Help</span>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-[38rem] gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b border-border/70 bg-muted/40 px-6 py-5 pr-14 text-left sm:px-8 sm:py-6">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <CircleHelp className="size-5" />
+            </span>
+            <div className="min-w-0 space-y-1.5">
+              <DialogTitle>How to use TrackHub</DialogTitle>
+              <DialogDescription className="text-[13px] leading-snug sm:text-[13px]">
+                Select how you want to continue. Requests do not require an account.
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <div className="grid gap-4 px-6 py-6 sm:grid-cols-2 sm:gap-5 sm:px-8 sm:py-7">
+          <HelpPathCard
+            eyebrow="For everyone"
+            title="Submit a request"
+            icon={<ClipboardList className="size-5" />}
+            steps={[
+              "Open the form and describe the issue.",
+              "Save your ticket number.",
+              "Check status with that ticket and email.",
+            ]}
+            cta="Open request form"
+            view="request"
+          />
+          <HelpPathCard
+            eyebrow="IT staff only"
+            title="Sign in to IT"
+            icon={<Shield className="size-5" />}
+            steps={[
+              "Sign in with your invited account.",
+              "Triage tickets from the dashboard.",
+              "Track and update work as it moves.",
+            ]}
+            cta="Continue to sign in"
+            view="login"
+            action="outline"
+          />
+        </div>
+
+        <div className="flex flex-col-reverse gap-2 border-t border-border/70 bg-muted/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
+          <p className="text-xs leading-snug text-muted-foreground">
+            There is no public signup. IT accounts are invited by an Admin.
+          </p>
+          <DialogClose asChild>
+            <Button type="button" variant="ghost" size="sm" className="shrink-0 rounded-full">
+              Got it
+            </Button>
+          </DialogClose>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function HelpPathCard({
+  eyebrow,
+  title,
+  icon,
+  steps,
+  cta,
+  view,
+  action = "default",
+}: {
+  eyebrow: string;
+  title: string;
+  icon: ReactNode;
+  steps: string[];
+  cta: string;
+  view: "request" | "login";
+  action?: "default" | "outline";
+}) {
+  return (
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          {icon}
+        </span>
+        <div className="min-w-0 pt-0.5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</p>
+          <h3 className="mt-0.5 text-sm font-semibold tracking-tight">{title}</h3>
+        </div>
+      </div>
+      <ol className="mt-4 flex-1 space-y-2.5">
+        {steps.map((step, index) => (
+          <li key={step} className="flex gap-2.5">
+            <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold tabular-nums text-primary">
+              {index + 1}
+            </span>
+            <span className="text-sm leading-snug text-foreground">{step}</span>
+          </li>
+        ))}
+      </ol>
+      <Button asChild variant={action} className="help-path-cta mt-5 h-9 w-full rounded-full">
+        <DialogClose asChild>
+          <Link to="/" search={{ view }}>
+            {cta}
+            <span className="landing-choice-arrow">
+              <ArrowRight className="size-4" />
+            </span>
+          </Link>
+        </DialogClose>
+      </Button>
+    </div>
+  );
+}
+
+function ChoiceCard({
+  view,
+  title,
+  description,
+  cta,
+  children,
+}: {
+  view: "request" | "login";
+  title: string;
+  description: string;
+  cta: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      to="/"
+      search={{ view }}
+      className="landing-choice-card flex h-full flex-col overflow-hidden rounded-2xl border-2 bg-card p-4 outline-none"
+    >
+      <div className="rounded-xl border border-border/80 bg-muted/40 p-3">{children}</div>
+      <h2 className="mt-3 text-base font-semibold tracking-tight">{title}</h2>
+      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
+      <span className="mt-3 inline-flex items-center text-sm font-medium text-primary">
+        {cta}
+        <span className="landing-choice-arrow ml-1">→</span>
+      </span>
+    </Link>
+  );
+}
+
+function RequestPreview() {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-start gap-2">
+        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+          <ClipboardList className="size-3" />
+        </span>
+        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-primary px-2.5 py-1.5 text-[11px] leading-snug text-primary-foreground">
+          Payroll overtime is not posting to the payslip. Can IT take a look?
+        </div>
+      </div>
+      <div className="flex items-start justify-end gap-2">
+        <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-card px-2.5 py-1.5 text-[11px] leading-snug text-foreground">
+          Request received. Your ticket is R-0001.
+        </div>
+        <img src="/it-logo.png" alt="" className="mt-0.5 size-6 rounded-full object-cover" />
+      </div>
+    </div>
+  );
+}
+
+function ItPreview() {
+  return (
+    <div className="flex min-h-[5.25rem] flex-col items-center justify-center gap-2 py-1">
+      <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Shield className="size-5" />
+      </span>
+      <div className="w-full max-w-[9.5rem] space-y-1.5">
+        <div className="h-1.5 rounded-full bg-muted-foreground/20" />
+        <div className="h-1.5 w-3/4 rounded-full bg-muted-foreground/20" />
+        <div className="h-6 rounded-md bg-primary/90" />
+      </div>
     </div>
   );
 }
