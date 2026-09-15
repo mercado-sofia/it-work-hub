@@ -5,7 +5,7 @@ import { TaskProvider } from "@/lib/task-store";
 export const Route = createFileRoute("/_app")({
   beforeLoad: ({ context, location }) => {
     if (!context.session) {
-      throw redirect({ to: "/" });
+      throw redirect({ to: "/", search: { view: "login" } });
     }
     if (context.session.mustChangePassword && location.pathname !== "/settings") {
       throw redirect({ to: "/settings" });

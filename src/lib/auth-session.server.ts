@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { useSession } from "@tanstack/react-start/server";
+import { getRequest, useSession } from "@tanstack/react-start/server";
 import type { SessionUser } from "@/data/requests";
 import { getProfileById, toSessionUser } from "@/lib/intake-backend.server";
 
@@ -17,9 +17,61 @@ function derivedCloudSecret(): string | null {
     process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
     process.env["SUPABASE_URL"] ||
     process.env["VITE_SUPABASE_URL"] ||
+    process.env["VITE_SUPABASE_ANON_KEY"] ||
+    process.env["SUPABASE_ANON_KEY"] ||
+    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"] ||
+    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
     "";
   if (material.length < 16) return null;
   return hashSecret(material);
+}
+
+const PREVIEW_ZONES = [
+  "lovableproject.com",
+  "lovableproject-dev.com",
+  "lovable.app",
+  "gpt-eng.com",
+  "gptengineer.run",
+];
+
+function requestHostAndHttps(): { host: string; https: boolean } {
+  let host = "";
+  let https = process.env["NODE_ENV"] === "production";
+  try {
+    const request = getRequest();
+    host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "";
+    const proto =
+      request.headers.get("x-forwarded-proto") ||
+      (request.url.startsWith("https:") ? "https" : "http");
+    if (proto.includes("https")) https = true;
+  } catch {
+    /* no request context */
+  }
+  return { host, https };
+}
+
+function isPreviewHost(host: string): boolean {
+  const hostname = host.split(":")[0]?.toLowerCase() ?? "";
+  return PREVIEW_ZONES.some((zone) => hostname === zone || hostname.endsWith(`.${zone}`));
+}
+
+function sessionCookieOptions() {
+  const { host, https } = requestHostAndHttps();
+  if (isPreviewHost(host)) {
+    return {
+      httpOnly: true,
+      sameSite: "none" as const,
+      path: "/",
+      secure: true,
+      partitioned: true,
+    };
+  }
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    path: "/",
+    secure: https,
+  };
 }
 
 function sessionPassword(): string {
@@ -51,12 +103,7 @@ export async function itSession() {
     name: "it-hub-session",
     password: sessionPassword(),
     maxAge: 60 * 60 * 24 * 14,
-    cookie: {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      secure: process.env["NODE_ENV"] === "production",
-    },
+    cookie: sessionCookieOptions(),
   });
 }
 
