@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { useSession } from "@tanstack/react-start/server";
@@ -7,18 +8,41 @@ import { getProfileById, toSessionUser } from "@/lib/intake-backend.server";
 const DATA_DIR = join(process.cwd(), ".data");
 const SECRET_FILE = join(DATA_DIR, "session-secret");
 
+function hashSecret(material: string): string {
+  return createHash("sha256").update(`it-hub-session:${material}`).digest("hex");
+}
+
+function derivedCloudSecret(): string | null {
+  const material =
+    process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
+    process.env["SUPABASE_URL"] ||
+    process.env["VITE_SUPABASE_URL"] ||
+    "";
+  if (material.length < 16) return null;
+  return hashSecret(material);
+}
+
 function sessionPassword(): string {
   const env = process.env["SESSION_SECRET"];
   if (env && env.length >= 32) return env;
+
+  const fromCloud = derivedCloudSecret();
+  if (fromCloud) return fromCloud;
+
   try {
     const existing = readFileSync(SECRET_FILE, "utf8").trim();
     if (existing.length >= 32) return existing;
   } catch {
-    /* first run */
+    /* first local run, or a read-only host such as Lovable preview */
   }
-  mkdirSync(dirname(SECRET_FILE), { recursive: true });
+
   const generated = `${crypto.randomUUID().replaceAll("-", "")}${crypto.randomUUID().replaceAll("-", "")}`;
-  writeFileSync(SECRET_FILE, generated, "utf8");
+  try {
+    mkdirSync(dirname(SECRET_FILE), { recursive: true });
+    writeFileSync(SECRET_FILE, generated, "utf8");
+  } catch {
+    /* preview filesystems are often not writable */
+  }
   return generated;
 }
 
