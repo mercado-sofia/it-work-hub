@@ -4,13 +4,21 @@ import { routeTree } from "./routeTree.gen";
 import type { SessionUser } from "@/data/requests";
 
 export const getRouter = () => {
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+      },
+    },
+  });
 
   const router = createRouter({
     routeTree,
     context: { queryClient, session: null as SessionUser | null },
     scrollRestoration: true,
-    defaultPreloadStaleTime: 0,
+    defaultPreload: "intent",
+    defaultStaleTime: 30_000,
+    defaultPreloadStaleTime: 30_000,
   });
 
   return router;

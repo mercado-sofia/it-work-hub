@@ -1,7 +1,16 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "@tanstack/react-router";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { SessionUser } from "@/data/requests";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { sessionUsersEqual, type SessionUser } from "@/data/requests";
 import { getSessionFn, loginFn, logoutFn } from "@/lib/request-functions";
 
 type AuthContextValue = {
@@ -17,6 +26,17 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function needsRouteReload(prev: SessionUser | null, next: SessionUser | null) {
+  if (prev && !next) return true;
+  if (!prev || !next) return false;
+  return (
+    prev.mustChangePassword !== next.mustChangePassword ||
+    prev.role !== next.role ||
+    prev.sessionVersion !== next.sessionVersion ||
+    prev.active !== next.active
+  );
+}
+
 export function AuthProvider({
   children,
   initialUser = null,
@@ -29,21 +49,51 @@ export function AuthProvider({
   const [user, setUser] = useState<SessionUser | null>(initialUser);
   const [loading, setLoading] = useState(!initialUser);
   const [signingOut, setSigningOut] = useState(false);
+  const userRef = useRef(user);
+  userRef.current = user;
 
   const refresh = useCallback(async () => {
     try {
       const session = await getSessionFn();
-      setUser(session);
+      const prev = userRef.current;
+      if (!sessionUsersEqual(prev, session)) {
+        setUser(session);
+      }
+      if (needsRouteReload(prev, session)) {
+        if (!session) queryClient.clear();
+        await router.invalidate();
+      }
     } catch {
+      const prev = userRef.current;
       setUser(null);
+      if (prev) {
+        queryClient.clear();
+        await router.invalidate();
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [queryClient, router]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    const onFocus = () => {
+      if (userRef.current) void refresh();
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refresh]);
+
+  useEffect(() => {
+    if (!user) return;
+    const id = window.setInterval(() => {
+      void refresh();
+    }, 5 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, [user, refresh]);
 
   const login = useCallback(
     async (email: string, password: string) => {

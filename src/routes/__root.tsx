@@ -4,10 +4,11 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -15,7 +16,7 @@ import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { Toaster } from "@/components/ui/sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getSessionFn } from "@/lib/request-functions";
+import { peekSessionFn } from "@/lib/request-functions";
 import type { SessionUser } from "@/data/requests";
 
 function NotFoundComponent() {
@@ -82,9 +83,10 @@ export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
   session: SessionUser | null;
 }>()({
+  staleTime: Infinity,
   beforeLoad: async () => {
     try {
-      return { session: await getSessionFn() };
+      return { session: await peekSessionFn() };
     } catch {
       return { session: null };
     }
@@ -144,6 +146,23 @@ function ResponsiveToaster() {
   return <Toaster richColors position={isMobile ? "bottom-center" : "top-right"} />;
 }
 
+function NavigationProgress() {
+  const isLoading = useRouterState({ select: (s) => s.isLoading });
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading) {
+      setVisible(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setVisible(true), 200);
+    return () => window.clearTimeout(timer);
+  }, [isLoading]);
+
+  if (!visible) return null;
+  return <div className="pointer-events-none fixed inset-x-0 top-0 z-[100] h-0.5 bg-primary" />;
+}
+
 function RootComponent() {
   const { queryClient, session } = Route.useRouteContext();
 
@@ -151,6 +170,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <AuthProvider initialUser={session}>
+          <NavigationProgress />
           <Outlet />
           <ResponsiveToaster />
         </AuthProvider>

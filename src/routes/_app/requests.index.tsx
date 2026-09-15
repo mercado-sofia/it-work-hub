@@ -22,6 +22,16 @@ import { listCatalogFn, listRequestsFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
 
 export const Route = createFileRoute("/_app/requests/")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery({
+      queryKey: ["it-requests"],
+      queryFn: () => listRequestsFn(),
+    });
+    void context.queryClient.prefetchQuery({
+      queryKey: ["request-catalog"],
+      queryFn: () => listCatalogFn(),
+    });
+  },
   head: () => ({
     meta: [
       { title: "IT Requests | TrackHub" },
@@ -100,6 +110,10 @@ function RequestsPage() {
         <MultiFilter label="Type" options={REQUEST_TYPES} selected={types} onChange={setTypes} />
         <MultiFilter label="Status" options={REQUEST_STATUSES} selected={statuses} onChange={setStatuses} />
       </div>
+
+      {list.isLoading && !list.data ? (
+        <p className="text-sm text-muted-foreground">Loading requests…</p>
+      ) : null}
 
       <div className="space-y-3 md:hidden">
         {rows.map((row) => (

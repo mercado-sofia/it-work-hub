@@ -7,6 +7,7 @@ import {
   REQUEST_URGENCIES,
   canRequesterComment,
   forwardPath,
+  sessionUsersEqual,
   type ItPriority,
   type RequestStatus,
 } from "@/data/requests";
@@ -59,6 +60,9 @@ export const getAuthBootstrap = createServerFn({ method: "GET" }).handler(async 
   needsBootstrap: (await profileCount()) === 0,
 }));
 
+/** Cookie only — safe for navigation. Full profile checks belong on getSessionFn. */
+export const peekSessionFn = createServerFn({ method: "GET" }).handler(async () => readSessionUser());
+
 export const getSessionFn = createServerFn({ method: "POST" }).handler(async () => {
   const user = await readSessionUser();
   if (!user) return null;
@@ -69,7 +73,9 @@ export const getSessionFn = createServerFn({ method: "POST" }).handler(async () 
     return null;
   }
   const next = toSessionUser(fresh);
-  await session.update({ user: next });
+  if (!sessionUsersEqual(user, next)) {
+    await session.update({ user: next });
+  }
   return next;
 });
 

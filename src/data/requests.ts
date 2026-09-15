@@ -71,6 +71,20 @@ export type SessionUser = {
   sessionVersion: number;
 };
 
+export function sessionUsersEqual(a: SessionUser | null, b: SessionUser | null) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return (
+    a.id === b.id &&
+    a.email === b.email &&
+    a.displayName === b.displayName &&
+    a.role === b.role &&
+    a.active === b.active &&
+    a.mustChangePassword === b.mustChangePassword &&
+    a.sessionVersion === b.sessionVersion
+  );
+}
+
 export type ItSettings = {
   departmentName: string;
   contactEmail: string;
