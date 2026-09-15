@@ -7,6 +7,7 @@ import {
   PauseCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardSkeleton } from "@/components/skeletons";
 import { PriorityBadge, ProgressBar, CircularProgress, StatusBadge } from "@/components/status-badges";
 import { WorkId } from "@/components/activity-refs";
 import { useTasks } from "@/lib/task-store";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/_app/dashboard")({
 });
 
 function Dashboard() {
-  const { tasks, categories } = useTasks();
+  const { tasks, categories, hydrated } = useTasks();
   const metrics = getMetrics(tasks);
   const categoryStats = getCategoryStats(tasks, categories);
   const priorities = getPriorityActivities(tasks);
@@ -69,6 +70,10 @@ function Dashboard() {
         </p>
       </div>
 
+      {!hydrated ? (
+        <DashboardSkeleton />
+      ) : (
+      <div className="contents">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map(({ label, value, icon: Icon }) => (
           <Card key={label} className="border-border">
@@ -283,6 +288,8 @@ function Dashboard() {
           ))}
         </CardContent>
       </Card>
+      </div>
+      )}
     </div>
   );
 }

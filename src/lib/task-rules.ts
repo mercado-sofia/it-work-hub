@@ -85,6 +85,30 @@ export function isSprintNameTaken(
   );
 }
 
+/** Whole local calendar days from `fromIso` to `toIso` (YYYY-MM-DD). */
+export function calendarDaysBetween(fromIso: string, toIso: string): number {
+  const from = new Date(`${fromIso}T00:00:00`);
+  const to = new Date(`${toIso}T00:00:00`);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return 0;
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+/**
+ * Where incomplete work may go when completing a sprint.
+ * `null` = backlog. `undefined` = invalid destination.
+ */
+export function resolveSprintMoveDestination(
+  sprints: { id: string; status: string }[],
+  fromId: string,
+  destination: "backlog" | string,
+): string | null | undefined {
+  if (destination === "backlog") return null;
+  if (destination === fromId) return undefined;
+  const dest = sprints.find((sprint) => sprint.id === destination);
+  if (!dest || dest.status === "Completed") return undefined;
+  return dest.id;
+}
+
 export function isOverdue(
   task: { status: Status; targetDate: string },
   today = todayISO(),

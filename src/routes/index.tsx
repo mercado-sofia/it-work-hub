@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getAuthBootstrap } from "@/lib/request-functions";
+import { LandingSkeleton } from "@/components/skeletons";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/")({
       return { needsBootstrap: false };
     }
   },
+  pendingComponent: LandingSkeleton,
   head: ({ match }) => {
     const view = match.search.view;
     if (view === "login") {

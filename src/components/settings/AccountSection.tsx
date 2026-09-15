@@ -8,6 +8,7 @@ import { PasswordInput } from "@/components/settings/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { AccountCardSkeleton } from "@/components/skeletons";
 import { useAuth } from "@/lib/auth";
 import { changePasswordSchema, updateOwnAccountSchema, zodFieldErrors } from "@/lib/it-account";
 import { changePasswordFn, updateOwnAccountFn } from "@/lib/request-functions";
@@ -66,6 +67,10 @@ export function AccountSection() {
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update password."),
   });
+
+  if (!user) {
+    return <AccountCardSkeleton />;
+  }
 
   return (
     <Card className="border-border">

@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sheet";
 import { ActivityDialogShell } from "@/components/ActivityDialogShell";
 import { CategoryField } from "@/components/CategoryField";
+import { TrackerSkeleton } from "@/components/skeletons";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
 import { ActivityId, WorkId } from "@/components/activity-refs";
 import { KanbanView } from "@/components/KanbanView";
@@ -522,7 +523,7 @@ function EditActivityDialog({
 function Tracker() {
   const { q: presetQuery } = Route.useSearch();
   const navigate = useNavigate();
-  const { tasks, sprints, staff, categories: categoryOptions, mode, updateTask, deleteTask } = useTasks();
+  const { tasks, sprints, staff, categories: categoryOptions, mode, hydrated, updateTask, deleteTask } = useTasks();
   const readOnly = mode === "management";
   const [view, setView] = useState<"table" | "kanban" | "sprint">("table");
   const [query, setQuery] = useState(presetQuery ?? "");
@@ -598,12 +599,14 @@ function Tracker() {
             Master Task Tracker
           </h1>
           <p className="mt-1 text-xs text-muted-foreground sm:hidden">
-            {filtered.length} of {tasks.length} shown
-            {readOnly ? " • read-only" : ""}.
+            {hydrated ? `${filtered.length} of ${tasks.length} shown` : "\u00a0"}
+            {hydrated && readOnly ? " • read-only" : ""}
+            {hydrated ? "." : ""}
           </p>
           <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
-            {filtered.length} of {tasks.length} activities shown
-            {readOnly ? " • read-only" : ""}.
+            {hydrated
+              ? `${filtered.length} of ${tasks.length} activities shown${readOnly ? " • read-only" : ""}.`
+              : "\u00a0"}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -635,6 +638,10 @@ function Tracker() {
         </div>
       </div>
 
+      {!hydrated ? (
+        <TrackerSkeleton />
+      ) : (
+      <div className="contents">
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
@@ -750,7 +757,7 @@ function Tracker() {
           />
       ) : (
         <SprintView
-          tasks={filtered}
+          tasks={tasks}
           readOnly={readOnly}
           onUpdate={updateTask}
           onEdit={setEditingTask}
@@ -766,6 +773,8 @@ function Tracker() {
           }}
           onUpdate={updateTask}
         />
+      )}
+      </div>
       )}
     </div>
   );

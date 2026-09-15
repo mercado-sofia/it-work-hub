@@ -25,16 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
 import { WorkId } from "@/components/activity-refs";
 import {
@@ -45,7 +35,7 @@ import {
   type Task,
 } from "@/data/tasks";
 import { useTasks } from "@/lib/task-store";
-import { isSprintNameTaken } from "@/lib/task-rules";
+import { calendarDaysBetween, isSprintNameTaken, todayISO } from "@/lib/task-rules";
 import { formatDate } from "@/lib/metrics";
 import { cn } from "@/lib/utils";
 
@@ -58,14 +48,14 @@ type SprintDraft = {
 };
 
 const emptySprintDraft = (): SprintDraft => {
-  const start = new Date();
-  const end = new Date();
+  const start = todayISO();
+  const end = new Date(`${start}T00:00:00`);
   end.setDate(end.getDate() + 13);
   return {
     name: "",
     goal: "",
-    startDate: start.toISOString().slice(0, 10),
-    endDate: end.toISOString().slice(0, 10),
+    startDate: start,
+    endDate: todayISO(end),
     status: "Planned",
   };
 };
@@ -83,19 +73,20 @@ function sprintMetrics(tasks: Task[], sprint: Sprint) {
       ? 0
       : Math.round(tasks.reduce((sum, t) => sum + t.progress, 0) / committed);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayISO();
   let daysLabel = "Ended";
-  if (sprint.status === "Completed" || today > sprint.endDate) {
+  if (sprint.status === "Completed") {
     daysLabel = "Ended";
+  } else if (today > sprint.endDate) {
+    const days = calendarDaysBetween(sprint.endDate, today);
+    daysLabel = days === 1 ? "1d over" : `${days}d over`;
   } else if (today < sprint.startDate) {
-    const days = Math.ceil(
-      (new Date(sprint.startDate).getTime() - new Date(today).getTime()) / 86400000,
-    );
+    const days = calendarDaysBetween(today, sprint.startDate);
     daysLabel = `Starts in ${days}d`;
+  } else if (today === sprint.endDate) {
+    daysLabel = "Last day";
   } else {
-    const days = Math.ceil(
-      (new Date(sprint.endDate).getTime() - new Date(today).getTime()) / 86400000,
-    );
+    const days = calendarDaysBetween(today, sprint.endDate);
     daysLabel = `${days}d left`;
   }
 
@@ -197,8 +188,15 @@ function SprintDialog({
   const [draft, setDraft] = useState(initial);
 
   useEffect(() => {
-    if (open) setDraft(initial);
-  }, [open, initial]);
+    if (!open) return;
+    setDraft({
+      name: initial.name,
+      goal: initial.goal,
+      startDate: initial.startDate,
+      endDate: initial.endDate,
+      status: initial.status,
+    });
+  }, [open, initial.name, initial.goal, initial.startDate, initial.endDate, initial.status]);
 
   const submit = () => {
     const name = draft.name.trim();
@@ -254,7 +252,6 @@ export function SprintView({
   onEdit: (task: Task) => void;
 }) {
   const {
-    tasks: storeTasks,
     sprints,
     addSprint,
     updateSprint,
@@ -269,7 +266,6 @@ export function SprintView({
   const [selectedId, setSelectedId] = useState(defaultId);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [completeOpen, setCompleteOpen] = useState(false);
   const [incompleteDest, setIncompleteDest] = useState<"backlog" | string>("backlog");
 
   useEffect(() => {
@@ -280,6 +276,7 @@ export function SprintView({
   }, [selectedId, defaultId, sprints]);
 
   const selected = sprints.find((s) => s.id === selectedId) ?? null;
+  const currentActive = sprints.find((s) => s.status === "Active") ?? null;
   const sprintTasks = useMemo(
     () => tasks.filter((t) => t.sprintId === selectedId),
     [tasks, selectedId],
@@ -287,6 +284,15 @@ export function SprintView({
   const backlog = useMemo(
     () => tasks.filter((t) => t.sprintId === null),
     [tasks],
+  );
+  const incompleteCount = useMemo(
+    () =>
+      tasks.filter((t) => t.sprintId === selectedId && t.status !== "Completed").length,
+    [tasks, selectedId],
+  );
+  const openDestinations = useMemo(
+    () => sprints.filter((s) => s.id !== selectedId && s.status !== "Completed"),
+    [sprints, selectedId],
   );
   const metrics = selected ? sprintMetrics(sprintTasks, selected) : null;
   const editInitial: SprintDraft = selected
@@ -345,55 +351,133 @@ export function SprintView({
                   >
                     <Pencil className="size-3.5" /> Edit
                   </Button>
-                  {selected.status !== "Active" && selected.status !== "Completed" && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="gap-1.5"
-                      onClick={() => {
-                        setActiveSprint(selected.id);
+                  {selected.status === "Planned" && (
+                    <ConfirmDialog
+                      icon={Target}
+                      title="Set Active Sprint"
+                      description={
+                        currentActive ? (
+                          <>
+                            You’re going to set “{selected.name}” as Active. “{currentActive.name}” will
+                            go back to Planned. Are you sure?
+                          </>
+                        ) : (
+                          <>
+                            You’re going to set “{selected.name}” as the Active sprint. Are you sure?
+                          </>
+                        )
+                      }
+                      confirmLabel="Set as Active"
+                      onConfirm={() => {
+                        if (!setActiveSprint(selected.id)) {
+                          toast.error("This sprint can’t be set Active.");
+                          return;
+                        }
                         toast.success(`${selected.name} is now Active`);
                       }}
-                    >
-                      <Target className="size-3.5" /> Set Active
-                    </Button>
+                      trigger={
+                        <Button size="sm" variant="secondary" className="gap-1.5">
+                          <Target className="size-3.5" /> Set Active
+                        </Button>
+                      }
+                    />
                   )}
                   {selected.status === "Active" && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="gap-1.5"
-                      onClick={() => {
-                        setIncompleteDest("backlog");
-                        setCompleteOpen(true);
+                    <ConfirmDialog
+                      icon={CheckCircle2}
+                      title="Complete Sprint"
+                      contentClassName="w-[min(100%-1.5rem,28rem)] max-w-[28rem]"
+                      description={
+                        incompleteCount > 0 ? (
+                          <>
+                            You’re going to complete “{selected.name}”. Completed activities stay on this
+                            sprint. {incompleteCount} incomplete{" "}
+                            {incompleteCount === 1 ? "item" : "items"} will be moved, and this sprint
+                            can’t be reopened. Are you sure?
+                          </>
+                        ) : (
+                          <>
+                            You’re going to complete “{selected.name}”. This sprint can’t be reopened.
+                            Are you sure?
+                          </>
+                        )
+                      }
+                      confirmLabel="Complete sprint"
+                      onOpenChange={(open) => {
+                        if (open) setIncompleteDest("backlog");
                       }}
+                      onConfirm={() => {
+                        const destName =
+                          incompleteDest === "backlog"
+                            ? "the backlog"
+                            : (sprints.find((s) => s.id === incompleteDest)?.name ?? "the backlog");
+                        if (!completeSprint(selected.id, incompleteDest)) {
+                          toast.error("This sprint can’t be completed.");
+                          return;
+                        }
+                        toast.success(
+                          incompleteCount > 0
+                            ? `${selected.name} marked Completed. ${incompleteCount} incomplete ${incompleteCount === 1 ? "item" : "items"} moved to ${destName}.`
+                            : `${selected.name} marked Completed.`,
+                        );
+                        if (incompleteDest !== "backlog") setSelectedId(incompleteDest);
+                      }}
+                      trigger={
+                        <Button size="sm" variant="secondary" className="gap-1.5">
+                          <CheckCircle2 className="size-3.5" /> Complete Sprint
+                        </Button>
+                      }
                     >
-                      <CheckCircle2 className="size-3.5" /> Complete Sprint
-                    </Button>
+                      {incompleteCount > 0 ? (
+                        <div className="w-full space-y-1.5 text-left">
+                          <Label htmlFor="sprint-incomplete-dest" className="text-sm font-medium">
+                            Move incomplete work to
+                          </Label>
+                          <Select
+                            value={incompleteDest}
+                            onValueChange={(value) => setIncompleteDest(value)}
+                          >
+                            <SelectTrigger id="sprint-incomplete-dest">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="backlog">Backlog</SelectItem>
+                              {openDestinations.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>
+                                  {s.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : null}
+                    </ConfirmDialog>
                   )}
-                  <ConfirmDialog
-                    title="Delete Sprint"
-                    description={
-                      <>
-                        You’re going to delete “{selected.name}”. Assigned activities will move back to
-                        the backlog. Are you sure?
-                      </>
-                    }
-                    confirmLabel="Confirm delete"
-                    onConfirm={() => {
-                      deleteSprint(selected.id);
-                      toast.success("Sprint deleted; tasks moved to backlog");
-                    }}
-                    trigger={
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="gap-1.5 text-muted-foreground hover:bg-transparent hover:text-destructive"
-                      >
-                        <Trash2 className="size-3.5" /> Delete
-                      </Button>
-                    }
-                  />
+                  {selected.status !== "Completed" && (
+                    <ConfirmDialog
+                      title="Delete Sprint"
+                      description={
+                        <>
+                          You’re going to delete “{selected.name}”. Assigned activities will move back to
+                          the backlog. Are you sure?
+                        </>
+                      }
+                      confirmLabel="Confirm delete"
+                      onConfirm={() => {
+                        deleteSprint(selected.id);
+                        toast.success("Sprint deleted; tasks moved to backlog");
+                      }}
+                      trigger={
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1.5 text-muted-foreground hover:bg-transparent hover:text-destructive"
+                        >
+                          <Trash2 className="size-3.5" /> Delete
+                        </Button>
+                      }
+                    />
+                  )}
                 </>
               )}
             </div>
@@ -523,6 +607,11 @@ export function SprintView({
               <p className="text-xs text-muted-foreground">
                 {backlog.length} unassigned {backlog.length === 1 ? "activity" : "activities"}
               </p>
+              {!readOnly && selected.status === "Completed" && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Completed sprints are read-only for planning.
+                </p>
+              )}
             </div>
             <div className="max-h-[70vh] space-y-3 overflow-y-auto p-3">
               {backlog.map((task) => (
@@ -549,11 +638,6 @@ export function SprintView({
                     >
                       <Plus className="size-3.5" /> Add to sprint
                     </Button>
-                  )}
-                  {!readOnly && selected?.status === "Completed" && (
-                    <p className="mt-2 text-xs text-muted-foreground">
-                      Completed sprints are read-only for planning.
-                    </p>
                   )}
                 </div>
               ))}
@@ -605,57 +689,6 @@ export function SprintView({
               toast.success("Sprint updated");
             }}
           />
-          <AlertDialog open={completeOpen} onOpenChange={setCompleteOpen}>
-            <AlertDialogContent className="max-w-md">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Complete {selected?.name}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  <span className="sm:hidden">Incomplete items will be moved.</span>
-                  <span className="hidden sm:inline">
-                    Completed activities stay on this sprint. Incomplete items (
-                    {storeTasks.filter(
-                      (t) => t.sprintId === selectedId && t.status !== "Completed",
-                    ).length}
-                    ) will be moved.
-                  </span>
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="flex flex-col gap-2">
-                <Label className="text-xs">Move incomplete work to</Label>
-                <Select
-                  value={incompleteDest}
-                  onValueChange={(value) => setIncompleteDest(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="backlog">Backlog</SelectItem>
-                    {sprints
-                      .filter((s) => s.id !== selectedId && s.status !== "Completed")
-                      .map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.name}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    if (!selected) return;
-                    completeSprint(selected.id, incompleteDest);
-                    toast.success(`${selected.name} marked Completed`);
-                    setCompleteOpen(false);
-                  }}
-                >
-                  Complete sprint
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </>
       )}
     </div>

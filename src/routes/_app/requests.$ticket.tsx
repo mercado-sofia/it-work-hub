@@ -26,6 +26,7 @@ import { useTasks } from "@/lib/task-store";
 import { todayISO } from "@/lib/task-rules";
 import { formatDate } from "@/lib/metrics";
 import { fileBadge, formatBytes } from "@/lib/attachment-ui";
+import { RequestDetailSkeleton } from "@/components/skeletons";
 import {
   allowedRequestTransitions,
   canEditResolutionNotes,
@@ -235,7 +236,7 @@ function RequestDetailPage() {
     return <p className="text-sm text-destructive">Request not found.</p>;
   }
   if (!request) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <RequestDetailSkeleton />;
   }
 
   const canConvert =

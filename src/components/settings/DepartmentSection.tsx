@@ -6,6 +6,7 @@ import { describedBy, SettingsField, SettingsFormDialog, SettingsValue } from "@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { DepartmentFieldsSkeleton } from "@/components/skeletons";
 import type { ItSettings } from "@/data/requests";
 import { departmentSettingsSchema, zodFieldErrors } from "@/lib/it-account";
 import { getSettingsFn, updateSettingsFn } from "@/lib/request-functions";
@@ -54,11 +55,7 @@ export function DepartmentSection() {
       </CardHeader>
       <CardContent>
         {settings.isPending ? (
-          <div className="grid gap-4 sm:grid-cols-2" aria-busy="true" aria-live="polite">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-10 animate-pulse rounded-md bg-muted" />
-            ))}
-          </div>
+          <DepartmentFieldsSkeleton />
         ) : settings.isError ? (
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-sm text-destructive">Could not load department contact.</p>

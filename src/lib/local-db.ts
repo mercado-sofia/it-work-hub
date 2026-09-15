@@ -6,7 +6,6 @@ import { normalizeTicket } from "@/data/requests";
 export const TASKS_KEY_V2 = "it-tracker-tasks-v2";
 export const TASKS_KEY_V1 = "it-tracker-tasks-v1";
 export const SPRINTS_KEY_V1 = "it-tracker-sprints-v1";
-export const MODE_KEY = "it-tracker-mode-v1";
 export const LAST_EXPORT_KEY = "it-tracker-last-export-v1";
 export const DATA_KEY = "it-tracker-data-v5";
 const DATA_KEY_V4 = "it-tracker-data-v4";
@@ -200,24 +199,6 @@ function loadLocalDataUnsafe(): LocalData {
 
 export function saveLocalData(data: LocalData) {
   localStorage.setItem(DATA_KEY, JSON.stringify(data));
-}
-
-export function loadMode(): "management" | "editor" {
-  try {
-    const value = localStorage.getItem(MODE_KEY);
-    if (value === "management" || value === "editor") return value;
-  } catch {
-    /* ignore */
-  }
-  return "editor";
-}
-
-export function saveMode(mode: "management" | "editor") {
-  try {
-    localStorage.setItem(MODE_KEY, mode);
-  } catch {
-    /* ignore */
-  }
 }
 
 export function loadLastExportAt(): string | null {

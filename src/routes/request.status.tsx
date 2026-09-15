@@ -11,6 +11,7 @@ import { RequestStatusBadge } from "@/components/request-badges";
 import { canRequesterComment, type PublicRequestView } from "@/data/requests";
 import { addRequesterCommentFn, lookupRequestFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
+import { RequestStatusResultSkeleton } from "@/components/skeletons";
 
 type Search = { ticket?: string };
 
@@ -107,6 +108,8 @@ function StatusPage() {
           {busy ? "Looking up…" : "Look up"}
         </Button>
       </form>
+
+      {busy && !result ? <RequestStatusResultSkeleton /> : null}
 
       {result && (
         <div className="space-y-4">

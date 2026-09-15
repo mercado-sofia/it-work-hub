@@ -19,6 +19,7 @@ import { IT_ROLES, type ItProfile, type ItRole } from "@/data/requests";
 import { useAuth } from "@/lib/auth";
 import { inviteUserSchema, IT_ROLE_META, zodFieldErrors } from "@/lib/it-account";
 import { cn } from "@/lib/utils";
+import { TeamListSkeleton } from "@/components/skeletons";
 import {
   inviteUserFn,
   listTeamFn,
@@ -139,6 +140,8 @@ export function TeamSection() {
               Retry
             </Button>
           </div>
+        ) : team.isPending ? (
+          <TeamListSkeleton />
         ) : (
           <>
             <div className="hidden overflow-x-auto md:block">
@@ -167,7 +170,7 @@ export function TeamSection() {
                   {people.length === 0 ? (
                     <tr>
                       <td className="px-6 py-6 text-sm text-muted-foreground" colSpan={5}>
-                        {team.isPending ? "Loading team…" : "No IT users yet."}
+                        No IT users yet.
                       </td>
                     </tr>
                   ) : null}
@@ -184,7 +187,7 @@ export function TeamSection() {
             </div>
             <div className="grid gap-3 px-6 pb-6 md:hidden">
               {people.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{team.isPending ? "Loading team…" : "No IT users yet."}</p>
+                <p className="text-sm text-muted-foreground">No IT users yet.</p>
               ) : (
                 people.map((person) => (
                   <TeamCard

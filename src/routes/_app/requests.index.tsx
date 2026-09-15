@@ -20,6 +20,7 @@ import {
 } from "@/data/requests";
 import { listCatalogFn, listRequestsFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
+import { RequestsListSkeleton } from "@/components/skeletons";
 
 export const Route = createFileRoute("/_app/requests/")({
   loader: ({ context }) => {
@@ -112,9 +113,9 @@ function RequestsPage() {
       </div>
 
       {list.isLoading && !list.data ? (
-        <p className="text-sm text-muted-foreground">Loading requests…</p>
-      ) : null}
-
+        <RequestsListSkeleton />
+      ) : (
+        <div className="contents">
       <div className="space-y-3 md:hidden">
         {rows.map((row) => (
           <RequestCard key={row.id} row={row} />
@@ -203,6 +204,8 @@ function RequestsPage() {
           )}
         </CardContent>
       </Card>
+        </div>
+      )}
     </div>
   );
 }

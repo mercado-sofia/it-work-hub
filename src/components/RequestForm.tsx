@@ -19,6 +19,7 @@ import {
 import { REQUEST_TYPES, REQUEST_URGENCIES, type SimilarRequest } from "@/data/requests";
 import { checkDuplicatesFn, listCatalogFn, submitRequestFn } from "@/lib/request-functions";
 import { fileBadge, formatBytes } from "@/lib/attachment-ui";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Draft = {
   type: (typeof REQUEST_TYPES)[number];
@@ -318,6 +319,9 @@ export function RequestForm() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Affected module" htmlFor="req-module">
+                  {catalog.isPending ? (
+                    <Skeleton id="req-module" className="h-9 w-full" />
+                  ) : (
                   <Select
                     {...(draft.module ? { value: draft.module } : {})}
                     onValueChange={(module) => setDraft({ ...draft, module })}
@@ -333,8 +337,12 @@ export function RequestForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                  )}
                 </Field>
                 <Field label="Department" htmlFor="req-department">
+                  {catalog.isPending ? (
+                    <Skeleton id="req-department" className="h-9 w-full" />
+                  ) : (
                   <Select
                     {...(draft.department ? { value: draft.department } : {})}
                     onValueChange={(department) => setDraft({ ...draft, department })}
@@ -350,6 +358,7 @@ export function RequestForm() {
                       ))}
                     </SelectContent>
                   </Select>
+                  )}
                 </Field>
               </div>
 

@@ -27,7 +27,14 @@ import {
   saveLocalData,
   type BackupPayload,
 } from "@/lib/local-db";
-import { applyTaskRules, isSprintNameTaken, nextSprintId, nextTaskId, todayISO } from "@/lib/task-rules";
+import {
+  applyTaskRules,
+  isSprintNameTaken,
+  nextSprintId,
+  nextTaskId,
+  resolveSprintMoveDestination,
+  todayISO,
+} from "@/lib/task-rules";
 import { useAuth } from "@/lib/auth";
 import { syncRequestFromTaskFn } from "@/lib/request-functions";
 
@@ -42,7 +49,6 @@ type Store = {
   categories: string[];
   hydrated: boolean;
   mode: AppMode;
-  setMode: (mode: AppMode) => void;
   canWrite: boolean;
   needsExportReminder: boolean;
   dismissExportReminder: () => void;
@@ -53,8 +59,8 @@ type Store = {
   addSprint: (sprint: Omit<Sprint, "id">) => string;
   updateSprint: (id: string, patch: Partial<Sprint>) => void;
   deleteSprint: (id: string) => void;
-  setActiveSprint: (id: string) => void;
-  completeSprint: (id: string, incompleteDestination: "backlog" | string) => void;
+  setActiveSprint: (id: string) => boolean;
+  completeSprint: (id: string, incompleteDestination: "backlog" | string) => boolean;
   addStaff: (name: string) => string;
   addCategory: (name: string) => string;
   exportBackup: () => void;
@@ -108,10 +114,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     }
     persist(tasks, sprints, staff, categories);
   }, [tasks, sprints, staff, categories, hydrated]);
-
-  const setMode = useCallback((_next: AppMode) => {
-    /* Role from IT login replaces the local mode toggle. */
-  }, []);
 
   const addTask = useCallback((task: Omit<Task, "id" | "lastUpdated" | "completedOn">) => {
     const today = todayISO();
@@ -177,8 +179,10 @@ export function TaskProvider({ children }: { children: ReactNode }) {
         throw new Error(`A sprint named ${nextPatch.name} already exists.`);
       }
     }
-    setSprints((prev) =>
-      prev.map((sprint) => {
+    setSprints((prev) => {
+      const exists = prev.some((sprint) => sprint.id === id);
+      if (!exists) return prev;
+      return prev.map((sprint) => {
         if (sprint.id !== id) {
           if (nextPatch.status === "Active" && sprint.status === "Active") {
             return { ...sprint, status: "Planned" };
@@ -186,8 +190,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
           return sprint;
         }
         return { ...sprint, ...nextPatch };
-      }),
-    );
+      });
+    });
   }, [sprints]);
 
   const deleteSprint = useCallback((id: string) => {
@@ -198,11 +202,23 @@ export function TaskProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setActiveSprint = useCallback((id: string) => {
-    updateSprint(id, { status: "Active" });
-  }, [updateSprint]);
+    const target = sprints.find((sprint) => sprint.id === id);
+    if (!target || target.status === "Active" || target.status === "Completed") return false;
+    setSprints((prev) =>
+      prev.map((sprint) => {
+        if (sprint.id === id) return { ...sprint, status: "Active" as const };
+        if (sprint.status === "Active") return { ...sprint, status: "Planned" as const };
+        return sprint;
+      }),
+    );
+    return true;
+  }, [sprints]);
 
   const completeSprint = useCallback((id: string, incompleteDestination: "backlog" | string) => {
-    const dest = incompleteDestination === "backlog" ? null : incompleteDestination;
+    const target = sprints.find((sprint) => sprint.id === id);
+    if (!target || target.status !== "Active") return false;
+    const dest = resolveSprintMoveDestination(sprints, id, incompleteDestination);
+    if (dest === undefined) return false;
     setTasks((prev) =>
       prev.map((task) => {
         if (task.sprintId !== id || isClosedStatus(task.status)) return task;
@@ -212,7 +228,8 @@ export function TaskProvider({ children }: { children: ReactNode }) {
     setSprints((prev) =>
       prev.map((sprint) => (sprint.id === id ? { ...sprint, status: "Completed" as const } : sprint)),
     );
-  }, []);
+    return true;
+  }, [sprints]);
 
   const addStaff = useCallback((name: string) => {
     const trimmed = name.trim();
@@ -311,7 +328,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       categories,
       hydrated,
       mode,
-      setMode,
       canWrite,
       needsExportReminder,
       dismissExportReminder,
@@ -338,7 +354,6 @@ export function TaskProvider({ children }: { children: ReactNode }) {
       categories,
       hydrated,
       mode,
-      setMode,
       canWrite,
       needsExportReminder,
       dismissExportReminder,

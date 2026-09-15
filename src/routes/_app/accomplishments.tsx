@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
+import { AccomplishmentsSkeleton } from "@/components/skeletons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -217,9 +218,7 @@ function Accomplishments() {
             Accomplishments &amp; Reports
           </h1>
           <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
-            {hydrated
-              ? `Completed tracker activities for ${periodText}.`
-              : "Loading completed tracker activities…"}
+            {hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2 print:hidden">
@@ -337,11 +336,7 @@ function Accomplishments() {
       </Card>
 
       {!hydrated ? (
-        <Card className="border-border">
-          <CardContent className="p-6 text-center text-sm text-muted-foreground sm:p-10">
-            Loading completed tracker activities…
-          </CardContent>
-        </Card>
+        <AccomplishmentsSkeleton />
       ) : !rangeValid ? null : completedAll.length === 0 ? (
         <Card className="border-border">
           <CardContent className="space-y-3 p-6 text-center sm:p-10">

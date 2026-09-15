@@ -15,6 +15,7 @@ import {
   Settings,
   Sun,
   Upload,
+  User,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -357,8 +358,14 @@ function UserMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="hidden rounded-full lg:inline-flex">
-          {name.split(" ")[0]}
+        <Button
+          variant="outline"
+          size="sm"
+          className="hidden rounded-full px-2.5 lg:inline-flex"
+          aria-label={`Account menu for ${name}`}
+          title={name}
+        >
+          <User className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-max min-w-36">
