@@ -363,7 +363,7 @@ function RoleField({
 }) {
   return (
     <SettingsField id={id} label="Role" hint={IT_ROLE_META[value].help} error={error}>
-      <Select value={value} disabled={lockAdmin} onValueChange={(role) => onChange(role as ItRole)}>
+      <Select value={value} disabled={Boolean(lockAdmin)} onValueChange={(role) => onChange(role as ItRole)}>
         <SelectTrigger id={id} className="bg-card" aria-describedby={describedBy(id, true, Boolean(error))}>
           <SelectValue placeholder="Select role" />
         </SelectTrigger>
