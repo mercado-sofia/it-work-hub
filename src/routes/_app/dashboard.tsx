@@ -1,15 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
-  ListChecks,
-  PauseCircle,
-} from "lucide-react";
+import { CheckCircle2, Clock, ListChecks, PauseCircle } from "lucide-react";
+import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardSkeleton } from "@/components/skeletons";
 import { PriorityBadge, ProgressBar, CircularProgress, StatusBadge } from "@/components/status-badges";
 import { WorkId } from "@/components/activity-refs";
+import type { Task } from "@/data/tasks";
 import { useTasks } from "@/lib/task-store";
 import {
   formatDate,
@@ -19,7 +15,7 @@ import {
   getOverdue,
   getPriorityActivities,
 } from "@/lib/metrics";
-import { isOverdue } from "@/lib/task-rules";
+import { calendarDaysBetween, isOverdue, todayISO } from "@/lib/task-rules";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -242,54 +238,238 @@ function Dashboard() {
       </Card>
 
       {overdue.length > 0 && (
-        <Card className="border-warning/40 bg-warning-soft/60">
-          <CardHeader className="flex-row items-center gap-2 pb-2">
-            <AlertTriangle className="size-4 text-warning" />
-            <CardTitle className="text-base">Overdue projects ({overdue.length})</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {overdue.map((task) => (
-              <div key={task.id} className="rounded-lg border border-border bg-card p-3">
-                <p className="text-sm font-semibold">{task.title}</p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                  <WorkId work={task} />
-                  {task.assignee} • {task.status} • target {formatDate(task.targetDate)}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <RankedListCard
+          title="Overdue projects"
+          chip={`Past target (${overdue.length})`}
+        >
+          <div className="space-y-0 md:hidden">
+            {overdue.map((task, index) => {
+              const late = daysPastTarget(task);
+              return (
+                <div
+                  key={task.id}
+                  className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0"
+                >
+                  <RankBadge rank={index + 1} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-snug">{task.title}</p>
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                      <WorkId work={task} />
+                      {task.assignee}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <StatusBadge status={task.status} />
+                      <MetricValue
+                        value={late}
+                        hint={late === 1 ? "day late" : "days late"}
+                        tone="danger"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
+                  <th className="w-16 whitespace-nowrap px-5 py-2.5">Rank</th>
+                  <th className="px-3 py-2.5">Activity</th>
+                  <th className="px-3 py-2.5">Owner</th>
+                  <th className="px-3 py-2.5">Status</th>
+                  <th className="w-36 px-3 py-2.5">Progress</th>
+                  <th className="px-3 py-2.5">Days late</th>
+                  <th className="px-5 py-2.5">Target</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overdue.map((task, index) => {
+                  const late = daysPastTarget(task);
+                  return (
+                    <tr key={task.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                      <td className="px-5 py-3.5">
+                        <RankBadge rank={index + 1} />
+                      </td>
+                      <td className="px-3 py-3.5">
+                        <p className="font-medium leading-snug">{task.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          <WorkId work={task} />
+                        </p>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3.5">{task.assignee}</td>
+                      <td className="px-3 py-3.5">
+                        <StatusBadge status={task.status} />
+                      </td>
+                      <td className="px-3 py-3.5">
+                        <MetricValue value={`${task.progress}%`} hint="complete" />
+                      </td>
+                      <td className="px-3 py-3.5">
+                        <MetricValue
+                          value={late}
+                          hint={late === 1 ? "day" : "days"}
+                          tone="danger"
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">
+                        {formatDate(task.targetDate)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </RankedListCard>
       )}
 
-      <Card className="border-destructive/30 bg-destructive/5">
-        <CardHeader className="flex-row items-center gap-2 pb-2">
-          <AlertTriangle className="size-4 text-destructive" />
-          <CardTitle className="text-base text-destructive">
-            Blockers &amp; On-Hold Items ({blockers.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {blockers.length === 0 && (
-            <p className="text-sm text-muted-foreground">No stalled activities.</p>
-          )}
-          {blockers.map((task) => (
-            <div key={task.id} className="rounded-lg border border-destructive/25 bg-card p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold">{task.title}</p>
-                <PriorityBadge priority={task.priority} />
-              </div>
-              <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                <WorkId work={task} />
-                {task.category} • {task.assignee} • {task.progress}% complete • target{" "}
-                {formatDate(task.targetDate)}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed">{task.remarks}</p>
+      <RankedListCard
+        title="Blockers & On-Hold Items"
+        chip={blockers.length === 0 ? "None stalled" : `On hold (${blockers.length})`}
+      >
+        {blockers.length === 0 ? (
+          <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+            No stalled activities.
+          </p>
+        ) : (
+          <>
+            <div className="space-y-0 md:hidden">
+              {blockers.map((task, index) => (
+                <div
+                  key={task.id}
+                  className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0"
+                >
+                  <RankBadge rank={index + 1} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium leading-snug">{task.title}</p>
+                    {task.remarks ? (
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                        {task.remarks}
+                      </p>
+                    ) : null}
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                      <WorkId work={task} />
+                      {task.assignee}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <PriorityBadge priority={task.priority} />
+                      <MetricValue value={`${task.progress}%`} hint="complete" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
+                    <th className="w-16 whitespace-nowrap px-5 py-2.5">Rank</th>
+                    <th className="px-3 py-2.5">Activity</th>
+                    <th className="px-3 py-2.5">Owner</th>
+                    <th className="px-3 py-2.5">Priority</th>
+                    <th className="min-w-48 px-3 py-2.5">Situation</th>
+                    <th className="px-5 py-2.5">Target</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {blockers.map((task, index) => (
+                    <tr key={task.id} className="border-b border-border/70 last:border-0 hover:bg-muted/40">
+                      <td className="px-5 py-3.5">
+                        <RankBadge rank={index + 1} />
+                      </td>
+                      <td className="px-3 py-3.5">
+                        <p className="font-medium leading-snug">{task.title}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          <WorkId work={task} />
+                        </p>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-3.5">{task.assignee}</td>
+                      <td className="px-3 py-3.5">
+                        <PriorityBadge priority={task.priority} />
+                      </td>
+                      <td className="px-3 py-3.5 text-xs leading-relaxed text-muted-foreground">
+                        <p className="line-clamp-2">{task.remarks || "—"}</p>
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-3.5 text-muted-foreground">
+                        {formatDate(task.targetDate)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </RankedListCard>
       </div>
       )}
     </div>
+  );
+}
+
+function daysPastTarget(task: Task, today = todayISO()) {
+  return Math.max(0, calendarDaysBetween(task.targetDate, today));
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex min-w-8 items-center justify-center rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums",
+        rank === 1 ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary",
+      )}
+    >
+      {String(rank).padStart(2, "0")}
+    </span>
+  );
+}
+
+function MetricValue({
+  value,
+  hint,
+  tone = "default",
+}: {
+  value: ReactNode;
+  hint: string;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <div className="leading-tight">
+      <p
+        className={cn(
+          "font-medium tabular-nums",
+          tone === "danger" ? "text-destructive" : "text-foreground",
+        )}
+      >
+        {value}
+      </p>
+      <p className={cn("text-xs", tone === "danger" ? "text-destructive/80" : "text-muted-foreground")}>
+        {hint}
+      </p>
+    </div>
+  );
+}
+
+function RankedListCard({
+  title,
+  chip,
+  children,
+}: {
+  title: string;
+  chip: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card className="border-border">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">{title}</CardTitle>
+        <p className="pt-1">
+          <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+            {chip}
+          </span>
+        </p>
+      </CardHeader>
+      <CardContent className="p-0">{children}</CardContent>
+    </Card>
   );
 }

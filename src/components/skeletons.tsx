@@ -146,17 +146,81 @@ export function DashboardSkeleton() {
       </Card>
 
       <Card className="border-border">
-        <CardHeader className="pb-2">
-          <Skeleton className="h-4 w-48" />
+        <CardHeader className="pb-3">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="mt-3 h-6 w-32 rounded-full" />
         </CardHeader>
-        <CardContent className="space-y-3">
-          {times(2).map((index) => (
-            <div key={index} className="rounded-lg border border-border p-4">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="mt-2 h-3 w-48" />
-              <Skeleton className="mt-3 h-3 w-full" />
-            </div>
-          ))}
+        <CardContent className="p-0">
+          <div className="space-y-0 md:hidden">
+            {times(2).map((index) => (
+              <div key={index} className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0">
+                <Skeleton className="h-5 w-8 rounded-md" />
+                <div className="min-w-0 flex-1">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="mt-2 h-3 w-40" />
+                  <div className="mt-2 flex justify-between">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-8 w-12" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
+                  <th className="px-5 py-2.5">Rank</th>
+                  <th className="px-3 py-2.5">Activity</th>
+                  <th className="px-3 py-2.5">Owner</th>
+                  <th className="px-3 py-2.5">Status</th>
+                  <th className="px-3 py-2.5">Progress</th>
+                  <th className="px-5 py-2.5">Target</th>
+                </tr>
+              </thead>
+              <tbody>
+                {times(2).map((index) => (
+                  <TableRowSkeleton
+                    key={index}
+                    columns={6}
+                    widths={["w-8", "w-40", "w-20", "w-16", "w-12", "w-20"]}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <Skeleton className="h-4 w-52" />
+          <Skeleton className="mt-3 h-6 w-28 rounded-full" />
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="hidden overflow-x-auto md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
+                  <th className="px-5 py-2.5">Rank</th>
+                  <th className="px-3 py-2.5">Activity</th>
+                  <th className="px-3 py-2.5">Owner</th>
+                  <th className="px-3 py-2.5">Priority</th>
+                  <th className="px-3 py-2.5">Situation</th>
+                  <th className="px-5 py-2.5">Target</th>
+                </tr>
+              </thead>
+              <tbody>
+                {times(2).map((index) => (
+                  <TableRowSkeleton
+                    key={index}
+                    columns={6}
+                    widths={["w-8", "w-44", "w-20", "w-14", "w-12", "w-20"]}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </CardContent>
       </Card>
     </BusyRegion>

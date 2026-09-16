@@ -65,7 +65,13 @@ export function getPriorityActivities(tasks: Task[]): Task[] {
 }
 
 export function getBlockers(tasks: Task[]): Task[] {
-  return tasks.filter((t) => t.status === "On Hold");
+  return tasks
+    .filter((t) => t.status === "On Hold")
+    .sort(
+      (a, b) =>
+        (priorityRank[a.priority] ?? 99) - (priorityRank[b.priority] ?? 99) ||
+        a.targetDate.localeCompare(b.targetDate),
+    );
 }
 
 export function getOverdue(tasks: Task[], today = todayISO()): Task[] {

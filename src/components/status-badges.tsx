@@ -110,7 +110,10 @@ export function CircularProgress({
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center text-center">
-        <p className="font-display text-3xl font-semibold tabular-nums leading-none">{clamped}%</p>
+        <div>
+          <p className="font-display text-3xl font-semibold tabular-nums leading-none">{clamped}%</p>
+          <p className="mt-1.5 text-xs font-medium text-muted-foreground">Completed</p>
+        </div>
       </div>
     </div>
   );
