@@ -1,4 +1,5 @@
 import type { Task } from "@/data/tasks";
+import { displayRequestType } from "@/data/requests";
 import {
   getBlockers,
   getCategoryStats,
@@ -322,7 +323,7 @@ export async function exportRequestCompletionPdf(payload: CompletionPayload) {
   doc.setFontSize(9.5);
   doc.setTextColor(...SLATE);
   doc.text(
-    `${request.ticket}  •  ${request.type}  •  ${request.department}  •  ${request.requesterName}`,
+    `${request.ticket}  •  ${displayRequestType(request.type)}  •  ${request.department}  •  ${request.requesterName}`,
     margin,
     y,
   );

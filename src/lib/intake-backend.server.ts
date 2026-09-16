@@ -17,6 +17,8 @@ import {
   isSimilarTitle,
   isTerminalRequestStatus,
   mapTaskStatusToRequest,
+  normalizeDepartmentName,
+  normalizeRequestType,
   normalizeTicket,
   ticketLookupKeys,
   type IntakeRequest,
@@ -138,6 +140,53 @@ function seedStore(): StoreFile {
   };
 }
 
+function syncStoreCatalog(store: StoreFile): boolean {
+  let changed = false;
+  const renameDepartment = (from: string, to: string) => {
+    const existingTo = store.departments.find((item) => item.name === to);
+    const existingFrom = store.departments.find((item) => item.name === from);
+    if (existingFrom) {
+      if (existingTo) {
+        store.departments = store.departments.filter((item) => item.name !== from);
+      } else {
+        existingFrom.name = to;
+      }
+      changed = true;
+    }
+    for (const request of store.requests) {
+      if (request.department === from) {
+        request.department = to;
+        changed = true;
+      }
+    }
+  };
+  renameDepartment("Finance", "Finance and Accounting");
+
+  const names = new Set(store.departments.map((item) => item.name));
+  let maxSort = Math.max(-1, ...store.departments.map((item) => item.sortOrder));
+  for (const name of DEFAULT_DEPARTMENTS) {
+    if (!names.has(name)) {
+      store.departments.push({ id: newId(), name, sortOrder: ++maxSort });
+      names.add(name);
+      changed = true;
+    }
+  }
+
+  for (const request of store.requests) {
+    const type = normalizeRequestType(String(request.type));
+    if (type !== request.type) {
+      request.type = type;
+      changed = true;
+    }
+    const department = normalizeDepartmentName(request.department);
+    if (department !== request.department) {
+      request.department = department;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 function readStore(): StoreFile {
   mkdirSync(DATA_DIR, { recursive: true });
   mkdirSync(ATTACH_DIR, { recursive: true });
@@ -147,7 +196,7 @@ function readStore(): StoreFile {
     return seeded;
   }
   const store = JSON.parse(readFileSync(STORE_FILE, "utf8")) as StoreFile;
-  let changed = false;
+  let changed = syncStoreCatalog(store);
   store.profiles = (store.profiles ?? []).map((profile) => {
     const next = normalizeStoredProfile(profile as StoredProfile & { sessionVersion?: number; mustChangePassword?: boolean });
     if (
@@ -317,9 +366,50 @@ async function nextTicket(store: StoreFile): Promise<string> {
   return formatTicket(n);
 }
 
+async function syncCloudCatalog(sb: SupabaseClient) {
+  const { data: rows, error } = await sb.from("departments").select("*").order("sort_order");
+  if (error) throw new Error(error.message);
+  const departments = rows ?? [];
+  const names = new Set(departments.map((row) => String((row as Record<string, unknown>)["name"])));
+
+  if (names.has("Finance")) {
+    if (names.has("Finance and Accounting")) {
+      const { error: deleteErr } = await sb.from("departments").delete().eq("name", "Finance");
+      if (deleteErr) throw new Error(deleteErr.message);
+    } else {
+      const { error: renameErr } = await sb
+        .from("departments")
+        .update({ name: "Finance and Accounting" })
+        .eq("name", "Finance");
+      if (renameErr) throw new Error(renameErr.message);
+    }
+    const { error: requestErr } = await sb
+      .from("requests")
+      .update({ department: "Finance and Accounting" })
+      .eq("department", "Finance");
+    if (requestErr) throw new Error(requestErr.message);
+    names.delete("Finance");
+    names.add("Finance and Accounting");
+  }
+
+  const maxSort = Math.max(0, ...departments.map((row) => Number((row as Record<string, unknown>)["sort_order"]) || 0));
+  let nextSort = maxSort + 1;
+  for (const name of DEFAULT_DEPARTMENTS) {
+    if (!names.has(name)) {
+      const { error: insertErr } = await sb.from("departments").insert({ name, sort_order: nextSort++ });
+      if (insertErr) throw new Error(insertErr.message);
+      names.add(name);
+    }
+  }
+
+  const { error: typeErr } = await sb.from("requests").update({ type: "Problem" }).eq("type", "Bug");
+  if (typeErr) throw new Error(typeErr.message);
+}
+
 export async function listCatalog() {
   if (isCloudEnabled()) {
     const sb = cloudClient();
+    await syncCloudCatalog(sb);
     const [{ data: departments, error: depErr }, { data: modules, error: modErr }] = await Promise.all([
       sb.from("departments").select("*").order("sort_order"),
       sb.from("modules").select("*").order("sort_order"),
@@ -595,13 +685,13 @@ function mapRequest(row: Record<string, any>, assignedToName: string | null = nu
   return {
     id: String(row["id"]),
     ticket: String(row["ticket"]),
-    type: row["type"] as RequestType,
+    type: normalizeRequestType(String(row["type"])),
     title: String(row["title"]),
     note: String(row["note"] ?? row["description"] ?? ""),
     module: String(row["module"]),
     requesterName: String(row["requester_name"]),
     requesterEmail: String(row["requester_email"]),
-    department: String(row["department"]),
+    department: normalizeDepartmentName(String(row["department"])),
     urgency: row["urgency"] as RequestUrgency,
     itPriority: (row["it_priority"] as ItPriority) ?? "Medium",
     status: row["status"] as RequestStatus,

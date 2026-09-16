@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { REQUEST_TYPES, REQUEST_URGENCIES, type SimilarRequest } from "@/data/requests";
+import { isIssueReportType, REQUEST_TYPES, REQUEST_URGENCIES, type SimilarRequest } from "@/data/requests";
 import { checkDuplicatesFn, listCatalogFn, submitRequestFn } from "@/lib/request-functions";
 import { fileBadge, formatBytes } from "@/lib/attachment-ui";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -80,7 +80,7 @@ export function RequestForm() {
   const [ticket, setTicket] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
-  const isBug = draft.type === "Bug";
+  const isProblem = isIssueReportType(draft.type);
 
   const payload = useMemo(
     () => ({
@@ -92,11 +92,11 @@ export function RequestForm() {
       requesterEmail: draft.requesterEmail,
       department: draft.department,
       urgency: draft.urgency,
-      stepsToReproduce: isBug ? draft.stepsToReproduce : null,
-      expectedBehavior: isBug ? draft.expectedBehavior : null,
-      actualBehavior: isBug ? draft.actualBehavior : null,
+      stepsToReproduce: isProblem ? draft.stepsToReproduce : null,
+      expectedBehavior: isProblem ? draft.expectedBehavior : null,
+      actualBehavior: isProblem ? draft.actualBehavior : null,
     }),
-    [draft, isBug],
+    [draft, isProblem],
   );
 
   const submit = async (force: boolean) => {
@@ -281,9 +281,9 @@ export function RequestForm() {
                 />
               </Field>
 
-              {isBug && (
+              {isProblem && (
                 <div className="space-y-4 rounded-lg border border-border p-4">
-                  <p className="text-sm font-medium">Bug details</p>
+                  <p className="text-sm font-medium">What went wrong</p>
                   <Field label="Steps to reproduce" htmlFor="req-steps">
                     <Textarea
                       id="req-steps"
@@ -412,8 +412,8 @@ export function RequestForm() {
                   htmlFor="req-files"
                   className={
                     files.length
-                      ? "mt-3 flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground"
-                      : "mt-4 flex flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-8 text-center"
+                      ? "mt-3 flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary focus-within:border-primary"
+                      : "mt-4 flex flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-8 text-center transition-colors hover:border-primary focus-within:border-primary"
                   }
                 >
                   {files.length ? (

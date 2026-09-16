@@ -64,7 +64,7 @@ export const Route = createFileRoute("/")({
           { title: "Submit an IT Request" },
           {
             name: "description",
-            content: "Send a bug, feature, access, or support request to the IT department.",
+            content: "Send a problem, feature, access, or support request to the IT department.",
           },
         ],
       };
@@ -187,7 +187,7 @@ function StartChooser() {
           <ChoiceCard
             view="request"
             title="I need to submit a request"
-            description="No account needed. Send a bug, access, or support request and get a ticket number to track status."
+            description="No account needed. Send a problem, access, or support request and get a ticket number to track status."
             cta="Open request form"
           >
             <RequestPreview />

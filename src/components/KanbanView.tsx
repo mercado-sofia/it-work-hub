@@ -158,7 +158,7 @@ export function KanbanView({ tasks, readOnly, onUpdate, onEdit }: KanbanViewProp
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:snap-none">
+      <div className="flex select-none gap-4 overflow-x-auto snap-x snap-mandatory pb-2 lg:grid lg:grid-cols-5 lg:overflow-visible lg:snap-none">
         {STATUSES.map((status) => (
           <KanbanColumn
             key={status}
@@ -205,7 +205,7 @@ function KanbanColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        "min-w-[min(17rem,85vw)] snap-start rounded-lg border border-border bg-card lg:min-w-0",
+        "min-w-[min(17rem,85vw)] snap-start select-none rounded-lg border border-border bg-card lg:min-w-0",
         isOver && "border-primary/40 ring-2 ring-primary/40",
       )}
     >
@@ -258,7 +258,7 @@ const KanbanCard = memo(function KanbanCard({
       {...(readOnly ? {} : listeners)}
       {...(readOnly ? {} : attributes)}
       className={cn(
-        "rounded-md border border-border bg-card p-3",
+        "select-none rounded-md border border-border bg-card p-3",
         !readOnly && "cursor-grab active:cursor-grabbing",
         isDragging && "opacity-40",
       )}
@@ -270,7 +270,7 @@ const KanbanCard = memo(function KanbanCard({
 
 function KanbanCardPreview({ task }: { task: Task }) {
   return (
-    <div className="w-[15.5rem] cursor-grabbing rounded-md border border-border bg-card p-3 shadow-lg">
+    <div className="w-[15.5rem] cursor-grabbing select-none rounded-md border border-border bg-card p-3 shadow-lg">
       <KanbanCardContent task={task} readOnly />
     </div>
   );

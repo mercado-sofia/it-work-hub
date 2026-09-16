@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PublicShell } from "@/components/PublicHeader";
 import { RequestStatusBadge } from "@/components/request-badges";
-import { canRequesterComment, type PublicRequestView } from "@/data/requests";
+import { canRequesterComment, displayRequestType, type PublicRequestView } from "@/data/requests";
 import { addRequesterCommentFn, lookupRequestFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
 import { RequestStatusResultSkeleton } from "@/components/skeletons";
@@ -123,7 +123,7 @@ function StatusPage() {
                 <RequestStatusBadge status={result.status} />
               </div>
               <p className="text-sm text-muted-foreground">
-                {result.type} · {result.department} · {result.module} · urgency {result.urgency}
+                {displayRequestType(result.type)} · {result.department} · {result.module} · urgency {result.urgency}
               </p>
               <p className="whitespace-pre-wrap text-sm">{result.note}</p>
               {result.status === "Declined" && result.declineReason && (

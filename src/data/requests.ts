@@ -1,5 +1,5 @@
 export const REQUEST_TYPES = [
-  "Bug",
+  "Problem",
   "Feature Request",
   "Enhancement",
   "Access Request",
@@ -24,8 +24,9 @@ export const REQUEST_STATUSES = [
 export const DEFAULT_DEPARTMENTS = [
   "HR",
   "Supply Chain & Logistics",
-  "Finance",
+  "Finance and Accounting",
   "IT",
+  "Chief Admin Director",
 ] as const;
 
 export const DEFAULT_MODULES = [
@@ -40,6 +41,31 @@ export const DEFAULT_MODULES = [
 export const IT_ROLES = ["admin", "staff", "management"] as const;
 
 export type RequestType = (typeof REQUEST_TYPES)[number];
+
+const LEGACY_REQUEST_TYPES: Record<string, RequestType> = {
+  Bug: "Problem",
+};
+
+const LEGACY_DEPARTMENTS: Record<string, string> = {
+  Finance: "Finance and Accounting",
+};
+
+export function isIssueReportType(type: string) {
+  return type === "Problem" || type === "Bug";
+}
+
+export function normalizeRequestType(type: string): RequestType {
+  return LEGACY_REQUEST_TYPES[type] ?? (type as RequestType);
+}
+
+export function displayRequestType(type: string) {
+  return normalizeRequestType(type);
+}
+
+export function normalizeDepartmentName(name: string) {
+  return LEGACY_DEPARTMENTS[name] ?? name;
+}
+
 export type RequestUrgency = (typeof REQUEST_URGENCIES)[number];
 export type ItPriority = (typeof IT_PRIORITIES)[number];
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];

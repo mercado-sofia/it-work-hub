@@ -57,7 +57,7 @@ function Dashboard() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <div>
         <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
           Executive Management Dashboard
@@ -73,7 +73,7 @@ function Dashboard() {
       {!hydrated ? (
         <DashboardSkeleton />
       ) : (
-      <div className="contents">
+      <div className="flex flex-col gap-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map(({ label, value, icon: Icon }) => (
           <Card key={label} className="border-border">

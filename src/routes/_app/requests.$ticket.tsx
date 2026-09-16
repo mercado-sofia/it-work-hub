@@ -32,6 +32,8 @@ import {
   canEditResolutionNotes,
   canEditTriageFields,
   canItAddComment,
+  displayRequestType,
+  isIssueReportType,
   isTerminalRequestStatus,
   IT_PRIORITIES,
   type ItPriority,
@@ -267,7 +269,7 @@ function RequestDetailPage() {
           <BackButton fallback="/requests" />
           <h1 className="mt-1 text-lg font-semibold tracking-tight sm:text-xl">{request.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {request.ticket} · {request.type} · {request.department} · {request.module}
+            {request.ticket} · {displayRequestType(request.type)} · {request.department} · {request.module}
           </p>
         </div>
         <RequestStatusBadge status={request.status} />
@@ -279,7 +281,7 @@ function RequestDetailPage() {
             <CardContent className="space-y-4 p-5">
               <h2 className="text-sm font-semibold">Submitted request</h2>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                <DetailField label="Type" value={request.type} />
+                <DetailField label="Type" value={displayRequestType(request.type)} />
                 <DetailField label="Module" value={request.module} />
                 <DetailField label="Department" value={request.department} />
                 <DetailField label="Requester urgency" value={request.urgency} />
@@ -290,7 +292,7 @@ function RequestDetailPage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Note</p>
                 <p className="whitespace-pre-wrap text-sm">{(request.note ?? "").trim() || "No note provided."}</p>
               </div>
-              {request.type === "Bug" && (
+              {isIssueReportType(request.type) && (
                 <div className="space-y-3 rounded-lg border border-border/70 bg-muted/30 p-3 text-sm">
                   <DetailField label="Steps to reproduce" value={request.stepsToReproduce || "—"} />
                   <DetailField label="Expected behavior" value={request.expectedBehavior || "—"} />

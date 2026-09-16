@@ -207,6 +207,7 @@ export function TeamSection() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         title="Add person"
+        description="Create a login for this person."
         icon={UserPlus}
         submitLabel="Create account"
         pending={inviteMutation.isPending}
@@ -256,6 +257,11 @@ export function TeamSection() {
         open={Boolean(editing)}
         onOpenChange={(open) => !open && setEditing(null)}
         title={editing ? `Edit ${editing.displayName}` : "Edit person"}
+        description={
+          editing && editing.id === user?.id
+            ? "Update your name or role."
+            : "Update this person's name or role."
+        }
         icon={Pencil}
         submitLabel="Save"
         pending={saveMutation.isPending}

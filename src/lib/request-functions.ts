@@ -7,6 +7,7 @@ import {
   REQUEST_URGENCIES,
   canRequesterComment,
   forwardPath,
+  isIssueReportType,
   sessionUsersEqual,
   type ItPriority,
   type RequestStatus,
@@ -269,9 +270,9 @@ const submitSchema = z.object({
 export const submitRequestFn = createServerFn({ method: "POST" })
   .inputValidator(submitSchema)
   .handler(async ({ data }) => {
-    if (data.type === "Bug") {
+    if (isIssueReportType(data.type)) {
       if (!data.stepsToReproduce?.trim() || !data.expectedBehavior?.trim() || !data.actualBehavior?.trim()) {
-        throw new Error("Bugs require steps to reproduce, expected behavior, and actual behavior.");
+        throw new Error("Please include the steps, what you expected, and what happened instead.");
       }
     }
     const similar = await findSimilarRequests(data.title, data.module);

@@ -13,6 +13,7 @@ import {
   IT_PRIORITIES,
   REQUEST_STATUSES,
   REQUEST_TYPES,
+  displayRequestType,
   type IntakeRequestListItem,
   type ItPriority,
   type RequestStatus,
@@ -69,7 +70,7 @@ function RequestsPage() {
       if (priorities.length && !priorities.includes(row.itPriority)) return false;
       if (departments.length && !departments.includes(row.department)) return false;
       if (modules.length && !modules.includes(row.module)) return false;
-      if (types.length && !types.includes(row.type)) return false;
+      if (types.length && !types.includes(displayRequestType(row.type))) return false;
       if (statuses.length && !statuses.includes(row.status)) return false;
       return true;
     });
@@ -80,7 +81,7 @@ function RequestsPage() {
       <div>
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Requests</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Incoming tickets from the public submit form. Open a request to read the note, bug details, and
+          Incoming tickets from the public submit form. Open a request to read the note, details, and
           attached files.
         </p>
       </div>
@@ -162,7 +163,7 @@ function RequestsPage() {
                       <p className="leading-snug">{row.requesterName}</p>
                       <p className="text-xs text-muted-foreground">{row.requesterEmail}</p>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-3">{row.type}</td>
+                    <td className="whitespace-nowrap px-3 py-3">{displayRequestType(row.type)}</td>
                     <td className="whitespace-nowrap px-3 py-3">{row.department}</td>
                     <td className="whitespace-nowrap px-3 py-3 text-muted-foreground">
                       {formatDate(row.createdAt.slice(0, 10))}
@@ -223,7 +224,7 @@ function RequestCard({ row }: { row: IntakeRequestListItem }) {
         <p className="text-sm font-medium">{row.title}</p>
         <p className="text-xs text-muted-foreground">Affected module: {row.module}</p>
         <p className="text-xs text-muted-foreground">
-          {row.requesterName} · {row.type} · {row.department} · {formatDate(row.createdAt.slice(0, 10))}
+          {row.requesterName} · {displayRequestType(row.type)} · {row.department} · {formatDate(row.createdAt.slice(0, 10))}
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <PriorityBadge priority={row.itPriority} />

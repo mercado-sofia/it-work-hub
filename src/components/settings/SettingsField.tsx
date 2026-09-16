@@ -56,6 +56,8 @@ export function SettingsFormDialog({
   open,
   onOpenChange,
   title,
+  description,
+  shortDescription,
   icon,
   submitLabel,
   pending = false,
@@ -67,6 +69,8 @@ export function SettingsFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
+  description?: string | undefined;
+  shortDescription?: string | undefined;
   icon: LucideIcon;
   submitLabel: string;
   pending?: boolean | undefined;
@@ -85,6 +89,8 @@ export function SettingsFormDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={title}
+      description={description}
+      shortDescription={shortDescription}
       icon={icon}
       contentClassName="sm:max-w-md"
       insetClassName="px-6 sm:px-7"
