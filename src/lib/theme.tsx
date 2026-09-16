@@ -10,7 +10,7 @@ import {
 
 export type Theme = "light" | "dark";
 
-export const THEME_KEY = "it-tracker-theme-v1";
+const THEME_KEY = "it-tracker-theme-v1";
 
 type ThemeContextValue = {
   theme: Theme;

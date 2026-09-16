@@ -16,7 +16,7 @@ export const STATUSES = [
   "On Hold",
 ] as const;
 
-export const SPRINT_STATUSES = ["Planned", "Active", "Completed"] as const;
+const SPRINT_STATUSES = ["Planned", "Active", "Completed"] as const;
 
 export type Category = string;
 export type Priority = (typeof PRIORITIES)[number];

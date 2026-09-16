@@ -244,11 +244,11 @@ export function allowedRequestTransitions(
   return next.filter((to) => !ROLLBACK_AFTER_CONVERT.includes(to));
 }
 
-export function canTransition(from: RequestStatus, to: RequestStatus): boolean {
+function canTransition(from: RequestStatus, to: RequestStatus): boolean {
   return from === to || TRANSITIONS[from].includes(to);
 }
 
-export function canChangeRequestStatus(
+function canChangeRequestStatus(
   status: RequestStatus,
   to: RequestStatus,
   linkedTaskId?: string | null,
@@ -321,7 +321,7 @@ const STOPWORDS = new Set([
   "request",
 ]);
 
-export function tokenize(text: string): string[] {
+function tokenize(text: string): string[] {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9\s]/g, " ")

@@ -3,11 +3,11 @@ import { applyTaskRules } from "@/lib/task-rules";
 import { getSampleData } from "@/data/sample-data";
 import { normalizeTicket } from "@/data/requests";
 
-export const TASKS_KEY_V2 = "it-tracker-tasks-v2";
-export const TASKS_KEY_V1 = "it-tracker-tasks-v1";
-export const SPRINTS_KEY_V1 = "it-tracker-sprints-v1";
-export const LAST_EXPORT_KEY = "it-tracker-last-export-v1";
-export const DATA_KEY = "it-tracker-data-v5";
+const TASKS_KEY_V2 = "it-tracker-tasks-v2";
+const TASKS_KEY_V1 = "it-tracker-tasks-v1";
+const SPRINTS_KEY_V1 = "it-tracker-sprints-v1";
+const LAST_EXPORT_KEY = "it-tracker-last-export-v1";
+const DATA_KEY = "it-tracker-data-v5";
 const DATA_KEY_V4 = "it-tracker-data-v4";
 
 const RETIRED_SUPPORT_CATEGORY = "support/ticketing";
@@ -49,7 +49,7 @@ function readJson<T>(key: string): T | null {
   }
 }
 
-export function migrateTask(raw: Record<string, unknown>): Task | null {
+function migrateTask(raw: Record<string, unknown>): Task | null {
   const sprintId = raw["sprintId"];
   const rawCategory = String(raw["category"] ?? "").trim();
   if (isRetiredSupportCategory(rawCategory)) return null;
@@ -154,7 +154,7 @@ export function peekLegacyBrowserData(): { tasks: Task[]; sprints: Sprint[] } | 
   return { tasks, sprints };
 }
 
-export function clearLegacyBrowserData() {
+function clearLegacyBrowserData() {
   localStorage.removeItem(TASKS_KEY_V2);
   localStorage.removeItem(TASKS_KEY_V1);
   localStorage.removeItem(SPRINTS_KEY_V1);

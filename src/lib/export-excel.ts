@@ -251,7 +251,7 @@ export async function exportAccomplishmentsWorkbook(
   downloadBlob(blob, `IT-Accomplishments-${slug}.xlsx`);
 }
 
-export function downloadBlob(blob: Blob, filename: string) {
+function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

@@ -191,7 +191,7 @@ export function isValidDateRange(from?: string, to?: string): boolean {
   return true;
 }
 
-export function inCompletionRange(task: Task, from?: string, to?: string): boolean {
+function inCompletionRange(task: Task, from?: string, to?: string): boolean {
   const done = completionDate(task);
   if (!done) return false;
   if (from && done < from) return false;

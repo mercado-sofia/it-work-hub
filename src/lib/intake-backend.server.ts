@@ -101,7 +101,7 @@ function serviceRoleKey() {
   return process.env["SUPABASE_SERVICE_ROLE_KEY"] || "";
 }
 
-export function isCloudEnabled() {
+function isCloudEnabled() {
   return Boolean(supabaseUrl() && serviceRoleKey());
 }
 
@@ -1251,5 +1251,3 @@ export async function getAttachmentFile(id: string): Promise<{
     return { fileName: row.fileName, mimeType: row.mimeType, dataBase64: buffer.toString("base64") };
   });
 }
-
-export { toPublicView };

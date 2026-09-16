@@ -38,7 +38,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { syncRequestFromTaskFn } from "@/lib/request-functions";
 
-export type AppMode = "management" | "editor";
+type AppMode = "management" | "editor";
 
 const EXPORT_REMIND_DAYS = 30;
 

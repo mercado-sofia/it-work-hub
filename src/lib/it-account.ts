@@ -7,7 +7,7 @@ export const IT_ROLE_META: Record<ItRole, { label: string; help: string }> = {
   management: { label: "Management", help: "Read-only executive view." },
 };
 
-export const passwordSchema = z.string().min(10).max(120);
+const passwordSchema = z.string().min(10).max(120);
 
 export const inviteUserSchema = z.object({
   name: z.string().trim().min(2).max(80),

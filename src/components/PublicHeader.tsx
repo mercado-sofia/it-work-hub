@@ -5,7 +5,7 @@ import { BackButton } from "@/components/BackButton";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/theme";
 
-export function PublicHeader() {
+function PublicHeader() {
   const { theme, toggleTheme } = useTheme();
 
   return (

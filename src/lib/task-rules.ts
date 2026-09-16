@@ -14,7 +14,7 @@ export function completionDate(task: Task): string {
   return "";
 }
 
-export function mapToProjectStatus(status: string): Status {
+function mapToProjectStatus(status: string): Status {
   if ((STATUSES as readonly string[]).includes(status)) return status as Status;
   if (status === "Closed") return "Completed";
   return "In Progress";
