@@ -225,7 +225,7 @@ export function AppHeader() {
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent
           side="left"
-          className="flex w-[min(16rem,72vw)] flex-col gap-6 overflow-y-auto bg-card text-card-foreground"
+          className="flex w-[min(16rem,72vw)] flex-col gap-5 overflow-y-auto bg-card p-6 text-card-foreground sm:gap-6"
         >
           <SheetHeader className="text-left">
             <SheetTitle>Menu</SheetTitle>
@@ -235,7 +235,7 @@ export function AppHeader() {
             </SheetDescription>
           </SheetHeader>
 
-          <nav className="flex flex-col gap-1">
+          <nav className="flex flex-col gap-1.5">
             {nav.map((item) => (
               <NavLink
                 key={item.to}
@@ -245,16 +245,20 @@ export function AppHeader() {
                 onNavigate={() => setMenuOpen(false)}
               />
             ))}
+            <NavLink to="/settings" label="Settings" stacked onNavigate={() => setMenuOpen(false)} />
           </nav>
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Account</p>
-            <p className="px-3 text-sm font-medium">{user?.displayName}</p>
-            <p className="px-3 text-xs capitalize text-muted-foreground">{user?.role}</p>
-            <NavLink to="/settings" label="Settings" stacked onNavigate={() => setMenuOpen(false)} />
+          <div className="space-y-3 border-t border-border pt-5">
+            <div className="space-y-1 px-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Account
+              </p>
+              <p className="truncate text-sm font-medium">{user?.displayName}</p>
+              <p className="text-xs capitalize text-muted-foreground">{user?.role}</p>
+            </div>
             <Button
               variant="outline"
-              className="w-full justify-start gap-2"
+              className="w-full justify-center gap-2"
               disabled={signingOut}
               onClick={() => void signOut()}
             >
@@ -263,10 +267,12 @@ export function AppHeader() {
             </Button>
           </div>
 
-          <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
-            <BackupMenu {...backupProps} fullWidth />
-            <ExportMenu busy={busy} runExport={runExport} fullWidth />
-          </div>
+          {canWrite && (
+            <div className="mt-auto flex flex-col gap-2 border-t border-border pt-5">
+              <BackupMenu {...backupProps} fullWidth />
+              <ExportMenu busy={busy} runExport={runExport} fullWidth />
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
