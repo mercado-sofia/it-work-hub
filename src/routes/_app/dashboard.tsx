@@ -74,7 +74,7 @@ function Dashboard() {
         {kpis.map(({ label, value, icon: Icon }) => (
           <Card
             key={label}
-            className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm"
+            className="border-border max-lg:rounded-3xl max-lg:shadow-sm"
           >
             <CardContent className="p-5 max-lg:p-4">
               <div className="lg:hidden">
@@ -101,7 +101,7 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <Card className="flex h-full min-w-0 flex-col border-border max-lg:rounded-[1.75rem] max-lg:border-0 max-lg:bg-primary/10 max-lg:shadow-none">
+        <Card className="flex h-full min-w-0 flex-col border-border max-lg:rounded-[1.75rem] max-lg:bg-primary/10 max-lg:shadow-none">
           <CardHeader className="shrink-0 max-lg:flex-row max-lg:items-center max-lg:justify-between max-lg:gap-3 max-lg:px-5 max-lg:py-5 lg:pb-2">
             <div className="min-w-0">
               <CardTitle className="text-base max-lg:text-lg max-lg:font-semibold">Overall Progress</CardTitle>
@@ -147,7 +147,7 @@ function Dashboard() {
             {categoryStats.map((stat) => (
               <div
                 key={stat.category}
-                className="min-w-0 overflow-hidden rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:border-0 max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
+                className="min-w-0 overflow-hidden rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
               >
                 <div className="flex items-start gap-2">
                   <p className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
@@ -187,7 +187,7 @@ function Dashboard() {
             {priorities.map((task) => (
               <div
                 key={task.id}
-                className="rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:border-0 max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
+                className="rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
               >
                 <p className="font-medium leading-snug">{task.title}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -283,7 +283,7 @@ function Dashboard() {
               return (
                 <div
                   key={task.id}
-                  className="flex gap-3 rounded-3xl bg-card p-4 shadow-sm"
+                  className="flex gap-3 rounded-3xl border border-border bg-card p-4 shadow-sm"
                 >
                   <RankBadge rank={index + 1} />
                   <div className="min-w-0 flex-1">
@@ -372,7 +372,7 @@ function Dashboard() {
               {blockers.map((task, index) => (
                 <div
                   key={task.id}
-                  className="min-w-0 rounded-3xl bg-card p-4 shadow-sm"
+                  className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-sm"
                 >
                   <div className="flex items-start gap-2">
                     <RankBadge rank={index + 1} />

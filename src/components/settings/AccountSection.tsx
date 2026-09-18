@@ -74,7 +74,7 @@ export function AccountSection() {
   }
 
   return (
-    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+    <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
       <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
         <div>
           <CardTitle className="text-base max-lg:text-lg">Your account</CardTitle>

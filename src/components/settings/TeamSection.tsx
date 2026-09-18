@@ -122,7 +122,7 @@ export function TeamSection() {
   const busy = saveMutation.isPending || activeMutation.isPending || resetMutation.isPending;
 
   return (
-    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+    <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
       <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
         <div>
           <CardTitle className="text-base max-lg:text-lg">IT team</CardTitle>
@@ -188,7 +188,7 @@ export function TeamSection() {
             </div>
             <div className="space-y-2.5 px-4 pb-4 md:hidden">
               {people.length === 0 ? (
-                <div className="rounded-2xl bg-muted/40 px-4 py-8 text-center">
+                <div className="rounded-2xl border border-border bg-muted/40 px-4 py-8 text-center">
                   <p className="text-sm text-muted-foreground">No IT users yet.</p>
                 </div>
               ) : (
@@ -431,7 +431,7 @@ function TeamCard({
   onEdit: () => void;
 }) {
   return (
-    <div className={cn("rounded-2xl bg-muted/40 p-4", isSelf && "bg-primary/5")}>
+    <div className={cn("rounded-2xl border border-border bg-muted/40 p-4", isSelf && "bg-primary/5")}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-[15px] font-semibold leading-snug">

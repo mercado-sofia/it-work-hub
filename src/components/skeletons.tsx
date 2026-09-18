@@ -27,7 +27,7 @@ function BusyRegion({
 
 function KpiCardSkeleton() {
   return (
-    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+    <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
       <CardContent className="p-5 max-lg:p-4">
         <div className="lg:hidden">
           <div className="flex items-center gap-2.5">
@@ -255,7 +255,7 @@ export function DashboardSkeleton() {
 export function TrackerSkeleton() {
   return (
     <BusyRegion label="Loading tracker" className="space-y-6">
-      <Card className="max-md:rounded-3xl max-md:border-0 max-md:shadow-sm">
+      <Card className="border-border max-md:rounded-3xl max-md:shadow-sm">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center max-md:p-3">
           <Skeleton className="h-9 w-full flex-1 max-md:h-11 max-md:rounded-full" />
           <div className="hidden flex-wrap items-center gap-3 md:flex">
@@ -269,7 +269,7 @@ export function TrackerSkeleton() {
 
       <div className="space-y-2.5 md:hidden">
         {times(4).map((index) => (
-          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+          <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-5 w-20 rounded-full" />
@@ -328,7 +328,7 @@ export function AccomplishmentsSkeleton() {
           <KpiCardSkeleton key={index} />
         ))}
       </div>
-      <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
         <CardContent className="flex flex-wrap items-center gap-2 p-4 sm:p-5">
           <Skeleton className="h-3 w-24" />
           {times(4).map((index) => (
@@ -342,7 +342,7 @@ export function AccomplishmentsSkeleton() {
           <Skeleton className="h-3 w-20" />
         </div>
         {times(3).map((index) => (
-          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+          <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-3 w-20" />
@@ -377,7 +377,7 @@ export function RequestsListSkeleton() {
     <BusyRegion label="Loading requests">
       <div className="space-y-2.5 md:hidden">
         {times(5).map((index) => (
-          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+          <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
             <div className="flex items-center justify-between gap-2">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-5 w-20 rounded-full" />
@@ -493,7 +493,7 @@ export function RequestDetailSkeleton() {
 export function AccountCardSkeleton() {
   return (
     <BusyRegion label="Loading account">
-      <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
         <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
           <div>
             <Skeleton className="h-4 w-28" />

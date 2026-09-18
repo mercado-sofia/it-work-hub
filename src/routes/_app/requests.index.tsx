@@ -168,7 +168,7 @@ function RequestsPage() {
         }
       />
 
-      <Card className="max-md:rounded-3xl max-md:border-0 max-md:shadow-sm">
+      <Card className="border-border max-md:rounded-3xl max-md:shadow-sm">
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center max-md:p-3">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -250,7 +250,7 @@ function RequestsPage() {
           <RequestCard key={row.id} row={row} />
         ))}
         {!list.isLoading && rows.length === 0 && (
-          <div className="rounded-3xl bg-card px-4 py-10 text-center shadow-sm">
+          <div className="rounded-3xl border border-border bg-card px-4 py-10 text-center shadow-sm">
             <p className="text-sm text-muted-foreground">No requests match the current filters.</p>
           </div>
         )}
@@ -346,7 +346,7 @@ function RequestCard({ row }: { row: IntakeRequestListItem }) {
     <Link
       to="/requests/$ticket"
       params={{ ticket: row.ticket }}
-      className="block min-w-0 rounded-3xl bg-card p-4 shadow-sm"
+      className="block min-w-0 rounded-3xl border border-border bg-card p-4 shadow-sm"
     >
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">

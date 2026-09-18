@@ -46,7 +46,7 @@ export function AppHeader() {
 
   return (
     <>
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-card text-foreground print:hidden">
+    <header className="sticky top-0 z-40 bg-card text-foreground lg:border-b lg:border-border/70 print:hidden">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link to="/dashboard" className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <img src="/it-logo.png" alt="TrackHub" className="size-9 rounded-full object-cover" />

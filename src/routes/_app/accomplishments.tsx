@@ -258,7 +258,7 @@ function Accomplishments() {
         </div>
       </div>
 
-      <Card className="min-w-0 border-border print:hidden max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <Card className="min-w-0 border-border print:hidden max-lg:rounded-3xl max-lg:shadow-sm">
         <CardContent className="space-y-4 overflow-x-hidden p-4 sm:p-5 max-lg:p-3">
           <fieldset className="w-full min-w-0 space-y-3 [min-inline-size:0]">
             <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -467,7 +467,7 @@ function SnapshotCard({
   icon: typeof CheckCircle2;
 }) {
   return (
-    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+    <Card className="border-border max-lg:rounded-3xl max-lg:shadow-sm">
       <CardContent className="p-5 max-lg:p-3 sm:max-lg:p-4">
         <div className="lg:hidden">
           <div className="flex items-center gap-2 max-[380px]:flex-col max-[380px]:items-start">
@@ -555,7 +555,7 @@ function AccomplishmentRow({ task }: { task: Task }) {
 
   return (
     <>
-      <div className="rounded-3xl bg-card p-4 shadow-sm lg:hidden">
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm lg:hidden">
         <div className="flex items-center justify-between gap-2">
           <p className="min-w-0 truncate text-xs font-medium tabular-nums text-muted-foreground">{idEl}</p>
           <span className="shrink-0 text-xs text-muted-foreground">{completed}</span>
