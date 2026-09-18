@@ -261,8 +261,8 @@ function Accomplishments() {
                 </Button>
               ))}
             </div>
-            <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-              <div className="w-full min-w-0 max-w-full space-y-1.5">
+            <div className="flex w-full min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
+              <div className="w-full min-w-0 space-y-1.5 sm:w-52">
                 <Label htmlFor="from" className="text-xs">
                   From
                 </Label>
@@ -277,7 +277,7 @@ function Accomplishments() {
                   className="w-full min-w-0 max-w-full"
                 />
               </div>
-              <div className="w-full min-w-0 max-w-full space-y-1.5">
+              <div className="w-full min-w-0 space-y-1.5 sm:w-52">
                 <Label htmlFor="to" className="text-xs">
                   To
                 </Label>

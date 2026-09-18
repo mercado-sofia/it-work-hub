@@ -24,6 +24,13 @@ const priorityStyles: Record<Priority, string> = {
   Low: "bg-muted text-muted-foreground border-border",
 };
 
+const priorityTextStyles: Record<Priority, string> = {
+  Critical: "text-destructive",
+  High: "text-warning",
+  Medium: "text-info",
+  Low: "text-muted-foreground",
+};
+
 const base =
   "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium whitespace-nowrap";
 
@@ -49,10 +56,19 @@ export function StatusBadge({
 export function PriorityBadge({
   priority,
   className,
+  variant = "badge",
 }: {
   priority: Priority;
   className?: string;
+  variant?: "badge" | "plain";
 }) {
+  if (variant === "plain") {
+    return (
+      <span className={cn("whitespace-nowrap text-xs font-medium", priorityTextStyles[priority], className)}>
+        {priority}
+      </span>
+    );
+  }
   return <span className={cn(base, priorityStyles[priority], className)}>{priority}</span>;
 }
 

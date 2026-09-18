@@ -642,7 +642,7 @@ function Tracker() {
       {!hydrated ? (
         <TrackerSkeleton />
       ) : (
-      <div className="flex min-w-0 flex-col gap-6">
+      <div className="flex min-w-0 flex-col gap-4">
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
@@ -852,7 +852,7 @@ function TableView({
               <span className="text-xs text-muted-foreground">
                 {task.sprintId ? (sprintNameById.get(task.sprintId) ?? "Unknown") : "Backlog"}
               </span>
-              <PriorityBadge priority={task.priority} />
+              <PriorityBadge priority={task.priority} variant="plain" />
             </div>
             {readOnly ? (
               <StatusBadge status={task.status} />
@@ -928,7 +928,7 @@ function TableView({
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">{task.assignee}</td>
                   <td className="px-3 py-3">
-                    <PriorityBadge priority={task.priority} />
+                    <PriorityBadge priority={task.priority} variant="plain" />
                   </td>
                   <td className="w-px whitespace-nowrap px-3 py-3">
                     {readOnly ? (
