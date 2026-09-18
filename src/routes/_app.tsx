@@ -18,9 +18,9 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   return (
     <TaskProvider>
-      <div className="min-h-screen bg-background font-sans text-foreground">
+      <div className="min-h-screen min-w-0 overflow-x-hidden bg-background font-sans text-foreground">
         <AppHeader />
-        <main className="mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
+        <main className="mx-auto min-w-0 max-w-7xl overflow-x-hidden px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
           <Outlet />
         </main>
       </div>

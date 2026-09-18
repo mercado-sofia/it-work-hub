@@ -326,16 +326,23 @@ input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
   box-sizing: border-box;
   padding: 0.875rem 2.5rem 0.875rem 0.875rem;
   gap: 0.75rem;
-  align-items: flex-start;
+  align-items: center;
   border-width: 0;
   box-shadow:
     0 1px 2px oklch(0.2 0.02 270 / 0.04),
     0 10px 28px oklch(0.2 0.02 270 / 0.1);
 }
 
+[data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"]:has([data-description]) {
+  align-items: flex-start;
+}
+
 [data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-content] {
   min-width: 0;
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 [data-sonner-toaster].toaster [data-sonner-toast][data-styled="true"] [data-title] {

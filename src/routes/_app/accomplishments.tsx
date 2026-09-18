@@ -211,17 +211,17 @@ function Accomplishments() {
   const canExport = hydrated && rangeValid && visible.length > 0 && busy === null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="w-full min-w-0 max-w-full space-y-6 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
             Accomplishments &amp; Reports
           </h1>
-          <p className="mt-1 text-xs text-muted-foreground" aria-live="polite">
+          <p className="mt-1 break-words text-xs text-muted-foreground" aria-live="polite">
             {hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
           </p>
         </div>
-        <div className="flex shrink-0 flex-wrap gap-2 print:hidden">
+        <div className="flex min-w-0 flex-wrap gap-2 print:hidden">
           <Button
             variant="outline"
             size="sm"
@@ -230,16 +230,18 @@ function Accomplishments() {
             onClick={() => void runExport("xlsx")}
           >
             {busy === "xlsx" ? <Loader2 className="size-4 animate-spin" /> : <FileSpreadsheet className="size-4" />}
-            Download Excel
+            <span className="sm:hidden">Excel</span>
+            <span className="hidden sm:inline">Download Excel</span>
           </Button>
           <Button size="sm" className="gap-2" disabled={!canExport} onClick={() => void runExport("pdf")}>
             {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-            Download PDF
+            <span className="sm:hidden">PDF</span>
+            <span className="hidden sm:inline">Download PDF</span>
           </Button>
         </div>
       </div>
 
-      <Card className="border-border print:hidden">
+      <Card className="min-w-0 border-border print:hidden">
         <CardContent className="space-y-4 p-4 sm:p-5">
           <fieldset className="min-w-0 space-y-3">
             <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -383,7 +385,7 @@ function Accomplishments() {
                   {snapshot.byCategory.map((row) => (
                     <span
                       key={row.name}
-                      className="rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-secondary-foreground"
+                      className="max-w-full break-words rounded-full border border-border bg-secondary px-2.5 py-1 text-xs text-secondary-foreground"
                     >
                       {row.name}
                       <span className="ml-1.5 font-semibold tabular-nums">{row.count}</span>
@@ -436,14 +438,14 @@ function MonthGroup({
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   return (
-    <Card className="border-border">
+    <Card className="min-w-0 border-border">
       <details
         className="accomplishment-month group"
         open={open}
         onToggle={(event) => setOpen(event.currentTarget.open)}
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
-          <h2 className="font-display text-sm font-semibold tracking-tight sm:text-base">{month}</h2>
+        <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
+          <h2 className="min-w-0 break-words font-display text-sm font-semibold tracking-tight sm:text-base">{month}</h2>
           <span className="flex items-center gap-2">
             <span className="text-xs font-semibold text-primary">
               {items.length} completed
@@ -451,7 +453,7 @@ function MonthGroup({
             <ChevronDown className="month-chevron size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </span>
         </summary>
-        <div className="space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="min-w-0 space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
           {items.map((task) => (
             <AccomplishmentRow key={task.id} task={task} />
           ))}
@@ -465,22 +467,22 @@ function AccomplishmentRow({ task }: { task: Task }) {
   const ticket = task.requestRef?.trim();
   const result = task.remarks.trim();
   return (
-    <div className="rounded-lg border border-border p-3 sm:p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold leading-snug break-words">{task.title}</p>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+    <div className="min-w-0 rounded-lg border border-border p-3 sm:p-4">
+      <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="break-words text-sm font-semibold leading-snug">{task.title}</p>
+          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             {ticket ? <WorkId work={task} /> : <ActivityIdLink id={task.id} />}
             <PriorityBadge priority={task.priority} />
-            <span className="rounded-full border border-border px-2 py-0.5">{task.category}</span>
-            <span>{task.assignee}</span>
+            <span className="max-w-full break-words rounded-full border border-border px-2 py-0.5">{task.category}</span>
+            <span className="min-w-0 break-words">{task.assignee}</span>
           </div>
         </div>
         <span className="shrink-0 text-xs text-muted-foreground">
           Completed {formatReportDate(completionDate(task))}
         </span>
       </div>
-      <p className="mt-2 text-xs leading-relaxed sm:text-sm">
+      <p className="mt-2 break-words text-xs leading-relaxed sm:text-sm">
         <span className="font-medium text-foreground">Result </span>
         {result ? (
           <span className="break-words">{result}</span>

@@ -1,14 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Paperclip, Search } from "lucide-react";
+import { Eye, Paperclip, Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { PriorityBadge } from "@/components/status-badges";
 import { RequestStatusBadge } from "@/components/request-badges";
+import { cn } from "@/lib/utils";
 import {
   IT_PRIORITIES,
   REQUEST_STATUSES,
@@ -55,6 +63,7 @@ function RequestsPage() {
   const [modules, setModules] = useState<string[]>([]);
   const [types, setTypes] = useState<RequestType[]>([]);
   const [statuses, setStatuses] = useState<RequestStatus[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -76,9 +85,24 @@ function RequestsPage() {
     });
   }, [list.data, query, priorities, departments, modules, types, statuses]);
 
+  const departmentOptions = (catalog.data?.departments ?? []).map((item) => item.name);
+  const moduleOptions = (catalog.data?.modules ?? []).map((item) => item.name);
+  const activeFilterCount =
+    priorities.length + departments.length + modules.length + types.length + statuses.length;
+
+  const filterControls = (
+    <>
+      <MultiFilter label="IT priority" options={IT_PRIORITIES} selected={priorities} onChange={setPriorities} />
+      <MultiFilter label="Department" options={departmentOptions} selected={departments} onChange={setDepartments} />
+      <MultiFilter label="Module" options={moduleOptions} selected={modules} onChange={setModules} />
+      <MultiFilter label="Type" options={REQUEST_TYPES} selected={types} onChange={setTypes} />
+      <MultiFilter label="Status" options={REQUEST_STATUSES} selected={statuses} onChange={setStatuses} />
+    </>
+  );
+
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden">
+      <div className="min-w-0">
         <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Requests</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Incoming tickets from the public submit form. Open a request to read the note, details, and
@@ -86,32 +110,78 @@ function RequestsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[12rem] flex-1">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search tickets, titles, requesters…"
-            className="pl-8"
-          />
-        </div>
-        <MultiFilter label="IT priority" options={IT_PRIORITIES} selected={priorities} onChange={setPriorities} />
-        <MultiFilter
-          label="Department"
-          options={(catalog.data?.departments ?? []).map((item) => item.name)}
-          selected={departments}
-          onChange={setDepartments}
-        />
-        <MultiFilter
-          label="Module"
-          options={(catalog.data?.modules ?? []).map((item) => item.name)}
-          selected={modules}
-          onChange={setModules}
-        />
-        <MultiFilter label="Type" options={REQUEST_TYPES} selected={types} onChange={setTypes} />
-        <MultiFilter label="Status" options={REQUEST_STATUSES} selected={statuses} onChange={setStatuses} />
-      </div>
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative w-full min-w-0 flex-1 md:min-w-56">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search tickets, titles, requesters…"
+              className={cn("pl-9", query && "pr-9")}
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 cursor-pointer rounded-sm p-0.5 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="size-4" />
+              </button>
+            ) : null}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 md:hidden"
+            onClick={() => setFiltersOpen(true)}
+          >
+            <SlidersHorizontal className="size-4" />
+            Filters
+            {activeFilterCount > 0 ? (
+              <span className="rounded bg-primary px-1.5 text-xs text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            ) : null}
+          </Button>
+          <div className="hidden flex-wrap items-center gap-3 md:flex">{filterControls}</div>
+        </CardContent>
+      </Card>
+
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="right" className="flex w-[min(16rem,72vw)] flex-col gap-5 overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Filters</SheetTitle>
+            <SheetDescription>
+              <span className="sm:hidden">Filter the list.</span>
+              <span className="hidden sm:inline">Narrow requests by priority, department, and status.</span>
+            </SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">IT priority</p>
+              <FilterOptions options={IT_PRIORITIES} selected={priorities} onChange={setPriorities} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Department</p>
+              <FilterOptions options={departmentOptions} selected={departments} onChange={setDepartments} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Module</p>
+              <FilterOptions options={moduleOptions} selected={modules} onChange={setModules} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Type</p>
+              <FilterOptions options={REQUEST_TYPES} selected={types} onChange={setTypes} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Status</p>
+              <FilterOptions options={REQUEST_STATUSES} selected={statuses} onChange={setStatuses} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {list.isLoading && !list.data ? (
         <RequestsListSkeleton />
@@ -213,17 +283,21 @@ function RequestsPage() {
 
 function RequestCard({ row }: { row: IntakeRequestListItem }) {
   return (
-    <Card>
-      <CardContent className="space-y-2 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <Link to="/requests/$ticket" params={{ ticket: row.ticket }} className="font-medium text-primary hover:underline">
+    <Card className="min-w-0">
+      <CardContent className="min-w-0 space-y-2 p-4">
+        <div className="flex min-w-0 items-start justify-between gap-2">
+          <Link
+            to="/requests/$ticket"
+            params={{ ticket: row.ticket }}
+            className="font-medium text-primary hover:underline"
+          >
             {row.ticket}
           </Link>
-          <RequestStatusBadge status={row.status} />
+          <RequestStatusBadge className="shrink-0" status={row.status} />
         </div>
-        <p className="text-sm font-medium">{row.title}</p>
-        <p className="text-xs text-muted-foreground">Affected module: {row.module}</p>
-        <p className="text-xs text-muted-foreground">
+        <p className="break-words text-sm font-medium">{row.title}</p>
+        <p className="break-words text-xs text-muted-foreground">Affected module: {row.module}</p>
+        <p className="break-words text-xs text-muted-foreground">
           {row.requesterName} · {displayRequestType(row.type)} · {row.department} · {formatDate(row.createdAt.slice(0, 10))}
         </p>
         <div className="flex flex-wrap items-center gap-2">
@@ -241,6 +315,40 @@ function RequestCard({ row }: { row: IntakeRequestListItem }) {
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function FilterOptions<T extends string>({
+  options,
+  selected,
+  onChange,
+}: {
+  options: readonly T[];
+  selected: T[];
+  onChange: (next: T[]) => void;
+}) {
+  if (options.length === 0) {
+    return <p className="text-xs text-muted-foreground">None available.</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {options.map((option) => (
+        <label key={option} className="flex min-w-0 cursor-pointer items-start gap-2 text-sm">
+          <Checkbox
+            checked={selected.includes(option)}
+            onCheckedChange={(checked) =>
+              onChange(checked ? [...selected, option] : selected.filter((item) => item !== option))
+            }
+          />
+          <span className="min-w-0 break-words">{option}</span>
+        </label>
+      ))}
+      {selected.length > 0 && (
+        <Button variant="ghost" size="sm" className="w-full" onClick={() => onChange([])}>
+          Clear
+        </Button>
+      )}
+    </div>
   );
 }
 
@@ -266,22 +374,7 @@ function MultiFilter<T extends string>({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-fit max-w-[min(20rem,calc(100vw-2rem))] space-y-2 p-3">
-        {options.map((option) => (
-          <label key={option} className="flex cursor-pointer items-center gap-2 whitespace-nowrap text-sm">
-            <Checkbox
-              checked={selected.includes(option)}
-              onCheckedChange={(checked) =>
-                onChange(checked ? [...selected, option] : selected.filter((item) => item !== option))
-              }
-            />
-            {option}
-          </label>
-        ))}
-        {selected.length > 0 && (
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => onChange([])}>
-            Clear
-          </Button>
-        )}
+        <FilterOptions options={options} selected={selected} onChange={onChange} />
       </PopoverContent>
     </Popover>
   );

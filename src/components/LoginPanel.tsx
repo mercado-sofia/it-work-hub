@@ -42,7 +42,7 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
   };
 
   return (
-    <div className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-8 py-6 sm:px-6 sm:py-8">
+    <div className="flex min-h-[calc(100svh-3.5rem)] items-start justify-center px-8 pt-8 pb-10 sm:items-center sm:px-6 sm:py-8">
       <div className="mx-auto w-full sm:max-w-[26rem] sm:rounded-2xl sm:border-2 sm:border-border sm:bg-card sm:p-8">
         <div className="text-center">
           <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-12">

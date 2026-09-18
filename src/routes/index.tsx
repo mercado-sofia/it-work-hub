@@ -134,7 +134,7 @@ function LandingPage() {
         <div className="bootstrap-stage">
           <section
             className={cn(
-              "bootstrap-panel flex flex-col items-center justify-center px-8 py-5 sm:px-6 sm:py-6",
+              "bootstrap-panel flex flex-col items-center justify-start px-8 py-8 sm:justify-center sm:px-6 sm:py-6",
               panelClass("start", current),
             )}
             aria-hidden={current !== "start"}

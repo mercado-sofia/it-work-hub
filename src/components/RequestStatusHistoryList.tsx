@@ -85,7 +85,7 @@ export function RequestStatusHistoryList({
                 ) : null}
               </p>
               {row.reason ? (
-                <p className="mt-2 rounded-md bg-muted/60 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-2 break-words rounded-md bg-muted/60 px-2.5 py-1.5 text-xs leading-relaxed text-muted-foreground">
                   {row.reason}
                 </p>
               ) : null}

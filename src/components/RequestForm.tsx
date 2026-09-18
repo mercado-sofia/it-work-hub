@@ -23,28 +23,28 @@ import { fileBadge, formatBytes } from "@/lib/attachment-ui";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type Draft = {
-  type: (typeof REQUEST_TYPES)[number];
+  type: (typeof REQUEST_TYPES)[number] | "";
   title: string;
   note: string;
   module: string;
   requesterName: string;
   requesterEmail: string;
   department: string;
-  urgency: (typeof REQUEST_URGENCIES)[number];
+  urgency: (typeof REQUEST_URGENCIES)[number] | "";
   stepsToReproduce: string;
   expectedBehavior: string;
   actualBehavior: string;
 };
 
 const emptyDraft = (): Draft => ({
-  type: "Question",
+  type: "",
   title: "",
   note: "",
   module: "",
   requesterName: "",
   requesterEmail: "",
   department: "",
-  urgency: "Medium",
+  urgency: "",
   stepsToReproduce: "",
   expectedBehavior: "",
   actualBehavior: "",
@@ -82,6 +82,7 @@ export function RequestForm() {
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const isProblem = isIssueReportType(draft.type);
+  const canSubmit = Boolean(draft.type && draft.urgency && draft.module && draft.department);
 
   const payload = useMemo(
     () => ({
@@ -101,6 +102,7 @@ export function RequestForm() {
   );
 
   const submit = async (force: boolean) => {
+    if (!draft.type || !draft.urgency || !draft.module || !draft.department) return;
     setBusy(true);
     try {
       if (!force) {
@@ -112,7 +114,9 @@ export function RequestForm() {
         }
       }
       const uploaded = await filesToPayload(files);
-      const result = await submitRequestFn({ data: { ...payload, files: uploaded, force } });
+      const result = await submitRequestFn({
+        data: { ...payload, type: draft.type, urgency: draft.urgency, files: uploaded, force },
+      });
       if (!result.ticket && result.similar.length) {
         setSimilar(result.similar);
         return;
@@ -227,7 +231,7 @@ export function RequestForm() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Type" htmlFor="req-type">
                   <Select
-                    value={draft.type}
+                    value={draft.type || undefined}
                     onValueChange={(type) => setDraft({ ...draft, type: type as Draft["type"] })}
                   >
                     <SelectTrigger id="req-type" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
@@ -244,7 +248,7 @@ export function RequestForm() {
                 </Field>
                 <Field label="Your urgency" htmlFor="req-urgency">
                   <Select
-                    value={draft.urgency}
+                    value={draft.urgency || undefined}
                     onValueChange={(urgency) => setDraft({ ...draft, urgency: urgency as Draft["urgency"] })}
                   >
                     <SelectTrigger id="req-urgency" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
@@ -402,7 +406,7 @@ export function RequestForm() {
               <Button
                 type="submit"
                 className="hidden h-10 rounded-full lg:inline-flex"
-                disabled={busy || !draft.module || !draft.department}
+                disabled={busy || !canSubmit}
               >
                 {busy ? "Submitting…" : "Submit request"}
               </Button>
@@ -467,7 +471,7 @@ export function RequestForm() {
               <Button
                 type="submit"
                 className="h-12 w-full rounded-full"
-                disabled={busy || !draft.module || !draft.department}
+                disabled={busy || !canSubmit}
               >
                 {busy ? "Submitting…" : "Submit request"}
               </Button>

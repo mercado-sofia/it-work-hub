@@ -299,21 +299,21 @@ function RequestDetailPage() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden">
+      <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
           <BackButton fallback="/requests" />
-          <h1 className="mt-1 text-lg font-semibold tracking-tight sm:text-xl">{request.title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="mt-1 break-words text-lg font-semibold tracking-tight sm:text-xl">{request.title}</h1>
+          <p className="mt-1 break-words text-sm text-muted-foreground">
             {request.ticket} · {displayRequestType(request.type)} · {request.department} · {request.module}
           </p>
         </div>
-        <RequestStatusBadge status={request.status} />
+        <RequestStatusBadge className="shrink-0" status={request.status} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="space-y-4">
-          <Card className="border-border">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <div className="min-w-0 space-y-4">
+          <Card className="min-w-0 border-border">
             <CardContent className="space-y-4 p-5">
               <h2 className="text-sm font-semibold">Submitted request</h2>
               <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -326,7 +326,7 @@ function RequestDetailPage() {
               </dl>
               <div className="space-y-1.5">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Note</p>
-                <p className="whitespace-pre-wrap text-sm">{(request.note ?? "").trim() || "No note provided."}</p>
+                <p className="whitespace-pre-wrap break-words text-sm">{(request.note ?? "").trim() || "No note provided."}</p>
               </div>
               {isIssueReportType(request.type) && (
                 <div className="space-y-3 rounded-lg border border-border/70 bg-muted/30 p-3 text-sm">
@@ -341,7 +341,7 @@ function RequestDetailPage() {
               {outcome ? (
                 <div className="rounded-md border border-border bg-muted/50 p-3 text-sm">
                   <p className="font-medium">{outcome.heading}</p>
-                  <p className="mt-1 whitespace-pre-wrap">{outcome.reason}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-words">{outcome.reason}</p>
                 </div>
               ) : null}
               {request.linkedTaskId && (
@@ -401,7 +401,7 @@ function RequestDetailPage() {
                   </Button>
                 </>
               ) : (
-                <p className="whitespace-pre-wrap text-sm">{request.resolutionNotes || "—"}</p>
+                <p className="whitespace-pre-wrap break-words text-sm">{request.resolutionNotes || "—"}</p>
               )}
             </CardContent>
           </Card>
@@ -422,7 +422,7 @@ function RequestDetailPage() {
                         {item.authorName}
                         {item.isInternal ? " · internal" : ""} · {formatDate(item.createdAt.slice(0, 10))}
                       </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm">{item.body}</p>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm">{item.body}</p>
                     </li>
                   ))}
                 </ul>
@@ -464,8 +464,8 @@ function RequestDetailPage() {
           </Card>
         </div>
 
-        <div className="space-y-4">
-          <Card className="border-border">
+        <div className="min-w-0 space-y-4">
+          <Card className="min-w-0 border-border">
             <CardContent className="p-5">
               <h2 className="text-sm font-semibold">Triage</h2>
               <div className="mt-4 space-y-4">
@@ -787,7 +787,7 @@ function DetailField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0 space-y-1">
       <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-      <dd className="whitespace-pre-wrap">{value}</dd>
+      <dd className="whitespace-pre-wrap break-words">{value}</dd>
     </div>
   );
 }
@@ -807,19 +807,21 @@ function StoredAttachmentCard({
 }) {
   const badge = fileBadge({ name: fileName, type: mimeType });
   return (
-    <div className="rounded-2xl border border-border bg-background px-3 py-3">
-      <div className="flex items-start gap-3">
-        <span
-          className={`flex size-10 shrink-0 flex-col items-center justify-center rounded-xl text-[10px] font-bold leading-none ${badge.className}`}
-        >
-          {badge.label === "IMG" ? <ImageIcon className="size-4" /> : <FileText className="size-4" />}
-          <span className="mt-0.5">{badge.label}</span>
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{fileName}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{formatBytes(sizeBytes)}</p>
+    <div className="min-w-0 rounded-2xl border border-border bg-background px-3 py-3">
+      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <span
+            className={`flex size-10 shrink-0 flex-col items-center justify-center rounded-xl text-[10px] font-bold leading-none ${badge.className}`}
+          >
+            {badge.label === "IMG" ? <ImageIcon className="size-4" /> : <FileText className="size-4" />}
+            <span className="mt-0.5">{badge.label}</span>
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="break-all text-sm font-medium">{fileName}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{formatBytes(sizeBytes)}</p>
+          </div>
         </div>
-        <div className="flex shrink-0 flex-col gap-1 sm:flex-row">
+        <div className="flex gap-2 sm:shrink-0">
           <Button type="button" variant="outline" size="sm" onClick={onOpen}>
             Open
           </Button>

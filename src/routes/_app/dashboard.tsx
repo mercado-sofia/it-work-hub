@@ -333,29 +333,28 @@ function Dashboard() {
           </p>
         ) : (
           <>
-            <div className="space-y-0 md:hidden">
+            <div className="space-y-3 p-4 md:hidden">
               {blockers.map((task, index) => (
-                <div
-                  key={task.id}
-                  className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0"
-                >
-                  <RankBadge rank={index + 1} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-snug">{task.title}</p>
-                    {task.remarks ? (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
-                        {task.remarks}
+                <div key={task.id} className="min-w-0 rounded-lg border border-border p-3">
+                  <div className="flex items-start gap-2">
+                    <RankBadge rank={index + 1} />
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-medium leading-snug">{task.title}</p>
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                        <WorkId work={task} />
+                        <span className="min-w-0 break-words">{task.assignee}</span>
                       </p>
-                    ) : null}
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <WorkId work={task} />
-                      {task.assignee}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <PriorityBadge priority={task.priority} />
-                      <MetricValue value={`${task.progress}%`} hint="complete" />
                     </div>
                   </div>
+                  <div className="mt-2">
+                    <PriorityBadge priority={task.priority} />
+                  </div>
+                  <p className="mt-2 break-words text-xs leading-relaxed text-muted-foreground">
+                    {task.remarks || "—"}
+                  </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Target {formatDate(task.targetDate)}
+                  </p>
                 </div>
               ))}
             </div>
@@ -460,7 +459,7 @@ function RankedListCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="border-border">
+    <Card className="min-w-0 border-border">
       <CardHeader className="pb-3">
         <CardTitle className="text-base">{title}</CardTitle>
         <p className="pt-1">

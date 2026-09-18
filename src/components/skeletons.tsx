@@ -198,6 +198,22 @@ export function DashboardSkeleton() {
           <Skeleton className="mt-3 h-6 w-28 rounded-full" />
         </CardHeader>
         <CardContent className="p-0">
+          <div className="space-y-3 p-4 md:hidden">
+            {times(2).map((index) => (
+              <div key={index} className="rounded-lg border border-border p-3">
+                <div className="flex items-start gap-2">
+                  <Skeleton className="h-5 w-8 rounded-md" />
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="mt-2 h-3 w-40" />
+                  </div>
+                </div>
+                <Skeleton className="mt-2 h-5 w-16" />
+                <Skeleton className="mt-2 h-3 w-full" />
+                <Skeleton className="mt-2 h-3 w-28" />
+              </div>
+            ))}
+          </div>
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
@@ -551,7 +567,7 @@ export function LandingSkeleton() {
           </div>
         </div>
       </header>
-      <main className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-8 py-5 sm:px-6 sm:py-6">
+      <main className="flex min-h-[calc(100svh-3.5rem)] items-start justify-center px-8 py-8 sm:items-center sm:px-6 sm:py-6">
         <div className="mx-auto w-full max-w-3xl">
           <div className="flex flex-col items-center">
             <Skeleton className="h-5 w-28 rounded-full" />
