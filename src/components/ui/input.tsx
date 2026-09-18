@@ -14,7 +14,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
             type === "month" ||
             type === "week" ||
             type === "time"
-            ? "block overflow-hidden pe-9 outline-none focus:border-input focus:outline-none focus-visible:border-input focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            ? "flex max-w-full items-center overflow-hidden pe-3 outline-none focus:border-input focus:outline-none focus-visible:border-input focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             : "flex",
           className,
         )}

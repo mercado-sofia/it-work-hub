@@ -242,8 +242,8 @@ function Accomplishments() {
       </div>
 
       <Card className="min-w-0 border-border print:hidden">
-        <CardContent className="space-y-4 p-4 sm:p-5">
-          <fieldset className="min-w-0 space-y-3">
+        <CardContent className="space-y-4 overflow-x-hidden p-4 sm:p-5">
+          <fieldset className="w-full min-w-0 space-y-3 [min-inline-size:0]">
             <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Reporting window
             </legend>
@@ -261,8 +261,8 @@ function Accomplishments() {
                 </Button>
               ))}
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:gap-4">
-              <div className="w-full min-w-0 space-y-1.5 sm:w-auto">
+            <div className="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+              <div className="w-full min-w-0 max-w-full space-y-1.5">
                 <Label htmlFor="from" className="text-xs">
                   From
                 </Label>
@@ -274,10 +274,10 @@ function Accomplishments() {
                   disabled={allTime}
                   aria-invalid={!allTime && !rangeValid}
                   onChange={(e) => onFromChange(e.target.value)}
-                  className="min-w-0 w-full sm:w-44"
+                  className="w-full min-w-0 max-w-full"
                 />
               </div>
-              <div className="w-full min-w-0 space-y-1.5 sm:w-auto">
+              <div className="w-full min-w-0 max-w-full space-y-1.5">
                 <Label htmlFor="to" className="text-xs">
                   To
                 </Label>
@@ -289,7 +289,7 @@ function Accomplishments() {
                   disabled={allTime}
                   aria-invalid={!allTime && !rangeValid}
                   onChange={(e) => onToChange(e.target.value)}
-                  className="min-w-0 w-full sm:w-44"
+                  className="w-full min-w-0 max-w-full"
                 />
               </div>
             </div>

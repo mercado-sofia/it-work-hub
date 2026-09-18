@@ -642,7 +642,7 @@ function Tracker() {
       {!hydrated ? (
         <TrackerSkeleton />
       ) : (
-      <div className="contents min-w-0">
+      <div className="flex min-w-0 flex-col gap-6">
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">

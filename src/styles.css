@@ -188,18 +188,25 @@
     color: var(--color-foreground);
   }
 
+  fieldset {
+    min-inline-size: 0;
+  }
+
   input[type="date"],
   input[type="datetime-local"],
   input[type="month"],
   input[type="week"],
   input[type="time"] {
-    display: block;
+    display: flex;
+    align-items: center;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
     min-width: 0;
-    position: relative;
-    padding-inline-end: 2.25rem;
+    min-inline-size: 0;
+    overflow: hidden;
+    field-sizing: fixed;
+    padding-inline-end: 0.75rem;
   }
 
   input[type="date"]::-webkit-datetime-edit,
@@ -209,6 +216,7 @@
   input[type="time"]::-webkit-datetime-edit,
   input[type="date"]::-webkit-datetime-edit-fields-wrapper,
   input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper {
+    flex: 1 1 auto;
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
@@ -219,12 +227,12 @@
   input[type="month"]::-webkit-calendar-picker-indicator,
   input[type="week"]::-webkit-calendar-picker-indicator,
   input[type="time"]::-webkit-calendar-picker-indicator {
-    position: absolute;
-    inset-block: 0;
-    right: 0.7rem;
+    flex: 0 0 1rem;
     width: 1rem;
     height: 1rem;
-    margin-block: auto;
+    margin: 0;
+    margin-inline-start: 0.5rem;
+    padding: 0;
     cursor: pointer;
     opacity: 0.55;
   }
