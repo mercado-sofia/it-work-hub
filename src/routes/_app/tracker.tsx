@@ -40,6 +40,8 @@ import {
 import { ActivityDialogShell } from "@/components/ActivityDialogShell";
 import { CategoryField } from "@/components/CategoryField";
 import { TrackerSkeleton } from "@/components/skeletons";
+import { BackupControls } from "@/components/DataActions";
+import { PageHeading } from "@/components/PageHeading";
 import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
 import { ActivityId, WorkId } from "@/components/activity-refs";
 import { KanbanView } from "@/components/KanbanView";
@@ -443,7 +445,7 @@ function AddActivityDialog() {
       trigger={
         <DialogTrigger asChild>
           <Button size="sm" className="gap-2 rounded-full">
-            <Plus className="size-4" /> Add<span className="hidden sm:inline"> New Activity</span>
+            <Plus className="size-4" /> Add New
           </Button>
         </DialogTrigger>
       }
@@ -595,21 +597,16 @@ function Tracker() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 overflow-hidden">
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-            Master Task Tracker
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground sm:hidden">
-            {hydrated ? `${filtered.length} of ${tasks.length} shown` : "\u00a0"}
-            {hydrated && readOnly ? " • read-only" : ""}
-            {hydrated ? "." : ""}
-          </p>
-          <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
-            {hydrated
+        <PageHeading
+          className="min-w-0 flex-1"
+          title="Master Tracker"
+          desktopTitle="Master Task Tracker"
+          subtitle={
+            hydrated
               ? `${filtered.length} of ${tasks.length} activities shown${readOnly ? " • read-only" : ""}.`
-              : "\u00a0"}
-          </p>
-        </div>
+              : "\u00a0"
+          }
+        />
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex rounded-full border border-border/60 bg-muted/50 p-0.5">
             {(
@@ -635,6 +632,7 @@ function Tracker() {
               </button>
             ))}
           </div>
+          <BackupControls className="lg:hidden" />
           {!readOnly && <AddActivityDialog />}
         </div>
       </div>
@@ -643,15 +641,15 @@ function Tracker() {
         <TrackerSkeleton />
       ) : (
       <div className="flex min-w-0 flex-col gap-4">
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+      <Card className="max-md:rounded-3xl max-md:border-0 max-md:shadow-sm">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center max-md:p-3">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
-            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search IDs, activities, owners…"
-              className={cn("pl-9", query && "pr-9")}
+              className={cn("rounded-full pl-9 max-md:h-11", query && "pr-9")}
             />
             {query && (
               <button
@@ -672,7 +670,7 @@ function Tracker() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 md:hidden"
+            className="h-11 gap-2 rounded-full md:hidden"
             onClick={() => setFiltersOpen(true)}
           >
             <SlidersHorizontal className="size-4" />
@@ -788,6 +786,98 @@ type EditProps = {
   onEdit: (task: Task) => void;
 };
 
+function TrackerTaskCard({
+  task,
+  readOnly,
+  onUpdate,
+  onEdit,
+  onDelete,
+  sprintName,
+}: {
+  task: Task;
+  readOnly: boolean;
+  onUpdate: (id: string, patch: Partial<Task>) => void;
+  onEdit: (task: Task) => void;
+  onDelete: () => void;
+  sprintName: string;
+}) {
+  return (
+    <div className="rounded-3xl bg-card p-4 shadow-sm">
+      <div className="flex items-center justify-between gap-2">
+        <p className="min-w-0 truncate text-xs font-medium tabular-nums text-muted-foreground">
+          <WorkId work={task} className="text-xs" />
+        </p>
+        {readOnly ? (
+          <StatusBadge className="shrink-0" status={task.status} />
+        ) : (
+          <Select
+            value={task.status}
+            onValueChange={(v) => onUpdate(task.id, { status: v as Status })}
+          >
+            <SelectTrigger
+              aria-label="Change status"
+              className="h-7 w-auto shrink-0 gap-1 rounded-full border border-border bg-white px-2.5 py-0.5 text-xs font-medium text-foreground shadow-none focus:ring-1 dark:bg-card dark:text-foreground [&>svg]:size-3.5 [&>svg]:opacity-70"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+      <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
+        {task.title}
+      </p>
+      <p className="mt-1 truncate text-xs text-muted-foreground">
+        {task.assignee} · {task.category}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+        <PriorityBadge priority={task.priority} />
+        <span className="text-xs text-muted-foreground">{sprintName}</span>
+        <span className="text-xs text-muted-foreground">{formatDate(task.targetDate)}</span>
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <ProgressBar value={task.progress} className="min-w-0 flex-1" />
+        <span className="w-9 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+          {task.progress}%
+        </span>
+      </div>
+      {task.remarks ? (
+        <p className="mt-2 line-clamp-1 text-xs leading-relaxed text-muted-foreground">
+          {task.remarks}
+        </p>
+      ) : null}
+      {!readOnly ? (
+        <div className="mt-3 flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+            onClick={() => onEdit(task)}
+          >
+            <Pencil className="size-3.5" />
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-muted-foreground hover:bg-transparent hover:text-destructive"
+            onClick={onDelete}
+            aria-label="Delete activity"
+          >
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function TableView({
   tasks,
   readOnly,
@@ -805,90 +895,22 @@ function TableView({
 
   return (
     <>
-    <div className="space-y-3 md:hidden">
+    <div className="space-y-2.5 md:hidden">
       {tasks.length === 0 && (
-        <Card>
-          <CardContent className="p-10 text-center text-sm text-muted-foreground">
-            {emptyMessage}
-          </CardContent>
-        </Card>
+        <div className="rounded-3xl bg-card px-4 py-10 text-center shadow-sm">
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+        </div>
       )}
       {tasks.map((task) => (
-        <Card key={task.id}>
-          <CardContent className="space-y-3 p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-medium leading-snug">{task.title}</p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                  <WorkId work={task} />
-                  <span>{task.category}</span>
-                </p>
-              </div>
-              {!readOnly && (
-                <div className="flex shrink-0 items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground"
-                    onClick={() => onEdit(task)}
-                    aria-label="Edit activity"
-                  >
-                    <Pencil className="size-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:bg-transparent hover:text-destructive"
-                    onClick={() => setPendingDelete(task)}
-                    aria-label="Delete activity"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">{task.assignee}</span>
-              <span className="text-xs text-muted-foreground">
-                {task.sprintId ? (sprintNameById.get(task.sprintId) ?? "Unknown") : "Backlog"}
-              </span>
-              <PriorityBadge priority={task.priority} variant="plain" />
-            </div>
-            {readOnly ? (
-              <StatusBadge status={task.status} />
-            ) : (
-              <Select
-                value={task.status}
-                onValueChange={(v) => onUpdate(task.id, { status: v as Status })}
-              >
-                <SelectTrigger className="h-8 w-full text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUSES.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <div className="flex items-center gap-2">
-              <ProgressBar value={task.progress} className="min-w-0 flex-1" />
-              <span className="w-9 shrink-0 text-xs tabular-nums text-muted-foreground">
-                {task.progress}%
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Target {formatDate(task.targetDate)}
-            </p>
-            {task.remarks ? (
-              <p className="line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-                {task.remarks}
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
+        <TrackerTaskCard
+          key={task.id}
+          task={task}
+          readOnly={readOnly}
+          onUpdate={onUpdate}
+          onEdit={onEdit}
+          onDelete={() => setPendingDelete(task)}
+          sprintName={task.sprintId ? (sprintNameById.get(task.sprintId) ?? "Unknown") : "Backlog"}
+        />
       ))}
     </div>
 

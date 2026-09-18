@@ -43,18 +43,18 @@ export function DepartmentSection() {
   });
 
   return (
-    <Card className="border-border">
-      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
         <div>
-          <CardTitle className="text-base">Department contact</CardTitle>
-          <CardDescription>Used on request completion reports and the executive PDF header.</CardDescription>
+          <CardTitle className="text-base max-lg:text-lg">Department contact</CardTitle>
+          <CardDescription className="max-lg:mt-1">Used on request completion reports and the executive PDF header.</CardDescription>
         </div>
-        <Button type="button" variant="outline" size="sm" className="shrink-0" disabled={!settings.data} onClick={openEdit}>
+        <Button type="button" variant="outline" size="sm" className="shrink-0 max-lg:rounded-full" disabled={!settings.data} onClick={openEdit}>
           <Pencil className="size-3.5" />
           Edit
         </Button>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-lg:px-4 max-lg:pb-4">
         {settings.isPending ? (
           <DepartmentFieldsSkeleton />
         ) : settings.isError ? (

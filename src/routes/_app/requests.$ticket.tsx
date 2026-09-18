@@ -19,6 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { BackButton } from "@/components/BackButton";
+import { PageHeading } from "@/components/PageHeading";
 import { PriorityBadge } from "@/components/status-badges";
 import { RequestStatusBadge } from "@/components/request-badges";
 import { RequestStatusHistoryList } from "@/components/RequestStatusHistoryList";
@@ -303,10 +304,12 @@ function RequestDetailPage() {
       <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <BackButton fallback="/requests" />
-          <h1 className="mt-1 break-words text-lg font-semibold tracking-tight sm:text-xl">{request.title}</h1>
-          <p className="mt-1 break-words text-sm text-muted-foreground">
-            {request.ticket} · {displayRequestType(request.type)} · {request.department} · {request.module}
-          </p>
+          <PageHeading
+            className="mt-1"
+            title={request.title}
+            accent={false}
+            subtitle={`${request.ticket} · ${displayRequestType(request.type)} · ${request.department} · ${request.module}`}
+          />
         </div>
         <RequestStatusBadge className="shrink-0" status={request.status} />
       </div>

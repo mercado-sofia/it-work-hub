@@ -1,21 +1,7 @@
 import type { Priority, Status } from "@/data/tasks";
 import { cn } from "@/lib/utils";
 
-const statusStyles: Record<Status, string> = {
-  "Not Started": "bg-muted text-muted-foreground border-border",
-  "In Progress": "bg-info-soft text-info border-info/25",
-  "For Testing": "bg-warning-soft text-warning border-warning/25",
-  Completed: "bg-success-soft text-success border-success/25",
-  "On Hold": "bg-destructive/10 text-destructive border-destructive/25",
-};
-
-const statusTextStyles: Record<Status, string> = {
-  "Not Started": "text-muted-foreground",
-  "In Progress": "text-muted-foreground",
-  "For Testing": "text-muted-foreground",
-  Completed: "text-primary",
-  "On Hold": "text-muted-foreground",
-};
+const statusBadgeClass = "bg-white text-foreground border-border dark:bg-card dark:text-foreground";
 
 const priorityStyles: Record<Priority, string> = {
   Critical: "bg-destructive text-destructive-foreground border-destructive",
@@ -45,12 +31,12 @@ export function StatusBadge({
 }) {
   if (variant === "plain") {
     return (
-      <span className={cn("whitespace-nowrap text-xs font-normal", statusTextStyles[status], className)}>
+      <span className={cn("whitespace-nowrap text-xs font-normal text-muted-foreground", className)}>
         {status}
       </span>
     );
   }
-  return <span className={cn(base, statusStyles[status], className)}>{status}</span>;
+  return <span className={cn(base, statusBadgeClass, className)}>{status}</span>;
 }
 
 export function PriorityBadge({

@@ -8,6 +8,7 @@ import {
   Layers,
   Loader2,
   Search,
+  SlidersHorizontal,
   Users,
   X,
 } from "lucide-react";
@@ -19,8 +20,16 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { PriorityBadge } from "@/components/status-badges";
 import { ActivityIdLink, WorkId } from "@/components/activity-refs";
+import { PageHeading } from "@/components/PageHeading";
 import { useTasks } from "@/lib/task-store";
 import {
   detectPeriodPreset,
@@ -39,6 +48,7 @@ import {
   type PeriodPreset,
 } from "@/lib/metrics";
 import { completionDate } from "@/lib/task-rules";
+import { cn } from "@/lib/utils";
 import type { Task } from "@/data/tasks";
 
 type AccomplishmentsSearch = {
@@ -93,6 +103,7 @@ function Accomplishments() {
   const [query, setQuery] = useState("");
   const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
   const [ownerFilters, setOwnerFilters] = useState<string[]>([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [busy, setBusy] = useState<"xlsx" | "pdf" | null>(null);
 
   const month = thisMonthRange();
@@ -159,6 +170,7 @@ function Accomplishments() {
   const groups = useMemo(() => groupByMonth(visible), [visible]);
   const snapshot = useMemo(() => getPeriodSnapshot(visible), [visible]);
   const extraFilters = categoryFilters.length > 0 || ownerFilters.length > 0 || query.trim().length > 0;
+  const activeFilterCount = categoryFilters.length + ownerFilters.length;
 
   const categoryOptions = useMemo(() => {
     const names = new Set<string>();
@@ -211,21 +223,21 @@ function Accomplishments() {
   const canExport = hydrated && rangeValid && visible.length > 0 && busy === null;
 
   return (
-    <div className="w-full min-w-0 max-w-full space-y-6 overflow-x-hidden">
-      <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-            Accomplishments &amp; Reports
-          </h1>
-          <p className="mt-1 break-words text-xs text-muted-foreground" aria-live="polite">
-            {hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
-          </p>
-        </div>
+    <div className="w-full min-w-0 max-w-full space-y-6 overflow-x-hidden max-lg:space-y-5">
+      <div className="flex min-w-0 flex-col gap-3 max-lg:gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <PageHeading
+          className="min-w-0 flex-1"
+          title="Accomplishments"
+          desktopTitle="Accomplishments & Reports"
+          accent={false}
+          hideSubtitleOnMobile
+          subtitle={hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
+        />
         <div className="flex min-w-0 flex-wrap gap-2 print:hidden">
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
+            className="gap-2 max-lg:rounded-full"
             disabled={!canExport}
             onClick={() => void runExport("xlsx")}
           >
@@ -233,7 +245,12 @@ function Accomplishments() {
             <span className="sm:hidden">Excel</span>
             <span className="hidden sm:inline">Download Excel</span>
           </Button>
-          <Button size="sm" className="gap-2" disabled={!canExport} onClick={() => void runExport("pdf")}>
+          <Button
+            size="sm"
+            className="gap-2 max-lg:rounded-full"
+            disabled={!canExport}
+            onClick={() => void runExport("pdf")}
+          >
             {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
             <span className="sm:hidden">PDF</span>
             <span className="hidden sm:inline">Download PDF</span>
@@ -241,8 +258,8 @@ function Accomplishments() {
         </div>
       </div>
 
-      <Card className="min-w-0 border-border print:hidden">
-        <CardContent className="space-y-4 overflow-x-hidden p-4 sm:p-5">
+      <Card className="min-w-0 border-border print:hidden max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+        <CardContent className="space-y-4 overflow-x-hidden p-4 sm:p-5 max-lg:p-3">
           <fieldset className="w-full min-w-0 space-y-3 [min-inline-size:0]">
             <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Reporting window
@@ -274,7 +291,7 @@ function Accomplishments() {
                   disabled={allTime}
                   aria-invalid={!allTime && !rangeValid}
                   onChange={(e) => onFromChange(e.target.value)}
-                  className="w-full min-w-0 max-w-full"
+                  className="w-full min-w-0 max-w-full max-lg:h-11"
                 />
               </div>
               <div className="w-full min-w-0 space-y-1.5 sm:w-52">
@@ -289,7 +306,7 @@ function Accomplishments() {
                   disabled={allTime}
                   aria-invalid={!allTime && !rangeValid}
                   onChange={(e) => onToChange(e.target.value)}
-                  className="w-full min-w-0 max-w-full"
+                  className="w-full min-w-0 max-w-full max-lg:h-11"
                 />
               </div>
             </div>
@@ -307,7 +324,7 @@ function Accomplishments() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search titles, results, IDs…"
-                className={query ? "pl-9 pr-9" : "pl-9"}
+                className={cn("rounded-full pl-9 max-lg:h-11", query && "pr-9")}
                 disabled={!hydrated}
               />
               {query ? (
@@ -321,21 +338,56 @@ function Accomplishments() {
                 </button>
               ) : null}
             </div>
-            <MultiFilter
-              label="Category"
-              options={categoryOptions}
-              selected={categoryFilters}
-              onChange={setCategoryFilters}
-            />
-            <MultiFilter
-              label="Owner"
-              options={ownerOptions}
-              selected={ownerFilters}
-              onChange={setOwnerFilters}
-            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-11 gap-2 rounded-full lg:hidden"
+              onClick={() => setFiltersOpen(true)}
+            >
+              <SlidersHorizontal className="size-4" />
+              Filters
+              {activeFilterCount > 0 ? (
+                <span className="rounded bg-primary px-1.5 text-xs text-primary-foreground">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </Button>
+            <div className="hidden flex-wrap items-center gap-3 lg:flex">
+              <MultiFilter
+                label="Category"
+                options={categoryOptions}
+                selected={categoryFilters}
+                onChange={setCategoryFilters}
+              />
+              <MultiFilter
+                label="Owner"
+                options={ownerOptions}
+                selected={ownerFilters}
+                onChange={setOwnerFilters}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="right" className="flex w-[min(16rem,72vw)] flex-col gap-5 overflow-y-auto">
+          <SheetHeader className="text-left">
+            <SheetTitle>Filters</SheetTitle>
+            <SheetDescription>Narrow completions by category and owner.</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Category</p>
+              <FilterOptions options={categoryOptions} selected={categoryFilters} onChange={setCategoryFilters} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-medium">Owner</p>
+              <FilterOptions options={ownerOptions} selected={ownerFilters} onChange={setOwnerFilters} />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {!hydrated ? (
         <AccomplishmentsSkeleton />
@@ -415,13 +467,24 @@ function SnapshotCard({
   icon: typeof CheckCircle2;
 }) {
   return (
-    <Card className="border-border">
-      <CardContent className="flex items-center justify-between gap-4 p-5">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-foreground">{label}</p>
-          <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</p>
+    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <CardContent className="p-5 max-lg:p-3 sm:max-lg:p-4">
+        <div className="lg:hidden">
+          <div className="flex items-center gap-2 max-[380px]:flex-col max-[380px]:items-start">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 max-[380px]:size-8">
+              <Icon className="size-5 text-primary max-[380px]:size-4" strokeWidth={1.75} />
+            </span>
+            <p className="font-display text-2xl font-bold tabular-nums leading-none max-[380px]:text-xl">{value}</p>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground max-[380px]:text-xs">{label}</p>
         </div>
-        <Icon className="size-8 text-primary" strokeWidth={1.6} />
+        <div className="hidden items-center justify-between gap-4 lg:flex">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-foreground">{label}</p>
+            <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</p>
+          </div>
+          <Icon className="size-8 text-primary" strokeWidth={1.6} />
+        </div>
       </CardContent>
     </Card>
   );
@@ -438,59 +501,105 @@ function MonthGroup({
 }) {
   const [open, setOpen] = useState(initiallyOpen);
   return (
-    <Card className="min-w-0 border-border">
+    <>
       <details
-        className="accomplishment-month group"
+        className="accomplishment-month group lg:hidden"
         open={open}
         onToggle={(event) => setOpen(event.currentTarget.open)}
       >
-        <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
-          <h2 className="min-w-0 break-words font-display text-sm font-semibold tracking-tight sm:text-base">{month}</h2>
+        <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-1 py-1 [&::-webkit-details-marker]:hidden">
+          <h2 className="min-w-0 break-words font-display text-sm font-semibold tracking-tight">{month}</h2>
           <span className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-primary">
-              {items.length} completed
-            </span>
+            <span className="text-xs font-semibold text-primary">{items.length} completed</span>
             <ChevronDown className="month-chevron size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
           </span>
         </summary>
-        <div className="min-w-0 space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="mt-2.5 space-y-2.5">
           {items.map((task) => (
             <AccomplishmentRow key={task.id} task={task} />
           ))}
         </div>
       </details>
-    </Card>
+
+      <Card className="hidden min-w-0 border-border lg:block">
+        <details
+          className="accomplishment-month group"
+          open={open}
+          onToggle={(event) => setOpen(event.currentTarget.open)}
+        >
+          <summary className="flex min-w-0 cursor-pointer list-none items-center justify-between gap-3 px-4 py-4 sm:px-6 [&::-webkit-details-marker]:hidden">
+            <h2 className="min-w-0 break-words font-display text-sm font-semibold tracking-tight sm:text-base">{month}</h2>
+            <span className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-primary">
+                {items.length} completed
+              </span>
+              <ChevronDown className="month-chevron size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+            </span>
+          </summary>
+          <div className="min-w-0 space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
+            {items.map((task) => (
+              <AccomplishmentRow key={task.id} task={task} />
+            ))}
+          </div>
+        </details>
+      </Card>
+    </>
   );
 }
 
 function AccomplishmentRow({ task }: { task: Task }) {
   const ticket = task.requestRef?.trim();
   const result = task.remarks.trim();
+  const completed = formatReportDate(completionDate(task));
+  const idEl = ticket ? <WorkId work={task} className="text-xs" /> : <ActivityIdLink id={task.id} className="text-xs" />;
+
   return (
-    <div className="min-w-0 rounded-lg border border-border p-3 sm:p-4">
-      <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="break-words text-sm font-semibold leading-snug">{task.title}</p>
-          <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            {ticket ? <WorkId work={task} /> : <ActivityIdLink id={task.id} />}
-            <PriorityBadge priority={task.priority} />
-            <span className="max-w-full break-words rounded-full border border-border px-2 py-0.5">{task.category}</span>
-            <span className="min-w-0 break-words">{task.assignee}</span>
-          </div>
+    <>
+      <div className="rounded-3xl bg-card p-4 shadow-sm lg:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <p className="min-w-0 truncate text-xs font-medium tabular-nums text-muted-foreground">{idEl}</p>
+          <span className="shrink-0 text-xs text-muted-foreground">{completed}</span>
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          Completed {formatReportDate(completionDate(task))}
-        </span>
+        <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">{task.title}</p>
+        <p className="mt-1 truncate text-xs text-muted-foreground">
+          {task.assignee} · {task.category}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          <PriorityBadge priority={task.priority} />
+        </div>
+        <p className="mt-2 line-clamp-2 text-xs leading-relaxed">
+          <span className="font-medium text-foreground">Result </span>
+          {result ? (
+            <span className="break-words">{result}</span>
+          ) : (
+            <span className="text-muted-foreground">No result recorded</span>
+          )}
+        </p>
       </div>
-      <p className="mt-2 break-words text-xs leading-relaxed sm:text-sm">
-        <span className="font-medium text-foreground">Result </span>
-        {result ? (
-          <span className="break-words">{result}</span>
-        ) : (
-          <span className="text-muted-foreground">No result recorded</span>
-        )}
-      </p>
-    </div>
+
+      <div className="hidden min-w-0 rounded-lg border border-border p-3 sm:p-4 lg:block">
+        <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="break-words text-sm font-semibold leading-snug">{task.title}</p>
+            <div className="mt-1.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+              {ticket ? <WorkId work={task} /> : <ActivityIdLink id={task.id} />}
+              <PriorityBadge priority={task.priority} />
+              <span className="max-w-full break-words rounded-full border border-border px-2 py-0.5">{task.category}</span>
+              <span className="min-w-0 break-words">{task.assignee}</span>
+            </div>
+          </div>
+          <span className="shrink-0 text-xs text-muted-foreground">Completed {completed}</span>
+        </div>
+        <p className="mt-2 break-words text-xs leading-relaxed sm:text-sm">
+          <span className="font-medium text-foreground">Result </span>
+          {result ? (
+            <span className="break-words">{result}</span>
+          ) : (
+            <span className="text-muted-foreground">No result recorded</span>
+          )}
+        </p>
+      </div>
+    </>
   );
 }
 

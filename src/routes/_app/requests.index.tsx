@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Eye, Paperclip, Search, SlidersHorizontal, X } from "lucide-react";
+import { ChevronRight, Eye, FileSpreadsheet, FileText, Loader2, Paperclip, Search, SlidersHorizontal, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import {
 import { listCatalogFn, listRequestsFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
 import { RequestsListSkeleton } from "@/components/skeletons";
+import { PageHeading } from "@/components/PageHeading";
 
 export const Route = createFileRoute("/_app/requests/")({
   loader: ({ context }) => {
@@ -64,6 +66,7 @@ function RequestsPage() {
   const [types, setTypes] = useState<RequestType[]>([]);
   const [statuses, setStatuses] = useState<RequestStatus[]>([]);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [busy, setBusy] = useState<"xlsx" | "pdf" | null>(null);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -100,25 +103,80 @@ function RequestsPage() {
     </>
   );
 
+  const runExport = async (kind: "xlsx" | "pdf") => {
+    if (rows.length === 0) return;
+    setBusy(kind);
+    try {
+      if (kind === "xlsx") {
+        const { exportRequestsWorkbook } = await import("@/lib/export-excel");
+        await exportRequestsWorkbook(rows);
+        toast.success("Requests workbook downloaded");
+      } else {
+        const { exportRequestsPdf } = await import("@/lib/export-pdf");
+        const { getSettingsFn } = await import("@/lib/request-functions");
+        const settings = await getSettingsFn();
+        await exportRequestsPdf(rows, settings.departmentName);
+        toast.success("Requests PDF downloaded");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const canExport = !list.isLoading && rows.length > 0 && busy === null;
+
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 overflow-x-hidden">
-      <div className="min-w-0">
-        <h1 className="text-lg font-semibold tracking-tight sm:text-xl">Requests</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Incoming tickets from the public submit form. Open a request to read the note, details, and
-          attached files.
-        </p>
-      </div>
+      <PageHeading
+        title="Requests"
+        accent={false}
+        subtitle={
+          <>
+            <span className="block text-sm lg:hidden">Incoming tickets from the form.</span>
+            <span className="hidden lg:inline">
+              Incoming tickets from the submit form. Open a request to read the note, details, and attached files.
+            </span>
+          </>
+        }
+        actions={
+          <div className="flex shrink-0 flex-wrap justify-end gap-2 print:hidden">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 max-lg:rounded-full"
+              disabled={!canExport}
+              onClick={() => void runExport("xlsx")}
+            >
+              {busy === "xlsx" ? <Loader2 className="size-4 animate-spin" /> : <FileSpreadsheet className="size-4" />}
+              <span className="sm:hidden">Excel</span>
+              <span className="hidden sm:inline">Download Excel</span>
+            </Button>
+            <Button
+              size="sm"
+              className="gap-2 max-lg:rounded-full"
+              disabled={!canExport}
+              onClick={() => void runExport("pdf")}
+            >
+              {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
+              <span className="sm:hidden">PDF</span>
+              <span className="hidden sm:inline">Download PDF</span>
+            </Button>
+          </div>
+        }
+      />
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
+      <Card className="max-md:rounded-3xl max-md:border-0 max-md:shadow-sm">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center max-md:p-3">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search tickets, titles, requesters…"
-              className={cn("pl-9", query && "pr-9")}
+            className={cn("rounded-full pl-9 max-md:h-11", query && "pr-9")}
             />
             {query ? (
               <button
@@ -134,7 +192,7 @@ function RequestsPage() {
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 md:hidden"
+            className="h-11 gap-2 rounded-full md:hidden"
             onClick={() => setFiltersOpen(true)}
           >
             <SlidersHorizontal className="size-4" />
@@ -187,12 +245,14 @@ function RequestsPage() {
         <RequestsListSkeleton />
       ) : (
         <div className="contents">
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-2.5 md:hidden">
         {rows.map((row) => (
           <RequestCard key={row.id} row={row} />
         ))}
         {!list.isLoading && rows.length === 0 && (
-          <p className="text-sm text-muted-foreground">No requests match the current filters.</p>
+          <div className="rounded-3xl bg-card px-4 py-10 text-center shadow-sm">
+            <p className="text-sm text-muted-foreground">No requests match the current filters.</p>
+          </div>
         )}
       </div>
 
@@ -283,38 +343,36 @@ function RequestsPage() {
 
 function RequestCard({ row }: { row: IntakeRequestListItem }) {
   return (
-    <Card className="min-w-0">
-      <CardContent className="min-w-0 space-y-2 p-4">
-        <div className="flex min-w-0 items-start justify-between gap-2">
-          <Link
-            to="/requests/$ticket"
-            params={{ ticket: row.ticket }}
-            className="font-medium text-primary hover:underline"
-          >
-            {row.ticket}
-          </Link>
-          <RequestStatusBadge className="shrink-0" status={row.status} />
+    <Link
+      to="/requests/$ticket"
+      params={{ ticket: row.ticket }}
+      className="block min-w-0 rounded-3xl bg-card p-4 shadow-sm"
+    >
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="truncate text-xs font-medium tabular-nums text-muted-foreground">{row.ticket}</p>
+            <RequestStatusBadge className="shrink-0" status={row.status} />
+          </div>
+          <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
+            {row.title}
+          </p>
+          <p className="mt-1 truncate text-xs text-muted-foreground">
+            {row.requesterName} · {row.department}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <PriorityBadge priority={row.itPriority} />
+            <span className="text-xs text-muted-foreground">{displayRequestType(row.type)}</span>
+            <span className="text-xs text-muted-foreground">{formatDate(row.createdAt.slice(0, 10))}</span>
+            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+              <Paperclip className="size-3.5" />
+              {row.attachmentCount}
+            </span>
+          </div>
         </div>
-        <p className="break-words text-sm font-medium">{row.title}</p>
-        <p className="break-words text-xs text-muted-foreground">Affected module: {row.module}</p>
-        <p className="break-words text-xs text-muted-foreground">
-          {row.requesterName} · {displayRequestType(row.type)} · {row.department} · {formatDate(row.createdAt.slice(0, 10))}
-        </p>
-        <div className="flex flex-wrap items-center gap-2">
-          <PriorityBadge priority={row.itPriority} />
-          <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-            <Paperclip className="size-3.5" />
-            {row.attachmentCount} {row.attachmentCount === 1 ? "file" : "files"}
-          </span>
-        </div>
-        <Button asChild variant="outline" size="sm" className="gap-1.5 px-2.5">
-          <Link to="/requests/$ticket" params={{ ticket: row.ticket }} aria-label={`View ${row.ticket}`}>
-            <Eye className="size-3.5" />
-            View
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
+      </div>
+    </Link>
   );
 }
 

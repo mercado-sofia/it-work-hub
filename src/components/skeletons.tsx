@@ -27,13 +27,22 @@ function BusyRegion({
 
 function KpiCardSkeleton() {
   return (
-    <Card className="border-border">
-      <CardContent className="flex items-center justify-between gap-4 p-5">
-        <div>
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="mt-3 h-8 w-16" />
+    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <CardContent className="p-5 max-lg:p-4">
+        <div className="lg:hidden">
+          <div className="flex items-center gap-2.5">
+            <Skeleton className="size-10 rounded-full" />
+            <Skeleton className="h-7 w-12" />
+          </div>
+          <Skeleton className="mt-2 h-4 w-16" />
         </div>
-        <Skeleton className="size-8 rounded-md" />
+        <div className="hidden items-center justify-between gap-4 lg:flex">
+          <div>
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="mt-3 h-8 w-16" />
+          </div>
+          <Skeleton className="size-8 rounded-md" />
+        </div>
       </CardContent>
     </Card>
   );
@@ -64,7 +73,7 @@ function TableRowSkeleton({
 export function DashboardSkeleton() {
   return (
     <BusyRegion label="Loading dashboard" className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {times(4).map((index) => (
           <KpiCardSkeleton key={index} />
         ))}
@@ -105,7 +114,7 @@ export function DashboardSkeleton() {
           <Skeleton className="h-3 w-28" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="space-y-3 p-4 md:hidden">
+          <div className="space-y-3 p-4 lg:hidden">
             {times(3).map((index) => (
               <div key={index} className="rounded-lg border border-border p-3">
                 <Skeleton className="h-4 w-3/4" />
@@ -118,7 +127,7 @@ export function DashboardSkeleton() {
               </div>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-border bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -151,7 +160,7 @@ export function DashboardSkeleton() {
           <Skeleton className="mt-3 h-6 w-32 rounded-full" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="space-y-0 md:hidden">
+          <div className="space-y-0 lg:hidden">
             {times(2).map((index) => (
               <div key={index} className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0">
                 <Skeleton className="h-5 w-8 rounded-md" />
@@ -166,7 +175,7 @@ export function DashboardSkeleton() {
               </div>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
@@ -198,7 +207,7 @@ export function DashboardSkeleton() {
           <Skeleton className="mt-3 h-6 w-28 rounded-full" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="space-y-3 p-4 md:hidden">
+          <div className="space-y-3 p-4 lg:hidden">
             {times(2).map((index) => (
               <div key={index} className="rounded-lg border border-border p-3">
                 <div className="flex items-start gap-2">
@@ -214,7 +223,7 @@ export function DashboardSkeleton() {
               </div>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
@@ -246,31 +255,33 @@ export function DashboardSkeleton() {
 export function TrackerSkeleton() {
   return (
     <BusyRegion label="Loading tracker" className="space-y-6">
-      <Card>
-        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
-          <Skeleton className="h-9 w-full flex-1" />
+      <Card className="max-md:rounded-3xl max-md:border-0 max-md:shadow-sm">
+        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center max-md:p-3">
+          <Skeleton className="h-9 w-full flex-1 max-md:h-11 max-md:rounded-full" />
           <div className="hidden flex-wrap items-center gap-3 md:flex">
             {times(5).map((index) => (
               <FilterChipSkeleton key={index} />
             ))}
           </div>
-          <Skeleton className="h-8 w-24 md:hidden" />
+          <Skeleton className="h-11 w-24 rounded-full md:hidden" />
         </CardContent>
       </Card>
 
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-2.5 md:hidden">
         {times(4).map((index) => (
-          <Card key={index}>
-            <CardContent className="space-y-3 p-4">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-40" />
-              <div className="flex gap-2">
-                <Skeleton className="h-5 w-16" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <Skeleton className="h-2 w-full rounded-full" />
-            </CardContent>
-          </Card>
+          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="mt-2 h-4 w-3/4" />
+            <Skeleton className="mt-2 h-3 w-40" />
+            <div className="mt-3 flex gap-2">
+              <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="mt-3 h-2 w-full rounded-full" />
+          </div>
         ))}
       </div>
 
@@ -312,12 +323,12 @@ export function TrackerSkeleton() {
 export function AccomplishmentsSkeleton() {
   return (
     <BusyRegion label="Loading accomplishments" className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-3 lg:gap-4">
         {times(3).map((index) => (
           <KpiCardSkeleton key={index} />
         ))}
       </div>
-      <Card className="border-border">
+      <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
         <CardContent className="flex flex-wrap items-center gap-2 p-4 sm:p-5">
           <Skeleton className="h-3 w-24" />
           {times(4).map((index) => (
@@ -325,7 +336,24 @@ export function AccomplishmentsSkeleton() {
           ))}
         </CardContent>
       </Card>
-      <Card className="border-border">
+      <div className="space-y-2.5 lg:hidden">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-20" />
+        </div>
+        {times(3).map((index) => (
+          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+            <Skeleton className="mt-2 h-4 w-3/4" />
+            <Skeleton className="mt-2 h-3 w-40" />
+            <Skeleton className="mt-3 h-5 w-14 rounded-full" />
+          </div>
+        ))}
+      </div>
+      <Card className="hidden border-border lg:block">
         <div className="flex items-center justify-between px-4 py-4 sm:px-6">
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-3 w-24" />
@@ -347,20 +375,20 @@ export function AccomplishmentsSkeleton() {
 export function RequestsListSkeleton() {
   return (
     <BusyRegion label="Loading requests">
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-2.5 md:hidden">
         {times(5).map((index) => (
-          <Card key={index}>
-            <CardContent className="space-y-2 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <Skeleton className="h-4 w-16" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-40" />
-              <Skeleton className="h-3 w-56" />
-              <Skeleton className="h-8 w-16" />
-            </CardContent>
-          </Card>
+          <div key={index} className="rounded-3xl bg-card p-4 shadow-sm">
+            <div className="flex items-center justify-between gap-2">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="mt-2 h-4 w-3/4" />
+            <Skeleton className="mt-2 h-3 w-40" />
+            <div className="mt-3 flex gap-2">
+              <Skeleton className="h-5 w-14 rounded-full" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+          </div>
         ))}
       </div>
 
@@ -465,18 +493,18 @@ export function RequestDetailSkeleton() {
 export function AccountCardSkeleton() {
   return (
     <BusyRegion label="Loading account">
-      <Card className="border-border">
-        <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+      <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+        <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
           <div>
             <Skeleton className="h-4 w-28" />
             <Skeleton className="mt-2 h-3 w-56" />
           </div>
           <div className="flex gap-2">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-32" />
+            <Skeleton className="h-8 w-24 max-lg:rounded-full" />
+            <Skeleton className="h-8 w-32 max-lg:rounded-full" />
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-lg:px-4 max-lg:pb-4">
           <div className="grid gap-4 sm:grid-cols-2">
             {times(2).map((index) => (
               <div key={index} className="space-y-1">

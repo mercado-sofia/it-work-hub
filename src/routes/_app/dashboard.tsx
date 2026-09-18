@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, ListChecks, PauseCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, ListChecks, PauseCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardSkeleton } from "@/components/skeletons";
+import { ExportMenu } from "@/components/DataActions";
+import { PageHeading } from "@/components/PageHeading";
 import { PriorityBadge, ProgressBar, CircularProgress, StatusBadge } from "@/components/status-badges";
 import { WorkId } from "@/components/activity-refs";
 import type { Task } from "@/data/tasks";
@@ -53,48 +55,75 @@ function Dashboard() {
   ];
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
-          Executive Management Dashboard
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground sm:hidden">
-          Status as of {formatDate(new Date().toISOString().slice(0, 10))}.
-        </p>
-        <p className="mt-1 hidden text-xs text-muted-foreground sm:block">
-          IT work status as of {formatDate(new Date().toISOString().slice(0, 10))}.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6 max-lg:gap-5">
+      <PageHeading
+        greeting
+        lead="Here’s your"
+        title="overview."
+        desktopTitle="Executive Management Dashboard"
+        subtitle={`IT work status as of ${formatDate(new Date().toISOString().slice(0, 10))}.`}
+        hideSubtitleOnMobile
+        actions={<ExportMenu className="shrink-0 lg:hidden print:hidden" />}
+      />
 
       {!hydrated ? (
         <DashboardSkeleton />
       ) : (
-      <div className="flex flex-col gap-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-col gap-6 max-lg:gap-5">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         {kpis.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="border-border">
-            <CardContent className="flex items-center justify-between gap-4 p-5">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-foreground">
-                  {label}
-                </p>
-                <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</p>
+          <Card
+            key={label}
+            className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm"
+          >
+            <CardContent className="p-5 max-lg:p-4">
+              <div className="lg:hidden">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                    <Icon className="size-5 text-primary" strokeWidth={1.75} />
+                  </span>
+                  <p className="font-display text-2xl font-bold tabular-nums leading-none">{value}</p>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">{label}</p>
               </div>
-              <Icon className="size-8 text-primary" strokeWidth={1.6} />
+              <div className="hidden items-center justify-between gap-4 lg:flex">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-foreground">
+                    {label}
+                  </p>
+                  <p className="mt-2 font-display text-3xl font-semibold tabular-nums">{value}</p>
+                </div>
+                <Icon className="size-8 text-primary" strokeWidth={1.6} />
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
-        <Card className="flex h-full min-w-0 flex-col border-border">
-          <CardHeader className="shrink-0 pb-2">
-            <CardTitle className="text-base">Overall Progress</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Aggregate completion across {metrics.total} activities
-            </p>
+        <Card className="flex h-full min-w-0 flex-col border-border max-lg:rounded-[1.75rem] max-lg:border-0 max-lg:bg-primary/10 max-lg:shadow-none">
+          <CardHeader className="shrink-0 max-lg:flex-row max-lg:items-center max-lg:justify-between max-lg:gap-3 max-lg:px-5 max-lg:py-5 lg:pb-2">
+            <div className="min-w-0">
+              <CardTitle className="text-base max-lg:text-lg max-lg:font-semibold">Overall Progress</CardTitle>
+              <p className="text-xs text-muted-foreground max-lg:mt-1 max-lg:leading-relaxed">
+                Aggregate completion across {metrics.total} activities
+              </p>
+              <Link
+                to="/tracker"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground lg:hidden"
+              >
+                View tracker
+                <ArrowRight className="size-4" />
+              </Link>
+            </div>
+            <CircularProgress
+              value={metrics.overall}
+              size={120}
+              strokeWidth={10}
+              className="shrink-0 lg:hidden"
+            />
           </CardHeader>
-          <CardContent className="flex flex-1 items-center justify-center p-5">
+          <CardContent className="flex flex-1 items-center justify-center p-5 max-lg:hidden">
             <CircularProgress
               value={metrics.overall}
               size={160}
@@ -110,15 +139,15 @@ function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="min-w-0 border-border">
-          <CardHeader className="pb-2">
+        <Card className="min-w-0 border-border max-lg:rounded-[1.75rem] max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none">
+          <CardHeader className="pb-2 max-lg:px-0 max-lg:pt-1">
             <CardTitle className="text-base">Work by Category</CardTitle>
           </CardHeader>
-          <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2">
+          <CardContent className="grid min-w-0 gap-3 sm:grid-cols-2 max-lg:px-0">
             {categoryStats.map((stat) => (
               <div
                 key={stat.category}
-                className="min-w-0 overflow-hidden rounded-lg border border-border p-3"
+                className="min-w-0 overflow-hidden rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:border-0 max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
               >
                 <div className="flex items-start gap-2">
                   <p className="min-w-0 flex-1 break-words text-sm font-medium leading-snug text-foreground">
@@ -138,22 +167,28 @@ function Dashboard() {
         </Card>
       </div>
 
-      <Card className="border-border">
-        <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
+      <Card className="border-border max-lg:rounded-[1.75rem] max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none">
+        <CardHeader className="flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between max-lg:px-0 max-lg:pt-1">
           <CardTitle className="text-base">Current Priority Projects</CardTitle>
-          <Link to="/tracker" className="shrink-0 text-xs font-medium text-primary hover:underline">
+          <Link
+            to="/tracker"
+            className="hidden shrink-0 text-xs font-medium text-primary hover:underline lg:inline"
+          >
             View full tracker
           </Link>
         </CardHeader>
-        <CardContent className="p-0">
-          <div className="space-y-3 p-4 md:hidden">
+        <CardContent className="p-0 max-lg:px-0">
+          <div className="space-y-3 p-4 lg:hidden max-lg:px-0 max-lg:pt-1">
             {priorities.length === 0 && (
               <p className="py-6 text-center text-sm text-muted-foreground">
                 No priority projects yet.
               </p>
             )}
             {priorities.map((task) => (
-              <div key={task.id} className="rounded-lg border border-border p-3">
+              <div
+                key={task.id}
+                className="rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:border-0 max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
+              >
                 <p className="font-medium leading-snug">{task.title}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                   <WorkId work={task} />
@@ -177,7 +212,7 @@ function Dashboard() {
               </div>
             ))}
           </div>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-border bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -242,13 +277,13 @@ function Dashboard() {
           title="Overdue projects"
           chip={`Past target (${overdue.length})`}
         >
-          <div className="space-y-0 md:hidden">
+          <div className="space-y-3 p-4 lg:hidden max-lg:px-0 max-lg:pt-1">
             {overdue.map((task, index) => {
               const late = daysPastTarget(task);
               return (
                 <div
                   key={task.id}
-                  className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0"
+                  className="flex gap-3 rounded-3xl bg-card p-4 shadow-sm"
                 >
                   <RankBadge rank={index + 1} />
                   <div className="min-w-0 flex-1">
@@ -270,7 +305,7 @@ function Dashboard() {
               );
             })}
           </div>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
@@ -333,9 +368,12 @@ function Dashboard() {
           </p>
         ) : (
           <>
-            <div className="space-y-3 p-4 md:hidden">
+            <div className="space-y-3 p-4 lg:hidden max-lg:px-0 max-lg:pt-1">
               {blockers.map((task, index) => (
-                <div key={task.id} className="min-w-0 rounded-lg border border-border p-3">
+                <div
+                  key={task.id}
+                  className="min-w-0 rounded-3xl bg-card p-4 shadow-sm"
+                >
                   <div className="flex items-start gap-2">
                     <RankBadge rank={index + 1} />
                     <div className="min-w-0 flex-1">
@@ -358,7 +396,7 @@ function Dashboard() {
                 </div>
               ))}
             </div>
-            <div className="hidden overflow-x-auto md:block">
+            <div className="hidden overflow-x-auto lg:block">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-y border-border text-left text-xs font-medium text-muted-foreground">
@@ -459,14 +497,12 @@ function RankedListCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="min-w-0 border-border">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{title}</CardTitle>
-        <p className="pt-1">
-          <span className="inline-flex items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
-            {chip}
-          </span>
-        </p>
+    <Card className="min-w-0 border-border max-lg:rounded-[1.75rem] max-lg:border-0 max-lg:bg-transparent max-lg:shadow-none">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 max-lg:gap-3 max-lg:px-0 max-lg:pt-1">
+        <CardTitle className="min-w-0 text-base">{title}</CardTitle>
+        <span className="inline-flex shrink-0 items-center rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
+          {chip}
+        </span>
       </CardHeader>
       <CardContent className="p-0">{children}</CardContent>
     </Card>

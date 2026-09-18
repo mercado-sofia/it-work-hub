@@ -74,27 +74,27 @@ export function AccountSection() {
   }
 
   return (
-    <Card className="border-border">
-      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
         <div>
-          <CardTitle className="text-base">Your account</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-base max-lg:text-lg">Your account</CardTitle>
+          <CardDescription className="max-lg:mt-1">
             {user?.mustChangePassword
               ? "Set a new password before using the rest of TrackHub."
               : "Your name on reports and a password only you know."}
           </CardDescription>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={openName}>
+          <Button type="button" variant="outline" size="sm" className="max-lg:rounded-full" onClick={openName}>
             <Pencil className="size-3.5" />
             Edit name
           </Button>
-          <Button type="button" size="sm" onClick={openPassword}>
+          <Button type="button" size="sm" className="max-lg:rounded-full" onClick={openPassword}>
             Change password
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="max-lg:px-4 max-lg:pb-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <SettingsValue label="Display name" value={user?.displayName ?? ""} />
           <SettingsValue label="Email" value={user?.email ?? ""} />

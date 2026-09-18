@@ -122,22 +122,22 @@ export function TeamSection() {
   const busy = saveMutation.isPending || activeMutation.isPending || resetMutation.isPending;
 
   return (
-    <Card className="border-border">
-      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+    <Card className="border-border max-lg:rounded-3xl max-lg:border-0 max-lg:shadow-sm">
+      <CardHeader className="flex flex-col gap-4 space-y-0 sm:flex-row sm:items-start sm:justify-between max-lg:px-4 max-lg:pt-4">
         <div>
-          <CardTitle className="text-base">IT team</CardTitle>
-          <CardDescription>People who can sign in to TrackHub.</CardDescription>
+          <CardTitle className="text-base max-lg:text-lg">IT team</CardTitle>
+          <CardDescription className="max-lg:mt-1">People who can sign in to TrackHub.</CardDescription>
         </div>
-        <Button type="button" size="sm" className="shrink-0" onClick={openCreate}>
+        <Button type="button" size="sm" className="shrink-0 max-lg:rounded-full" onClick={openCreate}>
           <UserPlus className="size-3.5" />
           Add person
         </Button>
       </CardHeader>
       <CardContent className="p-0">
         {team.isError ? (
-          <div className="flex flex-wrap items-center gap-3 px-6 pb-6">
+          <div className="flex flex-wrap items-center gap-3 px-6 pb-6 max-lg:px-4">
             <p className="text-sm text-destructive">Could not load the team.</p>
-            <Button type="button" variant="outline" size="sm" onClick={() => void team.refetch()}>
+            <Button type="button" variant="outline" size="sm" className="max-lg:rounded-full" onClick={() => void team.refetch()}>
               Retry
             </Button>
           </div>
@@ -186,9 +186,11 @@ export function TeamSection() {
                 </tbody>
               </table>
             </div>
-            <div className="grid gap-3 px-6 pb-6 md:hidden">
+            <div className="space-y-2.5 px-4 pb-4 md:hidden">
               {people.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No IT users yet.</p>
+                <div className="rounded-2xl bg-muted/40 px-4 py-8 text-center">
+                  <p className="text-sm text-muted-foreground">No IT users yet.</p>
+                </div>
               ) : (
                 people.map((person) => (
                   <TeamCard
@@ -429,23 +431,31 @@ function TeamCard({
   onEdit: () => void;
 }) {
   return (
-    <div className={cn("flex items-start justify-between gap-3 rounded-lg border border-border p-4", isSelf && "border-primary/30 bg-primary/5")}>
-      <div className="min-w-0 space-y-1">
-        <p className="font-medium">
-          {person.displayName}
-          {isSelf ? <span className="ml-2 text-xs font-normal text-muted-foreground">You</span> : null}
-        </p>
-        <p className="truncate text-sm text-muted-foreground">{person.email}</p>
-        <p className="text-sm">
-          {IT_ROLE_META[person.role].label}
-          <span className="text-muted-foreground"> · </span>
-          <StatusText person={person} />
-        </p>
+    <div className={cn("rounded-2xl bg-muted/40 p-4", isSelf && "bg-primary/5")}>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-semibold leading-snug">
+            {person.displayName}
+            {isSelf ? <span className="ml-2 text-xs font-normal text-muted-foreground">You</span> : null}
+          </p>
+          <p className="mt-1 truncate text-xs text-muted-foreground">{person.email}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {IT_ROLE_META[person.role].label}
+            <span> · </span>
+            <StatusText person={person} />
+          </p>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="shrink-0 gap-1.5 rounded-full text-muted-foreground hover:text-foreground"
+          onClick={onEdit}
+        >
+          <Pencil className="size-3.5" />
+          Edit
+        </Button>
       </div>
-      <Button type="button" variant="outline" size="sm" className="shrink-0" onClick={onEdit}>
-        <Pencil className="size-3.5" />
-        Edit
-      </Button>
     </div>
   );
 }

@@ -1,3 +1,5 @@
+import type { IntakeRequestListItem } from "@/data/requests";
+import { displayRequestType } from "@/data/requests";
 import type { Sprint, Task } from "@/data/tasks";
 import {
   getBlockers,
@@ -249,6 +251,93 @@ export async function exportAccomplishmentsWorkbook(
   });
   const slug = options.all || (!options.from && !options.to) ? "all-time" : `${options.from ?? "start"}-to-${options.to ?? "now"}`;
   downloadBlob(blob, `IT-Accomplishments-${slug}.xlsx`);
+}
+
+export async function exportRequestsWorkbook(rows: IntakeRequestListItem[]) {
+  const ExcelJS = (await import("exceljs")).default;
+  const wb = new ExcelJS.Workbook();
+  wb.creator = "IT Work Monitoring & Tracking System";
+  wb.created = new Date();
+
+  const ws = wb.addWorksheet("Requests");
+  const titleRow = ws.addRow(["IT Requests"]);
+  titleRow.font = { bold: true, size: 14, color: { argb: BRAND } };
+  titleRow.height = 24;
+  ws.addRow([`${rows.length} request${rows.length === 1 ? "" : "s"}  •  Generated ${new Date().toLocaleString("en-US")}`]);
+  ws.addRow([]);
+  ws.addRow([
+    "Ticket",
+    "Title",
+    "Type",
+    "Module",
+    "Requester",
+    "Email",
+    "Department",
+    "Urgency",
+    "IT Priority",
+    "Status",
+    "Assigned To",
+    "Submitted",
+    "Accepted",
+    "Resolved",
+    "Files",
+  ]);
+  const header = ws.getRow(ws.rowCount);
+  header.eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
+    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND } };
+    cell.alignment = { vertical: "middle", horizontal: "left" };
+    cell.border = { bottom: { style: "thin", color: { argb: BRAND_LIGHT } } };
+  });
+  header.height = 22;
+
+  const bodyStart = ws.rowCount + 1;
+  for (const row of rows) {
+    ws.addRow([
+      row.ticket,
+      row.title,
+      displayRequestType(row.type),
+      row.module,
+      row.requesterName,
+      row.requesterEmail,
+      row.department,
+      row.urgency,
+      row.itPriority,
+      row.status,
+      row.assignedToName ?? "",
+      dateOnly(row.createdAt),
+      dateOnly(row.acceptedAt),
+      dateOnly(row.resolvedAt),
+      row.attachmentCount,
+    ]);
+  }
+  for (let i = bodyStart; i <= ws.rowCount; i++) {
+    if ((i - bodyStart) % 2 === 1) {
+      ws.getRow(i).eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: STRIPE } };
+      });
+    }
+    ws.getRow(i).alignment = { vertical: "top", wrapText: true };
+  }
+  ws.columns.forEach((col) => {
+    let width = 10;
+    col.eachCell?.({ includeEmpty: false }, (cell) => {
+      const len = String(cell.value ?? "").length + 2;
+      if (len > width) width = len;
+    });
+    col.width = Math.min(width, 55);
+  });
+  ws.views = [{ state: "frozen", ySplit: 4 }];
+
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  downloadBlob(blob, `IT-Requests-${todayISO()}.xlsx`);
+}
+
+function dateOnly(value: string | null | undefined) {
+  return value?.slice(0, 10) ?? "";
 }
 
 function downloadBlob(blob: Blob, filename: string) {

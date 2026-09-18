@@ -1,5 +1,5 @@
 import type { Task } from "@/data/tasks";
-import { displayRequestType } from "@/data/requests";
+import { displayRequestType, type IntakeRequestListItem } from "@/data/requests";
 import {
   getBlockers,
   getCategoryStats,
@@ -252,6 +252,62 @@ export async function exportAccomplishmentsPdf(
 
   const slug = options.all || (!options.from && !options.to) ? "all-time" : `${options.from ?? "start"}-to-${options.to ?? "now"}`;
   doc.save(`IT-Accomplishments-${slug}.pdf`);
+}
+
+export async function exportRequestsPdf(rows: IntakeRequestListItem[], departmentName?: string) {
+  const { jsPDF } = await import("jspdf");
+  const autoTable = (await import("jspdf-autotable")).default;
+
+  const doc = new jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
+  const pageW = doc.internal.pageSize.getWidth();
+  const margin = 40;
+  const department = departmentName?.trim() || "Information Technology Department";
+
+  doc.setFillColor(...BRAND);
+  doc.rect(0, 0, pageW, 74, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(17);
+  doc.text("IT Requests", margin, 34);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.text(
+    `${department}  •  ${rows.length} request${rows.length === 1 ? "" : "s"}  •  Generated ${new Date().toLocaleString("en-US")}`,
+    margin,
+    52,
+  );
+
+  autoTable(doc, {
+    startY: 96,
+    head: [["Ticket", "Request", "Requester", "Department", "Type", "IT Priority", "Status", "Submitted", "Files"]],
+    body: rows.map((row) => [
+      row.ticket,
+      row.title,
+      row.requesterName,
+      row.department,
+      displayRequestType(row.type),
+      row.itPriority,
+      row.status,
+      formatDate(row.createdAt.slice(0, 10)),
+      String(row.attachmentCount),
+    ]),
+    headStyles: { fillColor: BRAND, textColor: 255, fontSize: 9, halign: "left" as const },
+    bodyStyles: { fontSize: 8.5, textColor: [40, 48, 62] as [number, number, number] },
+    alternateRowStyles: { fillColor: LIGHT },
+    styles: { cellPadding: 5, lineColor: [226, 232, 240] as [number, number, number], lineWidth: 0.4 },
+    margin: { left: margin, right: margin },
+    columnStyles: { 1: { cellWidth: 180 } },
+  });
+
+  const pages = doc.getNumberOfPages();
+  for (let i = 1; i <= pages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(...SLATE);
+    doc.text(`IT Requests — Page ${i} of ${pages}`, margin, doc.internal.pageSize.getHeight() - 20);
+  }
+
+  doc.save(`IT-Requests-${todayISO()}.pdf`);
 }
 
 type CompletionPayload = {
