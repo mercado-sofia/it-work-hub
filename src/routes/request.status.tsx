@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { PublicShell } from "@/components/PublicHeader";
 import { RequestStatusBadge } from "@/components/request-badges";
-import { canRequesterComment, displayRequestType, type PublicRequestView } from "@/data/requests";
+import { RequestStatusHistoryList } from "@/components/RequestStatusHistoryList";
+import {
+  canRequesterComment,
+  displayRequestType,
+  requestOutcomeNotice,
+  requesterClosedMessage,
+  type PublicRequestView,
+} from "@/data/requests";
 import { addRequesterCommentFn, lookupRequestFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
 import { RequestStatusResultSkeleton } from "@/components/skeletons";
@@ -39,6 +47,7 @@ function StatusPage() {
   const [result, setResult] = useState<PublicRequestView | null>(null);
   const [reply, setReply] = useState("");
   const [busy, setBusy] = useState(false);
+  const outcome = result ? requestOutcomeNotice(result.status, result.declineReason) : null;
 
   const lookup = async () => {
     setBusy(true);
@@ -47,7 +56,7 @@ function StatusPage() {
       setResult(data);
     } catch (error) {
       setResult(null);
-      toast.error(error instanceof Error ? error.message : "Lookup failed.");
+      toastError(error, "Lookup failed. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -61,7 +70,7 @@ function StatusPage() {
       setReply("");
       toast.success("Reply sent");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not send the reply.");
+      toastError(error, "Could not send the reply. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -126,28 +135,24 @@ function StatusPage() {
                 {displayRequestType(result.type)} · {result.department} · {result.module} · urgency {result.urgency}
               </p>
               <p className="whitespace-pre-wrap text-sm">{result.note}</p>
-              {result.status === "Declined" && result.declineReason && (
-                <p className="rounded-md border border-border bg-muted/50 p-3 text-sm">
-                  Declined: {result.declineReason}
-                </p>
-              )}
+              {outcome ? (
+                <div className="rounded-md border border-border bg-muted/50 p-3 text-sm">
+                  <p className="font-medium">{outcome.heading}</p>
+                  <p className="mt-1 whitespace-pre-wrap">{outcome.reason}</p>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="space-y-3 p-5">
-              <h3 className="text-sm font-semibold">Status history</h3>
-              <ul className="space-y-2 text-sm">
-                {result.history.map((row) => (
-                  <li key={row.id} className="flex flex-wrap justify-between gap-2">
-                    <span>
-                      {row.fromStatus ? `${row.fromStatus} → ${row.toStatus}` : row.toStatus}
-                      {row.reason ? ` — ${row.reason}` : ""}
-                    </span>
-                    <span className="text-muted-foreground">{formatDate(row.createdAt.slice(0, 10))}</span>
-                  </li>
-                ))}
-              </ul>
+            <CardContent className="p-5">
+              <div className="mb-4 flex items-baseline justify-between gap-3">
+                <h3 className="text-sm font-semibold">Status history</h3>
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {result.history.length} {result.history.length === 1 ? "update" : "updates"}
+                </span>
+              </div>
+              <RequestStatusHistoryList history={result.history} />
             </CardContent>
           </Card>
 
@@ -177,9 +182,7 @@ function StatusPage() {
                   </Button>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  This ticket is closed. Submit a new request if you need a follow-up.
-                </p>
+                <p className="text-sm text-muted-foreground">{requesterClosedMessage(result.status)}</p>
               )}
             </CardContent>
           </Card>

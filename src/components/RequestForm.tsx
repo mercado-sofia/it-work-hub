@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Copy, Check, CircleCheck, FileText, Image as ImageIcon, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -121,7 +122,7 @@ export function RequestForm() {
         setSimilar([]);
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not submit the request.");
+      toastError(error, "Could not submit the request. Please try again.");
     } finally {
       setBusy(false);
     }

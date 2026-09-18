@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { KeyRound, Pencil, UserPlus, UserX } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { CredentialsDialog, type IssuedCredentials } from "@/components/settings/CredentialsDialog";
 import { describedBy, SettingsField, SettingsFormDialog } from "@/components/settings/SettingsField";
@@ -68,7 +69,7 @@ export function TeamSection() {
       });
       toast.success("Account created");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create the account."),
+    onError: (error) => toastError(error, "Could not create the account."),
   });
 
   const saveMutation = useMutation({
@@ -86,7 +87,7 @@ export function TeamSection() {
       setEditing(null);
       toast.success("Person updated");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Save failed."),
+    onError: (error) => toastError(error, "Could not save this person."),
   });
 
   const activeMutation = useMutation({
@@ -96,7 +97,7 @@ export function TeamSection() {
       setEditing(null);
       toast.success(input.active ? "Reactivated" : "Deactivated");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Update failed."),
+    onError: (error) => toastError(error, "Could not update this person."),
   });
 
   const resetMutation = useMutation({
@@ -111,7 +112,7 @@ export function TeamSection() {
       });
       toast.success("Password reset");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Reset failed."),
+    onError: (error) => toastError(error, "Could not reset the password."),
   });
 
   const activeAdminCount = people.filter((person) => person.active && person.role === "admin").length;

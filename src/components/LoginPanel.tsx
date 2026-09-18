@@ -2,6 +2,7 @@ import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Shield } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { PasswordInput } from "@/components/settings/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
         await navigate({ to: next.mustChangePassword ? "/settings" : "/dashboard" });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not sign in.");
+      toastError(error, "Could not sign in. Please try again.");
     } finally {
       setBusy(false);
     }

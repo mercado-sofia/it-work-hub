@@ -19,6 +19,7 @@ export const REQUEST_STATUSES = [
   "Resolved",
   "Closed",
   "Declined",
+  "Cancelled",
 ] as const;
 
 export const DEFAULT_DEPARTMENTS = [
@@ -225,14 +226,15 @@ export const OPEN_REQUEST_STATUSES: RequestStatus[] = [
 const ROLLBACK_AFTER_CONVERT: RequestStatus[] = ["Submitted", "Under Review", "Declined"];
 
 const TRANSITIONS: Record<RequestStatus, RequestStatus[]> = {
-  Submitted: ["Under Review", "Accepted", "Declined"],
-  "Under Review": ["Accepted", "Declined", "Submitted"],
-  Accepted: ["In Progress", "Under Review"],
-  "In Progress": ["Testing", "Accepted"],
-  Testing: ["Resolved", "In Progress"],
+  Submitted: ["Under Review", "Accepted", "Declined", "Cancelled"],
+  "Under Review": ["Accepted", "Declined", "Submitted", "Cancelled"],
+  Accepted: ["In Progress", "Under Review", "Cancelled"],
+  "In Progress": ["Testing", "Accepted", "Cancelled"],
+  Testing: ["Resolved", "In Progress", "Cancelled"],
   Resolved: ["Closed", "Testing"],
   Closed: [],
   Declined: ["Under Review"],
+  Cancelled: ["Under Review"],
 };
 
 export function allowedRequestTransitions(
@@ -240,7 +242,7 @@ export function allowedRequestTransitions(
   linkedTaskId?: string | null,
 ): RequestStatus[] {
   const next = TRANSITIONS[status];
-  if (!linkedTaskId) return [...next];
+  if (!linkedTaskId || isReopenableRequestStatus(status)) return [...next];
   return next.filter((to) => !ROLLBACK_AFTER_CONVERT.includes(to));
 }
 
@@ -278,7 +280,30 @@ export function forwardPath(from: RequestStatus, to: RequestStatus): RequestStat
 }
 
 export function isTerminalRequestStatus(status: RequestStatus): boolean {
-  return status === "Closed" || status === "Declined";
+  return status === "Closed" || status === "Declined" || status === "Cancelled";
+}
+
+export function isReopenableRequestStatus(status: RequestStatus): boolean {
+  return status === "Declined" || status === "Cancelled";
+}
+
+export function needsPublicClosureReason(status: RequestStatus): boolean {
+  return status === "Declined" || status === "Cancelled";
+}
+
+export function requestOutcomeNotice(
+  status: RequestStatus,
+  reason: string | null,
+): { heading: string; reason: string } | null {
+  const detail = reason?.trim();
+  if (!detail) return null;
+  if (status === "Declined") {
+    return { heading: "IT declined this request.", reason: detail };
+  }
+  if (status === "Cancelled") {
+    return { heading: "IT cancelled this request.", reason: detail };
+  }
+  return null;
 }
 
 export function canEditTriageFields(status: RequestStatus): boolean {
@@ -299,8 +324,19 @@ export function canRequesterComment(status: RequestStatus): boolean {
 
 export function frozenRequestMessage(status: RequestStatus): string {
   if (status === "Declined") return "This ticket is declined. Reopen it to continue.";
+  if (status === "Cancelled") return "This ticket is cancelled. Reopen it to continue.";
   if (status === "Closed") return "This ticket is closed and can no longer be updated.";
   return "This ticket can no longer be updated.";
+}
+
+export function requesterClosedMessage(status: RequestStatus): string {
+  if (status === "Cancelled") {
+    return "This request was cancelled. Submit a new request if you still need help.";
+  }
+  if (status === "Declined") {
+    return "This request was declined. Submit a new request if you still need help.";
+  }
+  return "This ticket is closed. Submit a new request if you need a follow-up.";
 }
 
 const STOPWORDS = new Set([
@@ -396,8 +432,10 @@ export function applyRequestStatusChange(
   if (!canChangeRequestStatus(request.status, to, request.linkedTaskId)) {
     throw new Error(`Cannot change status from ${request.status} to ${to}.`);
   }
-  if (to === "Declined" && !reason?.trim()) {
-    throw new Error("A decline reason is required.");
+  if (needsPublicClosureReason(to) && !reason?.trim()) {
+    throw new Error(
+      to === "Cancelled" ? "A cancellation reason is required." : "A decline reason is required.",
+    );
   }
   const now = new Date().toISOString();
   const next: IntakeRequest = {
@@ -407,8 +445,8 @@ export function applyRequestStatusChange(
   };
   if (to === "Accepted" && !next.acceptedAt) next.acceptedAt = now;
   if (to === "Resolved") next.resolvedAt = next.resolvedAt ?? now;
-  if (to === "Declined") next.declineReason = reason!.trim();
-  else if (request.status === "Declined") next.declineReason = null;
+  if (needsPublicClosureReason(to)) next.declineReason = reason!.trim();
+  else if (needsPublicClosureReason(request.status)) next.declineReason = null;
   const history: RequestStatusHistory = {
     id: crypto.randomUUID(),
     requestId: request.id,

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { describedBy, SettingsField, SettingsFormDialog, SettingsValue } from "@/components/settings/SettingsField";
 import { PasswordInput } from "@/components/settings/PasswordInput";
 import { Button } from "@/components/ui/button";
@@ -50,7 +51,7 @@ export function AccountSection() {
       setNameOpen(false);
       toast.success("Display name saved");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save name."),
+    onError: (error) => toastError(error, "Could not save your name."),
   });
 
   const passwordMutation = useMutation({
@@ -65,7 +66,7 @@ export function AccountSection() {
       await router.invalidate();
       toast.success("Password updated");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update password."),
+    onError: (error) => toastError(error, "Could not update your password."),
   });
 
   if (!user) {

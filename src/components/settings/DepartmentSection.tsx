@@ -2,6 +2,7 @@ import { Building2, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { describedBy, SettingsField, SettingsFormDialog, SettingsValue } from "@/components/settings/SettingsField";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +39,7 @@ export function DepartmentSection() {
       setOpen(false);
       toast.success("Department contact saved");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Save failed."),
+    onError: (error) => toastError(error, "Could not save department contact."),
   });
 
   return (

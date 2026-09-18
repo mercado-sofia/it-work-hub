@@ -16,6 +16,7 @@ import {
   frozenRequestMessage,
   isSimilarTitle,
   isTerminalRequestStatus,
+  needsPublicClosureReason,
   mapTaskStatusToRequest,
   normalizeDepartmentName,
   normalizeRequestType,
@@ -103,6 +104,24 @@ function serviceRoleKey() {
 
 function isCloudEnabled() {
   return Boolean(supabaseUrl() && serviceRoleKey());
+}
+
+const LOOKUP_NOT_FOUND =
+  "We couldn’t find a request with that ticket number and email. Check both and try again.";
+
+function failStore(
+  error: { message?: string; code?: string } | null | undefined,
+  fallback: string,
+): never {
+  if (error) console.error(error);
+  const message = String(error?.message ?? "");
+  const code = error?.code;
+  if (code === "23505" || /duplicate key/i.test(message)) {
+    throw new Error(
+      /email/i.test(message) ? "That email already has an IT account." : "That value is already in use.",
+    );
+  }
+  throw new Error(fallback);
 }
 
 function cloudClient(): SupabaseClient {
@@ -282,7 +301,7 @@ export function toSessionUser(profile: StoredProfile): SessionUser {
 
 function toPublicView(detail: RequestDetail, email: string): PublicRequestView {
   if (detail.requesterEmail.toLowerCase() !== email.toLowerCase()) {
-    throw new Error("No request found for that ticket number and email.");
+    throw new Error(LOOKUP_NOT_FOUND);
   }
   return {
     ticket: detail.ticket,
@@ -297,7 +316,7 @@ function toPublicView(detail: RequestDetail, email: string): PublicRequestView {
     stepsToReproduce: detail.stepsToReproduce,
     expectedBehavior: detail.expectedBehavior,
     actualBehavior: detail.actualBehavior,
-    declineReason: detail.status === "Declined" ? detail.declineReason : null,
+    declineReason: needsPublicClosureReason(detail.status) ? detail.declineReason : null,
     createdAt: detail.createdAt,
     acceptedAt: detail.acceptedAt,
     resolvedAt: detail.resolvedAt,
@@ -368,26 +387,26 @@ async function nextTicket(store: StoreFile): Promise<string> {
 
 async function syncCloudCatalog(sb: SupabaseClient) {
   const { data: rows, error } = await sb.from("departments").select("*").order("sort_order");
-  if (error) throw new Error(error.message);
+  if (error) failStore(error, "Could not complete this action. Please try again.");
   const departments = rows ?? [];
   const names = new Set(departments.map((row) => String((row as Record<string, unknown>)["name"])));
 
   if (names.has("Finance")) {
     if (names.has("Finance and Accounting")) {
       const { error: deleteErr } = await sb.from("departments").delete().eq("name", "Finance");
-      if (deleteErr) throw new Error(deleteErr.message);
+      if (deleteErr) failStore(deleteErr, "Could not save this change. Please try again.");
     } else {
       const { error: renameErr } = await sb
         .from("departments")
         .update({ name: "Finance and Accounting" })
         .eq("name", "Finance");
-      if (renameErr) throw new Error(renameErr.message);
+      if (renameErr) failStore(renameErr, "Could not save this change. Please try again.");
     }
     const { error: requestErr } = await sb
       .from("requests")
       .update({ department: "Finance and Accounting" })
       .eq("department", "Finance");
-    if (requestErr) throw new Error(requestErr.message);
+    if (requestErr) failStore(requestErr, "Could not save the request. Please try again.");
     names.delete("Finance");
     names.add("Finance and Accounting");
   }
@@ -397,13 +416,13 @@ async function syncCloudCatalog(sb: SupabaseClient) {
   for (const name of DEFAULT_DEPARTMENTS) {
     if (!names.has(name)) {
       const { error: insertErr } = await sb.from("departments").insert({ name, sort_order: nextSort++ });
-      if (insertErr) throw new Error(insertErr.message);
+      if (insertErr) failStore(insertErr, "Could not save this change. Please try again.");
       names.add(name);
     }
   }
 
   const { error: typeErr } = await sb.from("requests").update({ type: "Problem" }).eq("type", "Bug");
-  if (typeErr) throw new Error(typeErr.message);
+  if (typeErr) failStore(typeErr, "Could not load request types. Please try again.");
 }
 
 export async function listCatalog() {
@@ -414,8 +433,8 @@ export async function listCatalog() {
       sb.from("departments").select("*").order("sort_order"),
       sb.from("modules").select("*").order("sort_order"),
     ]);
-    if (depErr) throw new Error(depErr.message);
-    if (modErr) throw new Error(modErr.message);
+    if (depErr) failStore(depErr, "Could not save departments. Please try again.");
+    if (modErr) failStore(modErr, "Could not save modules. Please try again.");
     return {
       departments: (departments ?? []).map((row) => {
         const item = row as Record<string, any>;
@@ -439,7 +458,7 @@ export async function listCatalog() {
 export async function profileCount() {
   if (isCloudEnabled()) {
     const { count, error } = await cloudClient().from("it_profiles").select("id", { count: "exact", head: true });
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return count ?? 0;
   }
   return withLock(() => readStore().profiles.length);
@@ -449,7 +468,7 @@ export async function getProfileByEmail(email: string): Promise<(StoredProfile) 
   const key = email.trim().toLowerCase();
   if (isCloudEnabled()) {
     const { data, error } = await cloudClient().from("it_profiles").select("*").ilike("email", key).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     if (!data) return null;
     return mapProfile(data);
   }
@@ -462,7 +481,7 @@ export async function getProfileByEmail(email: string): Promise<(StoredProfile) 
 export async function getProfileById(id: string): Promise<StoredProfile | null> {
   if (isCloudEnabled()) {
     const { data, error } = await cloudClient().from("it_profiles").select("*").eq("id", id).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return data ? mapProfile(data) : null;
   }
   return withLock(() => readStore().profiles.find((profile) => profile.id === id) ?? null);
@@ -505,7 +524,7 @@ export async function insertProfile(input: {
       })
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return publicProfile(mapProfile(data));
   }
   return withLock(() => {
@@ -533,7 +552,7 @@ export async function insertProfile(input: {
 export async function listTeam(): Promise<ItProfile[]> {
   if (isCloudEnabled()) {
     const { data, error } = await cloudClient().from("it_profiles").select("*").order("created_at");
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return (data ?? []).map((row) => publicProfile(mapProfile(row)));
   }
   return withLock(() => readStore().profiles.map(publicProfile));
@@ -550,7 +569,7 @@ export async function patchProfile(id: string, patch: ProfilePatch): Promise<ItP
       .eq("id", id)
       .select("*")
       .single();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return publicProfile(mapProfile(data));
   }
   return withLock(() => {
@@ -588,7 +607,7 @@ export async function saveTeamRoles(
 
   if (isCloudEnabled()) {
     const { data, error } = await cloudClient().from("it_profiles").select("*").order("created_at");
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     const current = (data ?? []).map((row) => mapProfile(row));
     const next = apply(current);
     for (const person of next) {
@@ -602,7 +621,7 @@ export async function saveTeamRoles(
           display_name: person.displayName,
         })
         .eq("id", person.id);
-      if (updateError) throw new Error(updateError.message);
+      if (updateError) failStore(updateError, "Could not update the password. Please try again.");
     }
     return next.map(publicProfile);
   }
@@ -639,7 +658,7 @@ function profileWritePayload(profile: StoredProfile) {
 export async function getSettings(): Promise<ItSettings> {
   if (isCloudEnabled()) {
     const { data, error } = await cloudClient().from("it_settings").select("*").eq("id", 1).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     if (!data) {
       return {
         departmentName: "Information Technology Department",
@@ -670,7 +689,7 @@ export async function saveSettings(settings: ItSettings): Promise<ItSettings> {
         contact_extension: settings.contactExtension,
         signatory_name: settings.signatoryName,
       });
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return settings;
   }
   return withLock(() => {
@@ -760,7 +779,7 @@ export async function findSimilarRequests(title: string, module: string): Promis
       .from("requests")
       .select("ticket,title,module,status")
       .in("status", OPEN_REQUEST_STATUSES);
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return compare(
       (data ?? []).map((row) => {
         const item = row as Record<string, any>;
@@ -797,7 +816,7 @@ export async function createRequest(input: {
     const sb = cloudClient();
     const { data: ticketValue, error: ticketErr } = await sb.rpc("next_request_ticket");
     if (ticketErr || typeof ticketValue !== "string") {
-      throw new Error(ticketErr?.message ?? "Could not allocate a ticket number.");
+      failStore(ticketErr, "Could not allocate a ticket number.");
     }
     return insertCloudRequest(sb, ticketValue, input, similar);
   }
@@ -883,7 +902,7 @@ async function persistFiles(
         contentType: file.mimeType,
         upsert: false,
       });
-      if (error) throw new Error(error.message);
+      if (error) failStore(error, "Could not complete this action. Please try again.");
       const { error: rowErr } = await sb.from("request_attachments").insert({
         id,
         request_id: requestId,
@@ -892,7 +911,7 @@ async function persistFiles(
         size_bytes: file.sizeBytes,
         storage_path: path,
       });
-      if (rowErr) throw new Error(rowErr.message);
+      if (rowErr) failStore(rowErr, "Could not save the request. Please try again.");
     } else if (store) {
       const storagePath = join(ATTACH_DIR, id);
       writeFileSync(storagePath, buffer);
@@ -917,7 +936,7 @@ async function insertCloudRequest(
 ) {
   const created = buildRequest(ticket, input);
   const { error } = await sb.from("requests").insert(requestRow(created));
-  if (error) throw new Error(error.message);
+  if (error) failStore(error, "Could not complete this action. Please try again.");
   const { error: histErr } = await sb.from("request_status_history").insert({
     request_id: created.id,
     from_status: null,
@@ -926,7 +945,7 @@ async function insertCloudRequest(
     actor_email: created.requesterEmail,
     reason: null,
   });
-  if (histErr) throw new Error(histErr.message);
+  if (histErr) failStore(histErr, "Could not save status history. Please try again.");
   await persistFiles(null, created.id, input.files, sb);
   return { ticket, similar };
 }
@@ -936,7 +955,7 @@ export async function getRequestByTicket(ticket: string): Promise<RequestDetail 
   if (isCloudEnabled()) {
     const sb = cloudClient();
     const { data, error } = await sb.from("requests").select("*").in("ticket", keys).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     if (!data) return null;
     const assignedTo = (data as Record<string, any>)["assigned_to"] as string | null;
     const assigned = assignedTo
@@ -1005,7 +1024,7 @@ function mapAttachment(row: Record<string, any>): RequestAttachment {
 
 export async function lookupPublicRequest(ticket: string, email: string): Promise<PublicRequestView> {
   const detail = await getRequestByTicket(ticket);
-  if (!detail) throw new Error("No request found for that ticket number and email.");
+  if (!detail) throw new Error(LOOKUP_NOT_FOUND);
   return toPublicView(detail, email.trim());
 }
 
@@ -1031,7 +1050,7 @@ export async function addComment(input: {
   }
   if (!input.isInternal && input.requesterEmail) {
     if (detail.requesterEmail !== input.requesterEmail.trim().toLowerCase()) {
-      throw new Error("No request found for that ticket number and email.");
+      throw new Error(LOOKUP_NOT_FOUND);
     }
   }
   const comment: RequestComment = {
@@ -1054,7 +1073,7 @@ export async function addComment(input: {
       author_profile_id: comment.authorProfileId,
       is_internal: comment.isInternal,
     });
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return comment;
   }
   return withLock(() => {
@@ -1069,12 +1088,12 @@ export async function listRequests(): Promise<IntakeRequestListItem[]> {
   if (isCloudEnabled()) {
     const sb = cloudClient();
     const { data, error } = await sb.from("requests").select("*");
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     const [{ data: profiles }, { data: attachRows, error: attachErr }] = await Promise.all([
       sb.from("it_profiles").select("id,display_name"),
       sb.from("request_attachments").select("request_id"),
     ]);
-    if (attachErr) throw new Error(attachErr.message);
+    if (attachErr) failStore(attachErr, "Could not save the attachment. Please try again.");
     const names = new Map(
       (profiles ?? []).map((row) => {
         const item = row as Record<string, any>;
@@ -1140,7 +1159,7 @@ export async function changeStatus(input: {
   if (isCloudEnabled()) {
     const sb = cloudClient();
     const { error } = await sb.from("requests").update(requestRow(request)).eq("id", request.id);
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     const { error: histErr } = await sb.from("request_status_history").insert({
       id: history.id,
       request_id: history.requestId,
@@ -1151,7 +1170,7 @@ export async function changeStatus(input: {
       reason: history.reason,
       created_at: history.createdAt,
     });
-    if (histErr) throw new Error(histErr.message);
+    if (histErr) failStore(histErr, "Could not save status history. Please try again.");
     return request;
   }
   return withLock(() => {
@@ -1192,8 +1211,13 @@ export async function patchRequest(
     updatedAt: nowIso(),
   };
   if (isCloudEnabled()) {
-    const { error } = await cloudClient().from("requests").update(requestRow(next)).eq("id", next.id);
-    if (error) throw new Error(error.message);
+    const row: Record<string, unknown> = { updated_at: next.updatedAt };
+    if (patch.itPriority !== undefined) row["it_priority"] = next.itPriority;
+    if (patch.assignedTo !== undefined) row["assigned_to"] = next.assignedTo;
+    if (patch.resolutionNotes !== undefined) row["resolution_notes"] = next.resolutionNotes;
+    if (patch.linkedTaskId !== undefined) row["linked_task_id"] = next.linkedTaskId;
+    const { error } = await cloudClient().from("requests").update(row).eq("id", next.id);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     return next;
   }
   return withLock(() => {
@@ -1229,13 +1253,13 @@ export async function getAttachmentFile(id: string): Promise<{
   if (isCloudEnabled()) {
     const sb = cloudClient();
     const { data, error } = await sb.from("request_attachments").select("*").eq("id", id).maybeSingle();
-    if (error) throw new Error(error.message);
+    if (error) failStore(error, "Could not complete this action. Please try again.");
     if (!data) throw new Error("Attachment not found.");
     const row = data as Record<string, any>;
     const { data: file, error: dlErr } = await sb.storage
       .from("request-attachments")
       .download(String(row["storage_path"]));
-    if (dlErr || !file) throw new Error(dlErr?.message ?? "Could not download file.");
+    if (dlErr || !file) failStore(dlErr, "Could not download this file. Please try again.");
     const buffer = Buffer.from(await file.arrayBuffer());
     return {
       fileName: String(row["file_name"]),

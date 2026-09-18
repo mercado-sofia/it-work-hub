@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,7 +62,7 @@ export function CategoryField({
               setNewCategory("");
               toast.success(`${name} added to categories`);
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : "Could not add category.");
+              toastError(error, "Could not add category.");
             }
           }}
         >

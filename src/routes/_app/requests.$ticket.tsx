@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowRight, Ban, ClipboardList, Download, FileText, Image as ImageIcon, ListTodo, Undo2 } from "lucide-react";
+import { Ban, ClipboardList, Download, FileText, Image as ImageIcon, ListTodo, Undo2, CircleX } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { BackButton } from "@/components/BackButton";
 import { PriorityBadge } from "@/components/status-badges";
 import { RequestStatusBadge } from "@/components/request-badges";
+import { RequestStatusHistoryList } from "@/components/RequestStatusHistoryList";
 import { ActivityIdLink } from "@/components/activity-refs";
 import { useAuth } from "@/lib/auth";
 import { useTasks } from "@/lib/task-store";
@@ -34,11 +36,12 @@ import {
   canItAddComment,
   displayRequestType,
   isIssueReportType,
+  isReopenableRequestStatus,
   isTerminalRequestStatus,
+  requestOutcomeNotice,
   IT_PRIORITIES,
   type ItPriority,
   type RequestStatus,
-  type RequestStatusHistory,
 } from "@/data/requests";
 import {
   acceptAndLinkTaskFn,
@@ -48,8 +51,7 @@ import {
   getCompletionPayloadFn,
   getRequestDetailFn,
   listAssignableFn,
-  setRequestAssigneeFn,
-  setRequestPriorityFn,
+  saveRequestTriageFn,
   setResolutionNotesFn,
 } from "@/lib/request-functions";
 
@@ -68,7 +70,7 @@ function RequestDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { canWrite, user } = useAuth();
-  const { addTask, addStaff, deleteTask } = useTasks();
+  const { addTask, addStaff, deleteTask, updateTask, tasks } = useTasks();
   const detail = useQuery({
     queryKey: ["it-request", ticket],
     queryFn: () => getRequestDetailFn({ data: { ticket } }),
@@ -80,6 +82,7 @@ function RequestDetailPage() {
   const [comment, setComment] = useState("");
   const [internal, setInternal] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
   const [reopenReason, setReopenReason] = useState("");
   const [notes, setNotes] = useState<string | null>(null);
   const [draftPriority, setDraftPriority] = useState<ItPriority | null>(null);
@@ -90,6 +93,19 @@ function RequestDetailPage() {
   const notesValue = notes ?? request?.resolutionNotes ?? "";
   const itPriority = draftPriority ?? request?.itPriority ?? "Medium";
   const assignedTo = draftAssignee ?? request?.assignedTo ?? "unassigned";
+  const assignablePeople = useMemo(() => {
+    const people: Array<{ id: string; displayName: string }> = (assignees.data ?? []).map((person) => ({
+      id: person.id,
+      displayName: person.displayName,
+    }));
+    const add = (id: string | null | undefined, name: string | null | undefined) => {
+      if (!id || people.some((person) => person.id === id)) return;
+      people.push({ id, displayName: name?.trim() || "Assigned" });
+    };
+    add(request?.assignedTo, request?.assignedToName);
+    if (user && user.role !== "management") add(user.id, user.displayName);
+    return people;
+  }, [assignees.data, request?.assignedTo, request?.assignedToName, user]);
   const nextStatuses = useMemo(
     () => (request ? allowedRequestTransitions(request.status, request.linkedTaskId) : []),
     [request],
@@ -103,6 +119,7 @@ function RequestDetailPage() {
     setDraftPriority(null);
     setDraftAssignee(null);
     setDeclineReason("");
+    setCancelReason("");
     setReopenReason("");
     setInternal(false);
     setComment("");
@@ -129,8 +146,10 @@ function RequestDetailPage() {
       await fn();
       await refresh();
       toast.success(ok);
+      return true;
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Action failed.");
+      toastError(error, "Could not complete this action. Please try again.");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -147,10 +166,12 @@ function RequestDetailPage() {
     const target = new Date();
     target.setDate(target.getDate() + 14);
     const targetDate = target.toISOString().slice(0, 10);
+    const selectedAssigneeId = assignedTo === "unassigned" ? null : assignedTo;
     const assigneePerson =
-      assignedTo === "unassigned"
+      selectedAssigneeId == null
         ? null
-        : (assignees.data ?? []).find((person) => person.id === assignedTo) ?? null;
+        : assignablePeople.find((person) => person.id === selectedAssigneeId) ??
+          (user.id === selectedAssigneeId ? { id: user.id, displayName: user.displayName } : null);
     const assigneeName = assigneePerson?.displayName ?? user.displayName;
     try {
       addStaff(assigneeName);
@@ -173,7 +194,7 @@ function RequestDetailPage() {
             ticket: request.ticket,
             taskId: created.id,
             itPriority,
-            assignedTo: assigneePerson?.id ?? user.id,
+            assignedTo: selectedAssigneeId ?? user.id,
           },
         });
       } catch (error) {
@@ -184,7 +205,7 @@ function RequestDetailPage() {
       toast.success(`Converted to ${request.ticket}`);
       await navigate({ to: "/tracker", search: { q: request.ticket } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not convert this request.");
+      toastError(error, "Could not convert this request. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -198,7 +219,7 @@ function RequestDetailPage() {
       await exportRequestCompletionPdf(payload);
       toast.success("Completion report downloaded");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not build the report.");
+      toastError(error, "Could not build the report. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -220,7 +241,7 @@ function RequestDetailPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Download failed.");
+      toastError(error, "Could not download this file. Please try again.");
     }
   };
 
@@ -230,7 +251,7 @@ function RequestDetailPage() {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank", "noopener");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not open this file.");
+      toastError(error, "Could not open this file. Please try again.");
     }
   };
 
@@ -249,18 +270,33 @@ function RequestDetailPage() {
   const canEditNotes = canWrite && canEditResolutionNotes(request.status);
   const canMarkReview = canWrite && request.status === "Submitted";
   const canDecline = canWrite && nextStatuses.includes("Declined");
-  const canReopen = canWrite && request.status === "Declined";
+  const canCancel = canWrite && nextStatuses.includes("Cancelled");
+  const canReopen = canWrite && isReopenableRequestStatus(request.status);
   const canPublicComment = canItAddComment(request.status, false);
-  const statusOptions = nextStatuses.filter((status) => status !== "Declined");
+  const statusOptions = nextStatuses.filter((status) => status !== "Declined" && status !== "Cancelled");
   const showStatusSelect = canWrite && !canConvert && !terminal && statusOptions.length > 0;
   const canReport = canWrite && (request.status === "Resolved" || request.status === "Closed");
+  const outcome = requestOutcomeNotice(request.status, request.declineReason);
   const hasTriageActions =
     (canEditTriage && triageDirty) ||
     canMarkReview ||
     canDecline ||
+    canCancel ||
     canConvert ||
     canReopen ||
     canReport;
+
+  const holdLinkedTrackerWork = (reason: string) => {
+    const linked =
+      tasks.find((task) => task.id === request.linkedTaskId) ??
+      tasks.find((task) => task.requestRef === request.ticket);
+    if (!linked || linked.status === "Completed") return;
+    const note = `Request ${request.ticket} cancelled: ${reason.trim()}`;
+    updateTask(linked.id, {
+      status: "On Hold",
+      remarks: linked.remarks.trim() ? `${linked.remarks.trim()}\n\n${note}` : note,
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -302,11 +338,12 @@ function RequestDetailPage() {
               <p className="text-xs text-muted-foreground">
                 Submitted {formatDate(request.createdAt.slice(0, 10))}
               </p>
-              {request.status === "Declined" && request.declineReason && (
-                <p className="rounded-md border border-border bg-muted/50 p-3 text-sm">
-                  Declined: {request.declineReason}
-                </p>
-              )}
+              {outcome ? (
+                <div className="rounded-md border border-border bg-muted/50 p-3 text-sm">
+                  <p className="font-medium">{outcome.heading}</p>
+                  <p className="mt-1 whitespace-pre-wrap">{outcome.reason}</p>
+                </div>
+              ) : null}
               {request.linkedTaskId && (
                 <p className="text-sm">
                   In tracker as <ActivityIdLink id={request.ticket} className="text-sm" />
@@ -456,19 +493,24 @@ function RequestDetailPage() {
                 <div className="space-y-1.5">
                   <Label>Assignee</Label>
                   {canEditTriage ? (
-                    <Select value={assignedTo} onValueChange={setDraftAssignee}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Unassigned" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">Unassigned</SelectItem>
-                        {(assignees.data ?? []).map((person) => (
-                          <SelectItem key={person.id} value={person.id}>
-                            {person.displayName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    assignees.isFetched ? (
+                      <Select value={assignedTo} onValueChange={setDraftAssignee}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Unassigned" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {assignablePeople.map((person) => (
+                            <SelectItem key={person.id} value={person.id}>
+                              {person.displayName}
+                              {user?.id === person.id ? " (you)" : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Loading team…</p>
+                    )
                   ) : (
                     <p className="text-sm">{request.assignedToName ?? "Unassigned"}</p>
                   )}
@@ -478,7 +520,7 @@ function RequestDetailPage() {
                     <Label>Change status</Label>
                     <Select
                       onValueChange={(value) => {
-                        if (value === "Declined") return;
+                        if (value === "Declined" || value === "Cancelled") return;
                         void run(
                           () => changeRequestStatusFn({ data: { ticket, to: value as RequestStatus } }),
                           "Status updated",
@@ -507,16 +549,21 @@ function RequestDetailPage() {
                       variant="outline"
                       className="w-full justify-center"
                       disabled={busy}
-                      onClick={() =>
-                        void run(async () => {
-                          await setRequestPriorityFn({ data: { ticket, itPriority } });
-                          await setRequestAssigneeFn({
-                            data: { ticket, assignedTo: assignedTo === "unassigned" ? null : assignedTo },
-                          });
+                      onClick={() => {
+                        const nextPriority = itPriority;
+                        const nextAssignee = assignedTo === "unassigned" ? null : assignedTo;
+                        void run(
+                          () =>
+                            saveRequestTriageFn({
+                              data: { ticket, itPriority: nextPriority, assignedTo: nextAssignee },
+                            }),
+                          "Triage saved",
+                        ).then((saved) => {
+                          if (!saved) return;
                           setDraftPriority(null);
                           setDraftAssignee(null);
-                        }, "Triage saved")
-                      }
+                        });
+                      }}
                     >
                       Save triage
                     </Button>
@@ -538,7 +585,7 @@ function RequestDetailPage() {
                       Mark as Under Review
                     </Button>
                   ) : null}
-                  {canDecline || canConvert ? (
+                  {canDecline || canConvert || canCancel ? (
                     <div className="grid w-full gap-2">
                       {canDecline ? (
                         <div className="w-full">
@@ -588,6 +635,56 @@ function RequestDetailPage() {
                           </ConfirmDialog>
                         </div>
                       ) : null}
+                      {canCancel ? (
+                        <div className="w-full">
+                          <ConfirmDialog
+                            icon={CircleX}
+                            title="Cancel Request"
+                            contentClassName="w-[min(100%-1.5rem,28rem)] max-w-[28rem]"
+                            description={
+                              <>
+                                You’re going to cancel {request.ticket}. Add a reason the requester will
+                                see when they check this ticket.
+                              </>
+                            }
+                            confirmLabel="Confirm cancel"
+                            confirmDisabled={busy || !cancelReason.trim()}
+                            onConfirm={() =>
+                              void run(async () => {
+                                const reason = cancelReason.trim();
+                                await changeRequestStatusFn({
+                                  data: { ticket, to: "Cancelled", reason },
+                                });
+                                holdLinkedTrackerWork(reason);
+                                setCancelReason("");
+                              }, "Request cancelled")
+                            }
+                            trigger={
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="w-full justify-center bg-zinc-200 text-zinc-800 shadow-none hover:bg-zinc-300 hover:text-zinc-800 dark:bg-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-600 dark:hover:text-zinc-100"
+                                disabled={busy}
+                              >
+                                Cancel request
+                              </Button>
+                            }
+                          >
+                            <div className="w-full space-y-1.5 text-left">
+                              <Label htmlFor="cancel-reason" className="text-sm font-medium">
+                                Cancellation reason
+                              </Label>
+                              <Input
+                                id="cancel-reason"
+                                value={cancelReason}
+                                onChange={(e) => setCancelReason(e.target.value)}
+                                placeholder="Why is this request being cancelled?"
+                                autoComplete="off"
+                              />
+                            </div>
+                          </ConfirmDialog>
+                        </div>
+                      ) : null}
                       {canConvert ? (
                         <div className="w-full">
                           <ConfirmDialog
@@ -618,7 +715,8 @@ function RequestDetailPage() {
                       contentClassName="w-[min(100%-1.5rem,28rem)] max-w-[28rem]"
                       description={
                         <>
-                          You’re going to reopen {request.ticket} and move it back to Under Review.
+                          You’re going to reopen {request.ticket} and move it back to Under Review
+                          {request.status === "Cancelled" ? " after it was cancelled" : ""}.
                         </>
                       }
                       confirmLabel="Confirm reopen"
@@ -675,62 +773,12 @@ function RequestDetailPage() {
                   {request.history.length} {request.history.length === 1 ? "update" : "updates"}
                 </span>
               </div>
-              <RequestHistoryList history={request.history} />
+              <RequestStatusHistoryList history={request.history} showActor />
             </CardContent>
           </Card>
         </div>
       </div>
     </div>
-  );
-}
-
-function RequestHistoryList({ history }: { history: RequestStatusHistory[] }) {
-  if (history.length === 0) {
-    return <p className="text-sm text-muted-foreground">No status changes yet.</p>;
-  }
-
-  return (
-    <ol>
-      {history.map((row, index) => {
-        const isLast = index === history.length - 1;
-        return (
-          <li key={row.id} className="flex gap-3">
-            <div className="flex w-3.5 shrink-0 flex-col items-center">
-              <span
-                className={`mt-1.5 size-2 rounded-full ${
-                  isLast ? "bg-primary ring-[3px] ring-primary/15" : "bg-muted-foreground/40"
-                }`}
-              />
-              {isLast ? null : <span className="mt-1 w-px flex-1 bg-border" />}
-            </div>
-            <div className={`min-w-0 flex-1 ${isLast ? "" : "pb-4"}`}>
-              <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm font-medium leading-5">
-                {row.fromStatus ? (
-                  <>
-                    <span className="text-muted-foreground">{row.fromStatus}</span>
-                    <ArrowRight className="size-3.5 shrink-0 text-muted-foreground/70" aria-hidden />
-                    <span className="sr-only">to</span>
-                    <span>{row.toStatus}</span>
-                  </>
-                ) : (
-                  <span>{row.toStatus}</span>
-                )}
-              </p>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                {row.actorName}
-                <span className="mx-1.5 text-muted-foreground/40">·</span>
-                {formatDate(row.createdAt.slice(0, 10))}
-              </p>
-              {row.reason ? (
-                <p className="mt-1.5 rounded-md bg-muted/60 px-2 py-1.5 text-xs leading-relaxed text-muted-foreground">
-                  {row.reason}
-                </p>
-              ) : null}
-            </div>
-          </li>
-        );
-      })}
-    </ol>
   );
 }
 

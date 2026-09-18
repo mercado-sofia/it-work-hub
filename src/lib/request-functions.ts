@@ -102,8 +102,8 @@ export const createFirstAdminFn = createServerFn({ method: "POST" })
 export const loginFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
-      email: z.string().trim().email(),
-      password: z.string().min(1),
+      email: z.string().trim().email("Enter a valid email address."),
+      password: z.string().min(1, "Enter your password."),
     }),
   )
   .handler(async ({ data }) => {
@@ -253,12 +253,12 @@ export const checkDuplicatesFn = createServerFn({ method: "POST" })
 
 const submitSchema = z.object({
   type: z.enum(REQUEST_TYPES),
-  title: z.string().trim().min(4).max(160),
-  note: z.string().trim().min(8).max(8000),
-  module: z.string().trim().min(1),
-  requesterName: z.string().trim().min(2).max(80),
-  requesterEmail: z.string().trim().email(),
-  department: z.string().trim().min(1),
+  title: z.string().trim().min(4, "Enter a longer title.").max(160, "Title is too long."),
+  note: z.string().trim().min(8, "Enter a longer description.").max(8000, "Description is too long."),
+  module: z.string().trim().min(1, "Choose a module."),
+  requesterName: z.string().trim().min(2, "Enter your name.").max(80, "Name is too long."),
+  requesterEmail: z.string().trim().email("Enter a valid email address."),
+  department: z.string().trim().min(1, "Choose a department."),
   urgency: z.enum(REQUEST_URGENCIES),
   stepsToReproduce: z.string().trim().max(4000).optional().nullable(),
   expectedBehavior: z.string().trim().max(2000).optional().nullable(),
@@ -299,8 +299,8 @@ export const submitRequestFn = createServerFn({ method: "POST" })
 export const lookupRequestFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
-      ticket: z.string().trim().min(3),
-      email: z.string().trim().email(),
+      ticket: z.string().trim().min(3, "Enter a valid ticket number."),
+      email: z.string().trim().email("Enter a valid email address."),
     }),
   )
   .handler(async ({ data }) => {
@@ -311,9 +311,9 @@ export const lookupRequestFn = createServerFn({ method: "POST" })
 export const addRequesterCommentFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
-      ticket: z.string().trim().min(3),
-      email: z.string().trim().email(),
-      body: z.string().trim().min(1).max(4000),
+      ticket: z.string().trim().min(3, "Enter a valid ticket number."),
+      email: z.string().trim().email("Enter a valid email address."),
+      body: z.string().trim().min(1, "Enter a comment.").max(4000, "Comment is too long."),
     }),
   )
   .handler(async ({ data }) => {
@@ -394,6 +394,9 @@ export const setRequestAssigneeFn = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await requireWriter();
     const person = data.assignedTo ? await getProfileById(data.assignedTo) : null;
+    if (data.assignedTo && !person) {
+      throw new Error("Selected assignee was not found.");
+    }
     await patchRequest(
       data.ticket,
       { assignedTo: person?.id ?? null },
@@ -402,6 +405,30 @@ export const setRequestAssigneeFn = createServerFn({ method: "POST" })
     const detail = await getRequestByTicket(data.ticket);
     if (!detail) throw new Error("Request not found.");
     return detail;
+  });
+
+export const saveRequestTriageFn = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      ticket: z.string().trim().min(3),
+      itPriority: z.enum(IT_PRIORITIES),
+      assignedTo: z.string().nullable(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireWriter();
+    const person = data.assignedTo ? await getProfileById(data.assignedTo) : null;
+    if (data.assignedTo && !person) {
+      throw new Error("Selected assignee was not found.");
+    }
+    await patchRequest(
+      data.ticket,
+      { itPriority: data.itPriority as ItPriority, assignedTo: person?.id ?? null },
+      person?.displayName ?? null,
+    );
+    const next = await getRequestByTicket(data.ticket);
+    if (!next) throw new Error("Request not found.");
+    return next;
   });
 
 export const addItCommentFn = createServerFn({ method: "POST" })
@@ -459,9 +486,6 @@ export const acceptAndLinkTaskFn = createServerFn({ method: "POST" })
     if (detail.status !== "Submitted" && detail.status !== "Under Review" && detail.status !== "Accepted") {
       throw new Error("Only submitted or reviewed requests can be converted.");
     }
-    if (data.itPriority) {
-      await patchRequest(data.ticket, { itPriority: data.itPriority as ItPriority });
-    }
     if (detail.status !== "Accepted") {
       for (const to of forwardPath(detail.status, "Accepted")) {
         await changeStatus({
@@ -484,7 +508,11 @@ export const acceptAndLinkTaskFn = createServerFn({ method: "POST" })
     const owner = assignee ?? user;
     await patchRequest(
       data.ticket,
-      { linkedTaskId: data.taskId, assignedTo: owner.id },
+      {
+        ...(data.itPriority ? { itPriority: data.itPriority as ItPriority } : {}),
+        linkedTaskId: data.taskId,
+        assignedTo: owner.id,
+      },
       owner.displayName,
     );
     const next = await getRequestByTicket(data.ticket);
@@ -518,7 +546,7 @@ export const getAttachmentFn = createServerFn({ method: "POST" })
     const user = await readSessionUser();
     if (!user) {
       if (!data.email || detail.requesterEmail !== data.email.trim().toLowerCase()) {
-        throw new Error("No request found for that ticket number and email.");
+        throw new Error("We couldn’t find a request with that ticket number and email. Check both and try again.");
       }
     }
     if (!detail.attachments.some((file) => file.id === data.id)) {

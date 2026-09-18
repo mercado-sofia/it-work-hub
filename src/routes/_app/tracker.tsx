@@ -12,6 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -283,7 +284,7 @@ function ActivityFormFields({
                   setNewPerson("");
                   toast.success(`${name} added to staff`);
                 } catch (error) {
-                  toast.error(error instanceof Error ? error.message : "Could not add staff.");
+                  toastError(error, "Could not add this person.");
                 }
               }}
             >

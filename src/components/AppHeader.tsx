@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -77,7 +78,7 @@ export function AppHeader() {
     try {
       await logout();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not sign out. Please try again.");
+      toastError(error, "Could not sign out. Please try again.");
     }
   };
 
@@ -190,7 +191,7 @@ export function AppHeader() {
                 try {
                   setBackupConfirm({ kind: "restore", payload: parseBackup(JSON.parse(text)) });
                 } catch (error) {
-                  toast.error(error instanceof Error ? error.message : "Import failed.");
+                  toastError(error, "This file isn’t a valid backup.");
                 }
               });
             }}

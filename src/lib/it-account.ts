@@ -7,19 +7,19 @@ export const IT_ROLE_META: Record<ItRole, { label: string; help: string }> = {
   management: { label: "Management", help: "Read-only executive view." },
 };
 
-const passwordSchema = z.string().min(10).max(120);
+const passwordSchema = z.string().min(10, "Use at least 10 characters.").max(120, "Password is too long.");
 
 export const inviteUserSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  email: z.string().trim().email(),
+  name: z.string().trim().min(2, "Enter a name.").max(80, "Name is too long."),
+  email: z.string().trim().email("Enter a valid email address."),
   role: z.enum(IT_ROLES),
 });
 
 export const departmentSettingsSchema = z.object({
-  departmentName: z.string().trim().min(2).max(120),
-  contactEmail: z.string().trim().email().or(z.literal("")),
-  contactExtension: z.string().trim().max(40),
-  signatoryName: z.string().trim().max(80),
+  departmentName: z.string().trim().min(2, "Enter a department name.").max(120, "Department name is too long."),
+  contactEmail: z.string().trim().email("Enter a valid email address.").or(z.literal("")),
+  contactExtension: z.string().trim().max(40, "Extension is too long."),
+  signatoryName: z.string().trim().max(80, "Name is too long."),
 });
 
 export const changePasswordSchema = z.object({
@@ -32,8 +32,8 @@ export const updateOwnAccountSchema = z.object({
 });
 
 export const bootstrapAdminSchema = z.object({
-  name: z.string().trim().min(2).max(80),
-  email: z.string().trim().email(),
+  name: z.string().trim().min(2, "Enter your name.").max(80, "Name is too long."),
+  email: z.string().trim().email("Enter a valid email address."),
   password: passwordSchema,
 });
 

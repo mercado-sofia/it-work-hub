@@ -10,6 +10,7 @@ const styles: Record<RequestStatus, string> = {
   Resolved: "bg-success-soft text-success border-success/25",
   Closed: "bg-muted text-muted-foreground border-border",
   Declined: "bg-destructive/10 text-destructive border-destructive/25",
+  Cancelled: "bg-destructive/10 text-destructive border-destructive/25",
 };
 
 const base =
