@@ -129,7 +129,7 @@ function SprintFormFields({
           className="min-w-0 resize-none bg-card"
         />
       </div>
-      <div className="grid min-w-0 grid-cols-2 gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="flex min-w-0 flex-col gap-1.5 overflow-hidden">
           <Label htmlFor={`${idPrefix}-start`} className="text-foreground">
             Start date
@@ -308,13 +308,13 @@ export function SprintView({
   const canMutateSprint = !readOnly && selected && selected.status !== "Completed";
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="flex flex-wrap items-end gap-3 p-4">
-          <div className="w-full space-y-1.5 sm:min-w-52 sm:w-auto">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-hidden">
+      <Card className="min-w-0">
+        <CardContent className="grid min-w-0 grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(13rem,18rem)_minmax(0,1fr)] lg:items-end xl:grid-cols-[minmax(13rem,18rem)_minmax(0,1fr)_auto]">
+          <div className="min-w-0 space-y-1.5">
             <Label className="text-xs">Sprint</Label>
             <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full min-w-0">
                 <SelectValue placeholder="Select sprint" />
               </SelectTrigger>
               <SelectContent>
@@ -328,8 +328,8 @@ export function SprintView({
           </div>
 
           {selected && (
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5 pb-1">
-              <p className="text-sm font-medium leading-snug">{selected.goal || "No goal set"}</p>
+            <div className="flex min-w-0 flex-col gap-0.5 pb-1">
+              <p className="break-words text-sm font-medium leading-snug">{selected.goal || "No goal set"}</p>
               <p className="text-xs text-muted-foreground">
                 {formatDate(selected.startDate)} – {formatDate(selected.endDate)}
               </p>
@@ -337,8 +337,8 @@ export function SprintView({
           )}
 
           {!readOnly && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Button size="sm" className="gap-1.5" onClick={() => setCreateOpen(true)}>
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center lg:col-span-2 xl:col-span-1 xl:justify-end">
+              <Button size="sm" className="min-w-0 gap-1.5" onClick={() => setCreateOpen(true)}>
                 <Plus className="size-3.5" /> New Sprint
               </Button>
               {selected && (
@@ -346,7 +346,7 @@ export function SprintView({
                   <Button
                     size="sm"
                     variant="outline"
-                    className="gap-1.5"
+                    className="min-w-0 gap-1.5"
                     onClick={() => setEditOpen(true)}
                   >
                     <Pencil className="size-3.5" /> Edit
@@ -376,7 +376,7 @@ export function SprintView({
                         toast.success(`${selected.name} is now Active`);
                       }}
                       trigger={
-                        <Button size="sm" variant="secondary" className="gap-1.5">
+                        <Button size="sm" variant="secondary" className="min-w-0 gap-1.5">
                           <Target className="size-3.5" /> Set Active
                         </Button>
                       }
@@ -423,7 +423,7 @@ export function SprintView({
                         if (incompleteDest !== "backlog") setSelectedId(incompleteDest);
                       }}
                       trigger={
-                        <Button size="sm" variant="secondary" className="gap-1.5">
+                        <Button size="sm" variant="secondary" className="min-w-0 gap-1.5">
                           <CheckCircle2 className="size-3.5" /> Complete Sprint
                         </Button>
                       }
@@ -471,7 +471,7 @@ export function SprintView({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="gap-1.5 text-muted-foreground hover:bg-transparent hover:text-destructive"
+                          className="min-w-0 gap-1.5 text-muted-foreground hover:bg-transparent hover:text-destructive"
                         >
                           <Trash2 className="size-3.5" /> Delete
                         </Button>
@@ -486,7 +486,7 @@ export function SprintView({
       </Card>
 
       {metrics && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
           {[
             { label: "Committed", value: String(metrics.committed), icon: ListPlus },
             { label: "Completed", value: String(metrics.completed), icon: CheckCircle2 },
@@ -494,14 +494,14 @@ export function SprintView({
             { label: "Timeline", value: metrics.daysLabel, icon: CalendarRange },
           ].map(({ label, value, icon: Icon }) => (
             <Card key={label}>
-              <CardContent className="flex items-center justify-between gap-3 p-4">
-                <div>
+              <CardContent className="flex min-w-0 items-center justify-between gap-2 p-3 sm:gap-3 sm:p-4">
+                <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wide text-foreground">
                     {label}
                   </p>
-                  <p className="mt-1 font-display text-2xl font-semibold tabular-nums">{value}</p>
+                  <p className="mt-1 break-words font-display text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
                 </div>
-                <Icon className="size-6 text-primary" strokeWidth={1.6} />
+                <Icon className="hidden size-6 shrink-0 text-primary min-[380px]:block" strokeWidth={1.6} />
               </CardContent>
             </Card>
           ))}
@@ -515,14 +515,14 @@ export function SprintView({
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
-          <div className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2 xl:grid xl:grid-cols-5 xl:overflow-visible xl:snap-none">
+        <div className="grid min-w-0 gap-4 2xl:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
             {STATUSES.map((status) => {
               const items = sprintTasks.filter((task) => task.status === status);
               return (
                 <div
                   key={status}
-                  className="min-w-[min(17rem,85vw)] snap-start rounded-lg border border-border bg-card xl:min-w-0"
+                  className="min-w-0 rounded-lg border border-border bg-card"
                 >
                   <div className="flex items-center justify-between border-b border-border px-3 py-2.5">
                     <StatusBadge status={status} variant="plain" />
@@ -534,7 +534,7 @@ export function SprintView({
                     {items.map((task) => (
                       <div key={task.id} className="rounded-md border border-border p-3">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="text-sm font-medium leading-snug">{task.title}</p>
+                          <p className="min-w-0 break-words text-sm font-medium leading-snug">{task.title}</p>
                           {!readOnly && (
                             <Button
                               variant="ghost"
@@ -601,7 +601,7 @@ export function SprintView({
             })}
           </div>
 
-          <div className="rounded-lg border border-border bg-card">
+          <div className="min-w-0 rounded-lg border border-border bg-card">
             <div className="border-b border-border px-3 py-2.5">
               <p className="text-sm font-semibold text-foreground">Backlog</p>
               <p className="text-xs text-muted-foreground">
@@ -616,7 +616,7 @@ export function SprintView({
             <div className="max-h-[70vh] space-y-3 overflow-y-auto p-3">
               {backlog.map((task) => (
                 <div key={task.id} className="rounded-md border border-border p-3">
-                  <p className="text-sm font-medium leading-snug">{task.title}</p>
+                   <p className="break-words text-sm font-medium leading-snug">{task.title}</p>
                   <p className="mt-1 text-xs">
                     <WorkId work={task} className="text-xs" />
                   </p>

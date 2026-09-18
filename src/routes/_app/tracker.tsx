@@ -592,7 +592,7 @@ function Tracker() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 max-w-full space-y-6 overflow-hidden">
       <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <h1 className="font-display text-lg font-semibold tracking-tight text-foreground sm:text-xl">
@@ -641,7 +641,7 @@ function Tracker() {
       {!hydrated ? (
         <TrackerSkeleton />
       ) : (
-      <div className="contents">
+      <div className="contents min-w-0">
       <Card>
         <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center">
           <div className="relative w-full min-w-0 flex-1 md:min-w-56">
