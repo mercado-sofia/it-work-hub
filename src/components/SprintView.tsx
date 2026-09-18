@@ -308,13 +308,13 @@ export function SprintView({
   const canMutateSprint = !readOnly && selected && selected.status !== "Completed";
 
   return (
-    <div className="min-w-0 space-y-4 overflow-hidden">
+    <div className="w-full min-w-0 max-w-full space-y-4 overflow-hidden">
       <Card className="min-w-0">
         <CardContent className="grid min-w-0 grid-cols-1 gap-4 p-4 lg:grid-cols-[minmax(13rem,18rem)_minmax(0,1fr)] lg:items-end xl:grid-cols-[minmax(13rem,18rem)_minmax(0,1fr)_auto]">
           <div className="min-w-0 space-y-1.5">
             <Label className="text-xs">Sprint</Label>
             <Select value={selectedId} onValueChange={setSelectedId}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full min-w-0">
                 <SelectValue placeholder="Select sprint" />
               </SelectTrigger>
               <SelectContent>
