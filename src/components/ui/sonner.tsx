@@ -24,8 +24,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         closeButton: true,
         classNames: {
-          toast: "group toast font-sans max-w-[22rem] sm:max-w-sm",
+          toast: "group toast font-sans w-full max-w-full sm:max-w-sm",
           title: "font-normal leading-snug break-words",
+          description: "break-words",
         },
       }}
       {...props}

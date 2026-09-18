@@ -538,8 +538,8 @@ export function LandingSkeleton() {
       label="Loading portal"
       className="relative min-h-svh overflow-x-hidden bg-white font-sans text-foreground dark:bg-background"
     >
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
-        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-3 sm:gap-3 sm:px-6">
+      <header className="sticky top-0 z-40 bg-white print:hidden dark:bg-card">
+        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-8 sm:gap-3 sm:px-6">
           <Skeleton className="size-8 rounded-full sm:size-9" />
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-24" />
@@ -551,21 +551,27 @@ export function LandingSkeleton() {
           </div>
         </div>
       </header>
-      <main className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-3 py-5 sm:px-6">
+      <main className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-8 py-5 sm:px-6 sm:py-6">
         <div className="mx-auto w-full max-w-3xl">
           <div className="flex flex-col items-center">
             <Skeleton className="h-5 w-28 rounded-full" />
-            <Skeleton className="mt-4 h-7 w-56 sm:mt-6 sm:h-8 sm:w-96" />
+            <Skeleton className="mt-3 h-7 w-56 sm:mt-6 sm:h-8 sm:w-96" />
             <Skeleton className="mt-3 h-4 w-64 sm:w-80" />
           </div>
-          <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-5">
+          <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-5">
             {times(2).map((index) => (
-              <div key={index} className="rounded-2xl border-2 border-border bg-card p-3 sm:p-5">
-                <Skeleton className="h-16 w-full rounded-lg sm:h-24 sm:rounded-xl" />
-                <Skeleton className="mt-2.5 h-5 w-40 sm:mt-3" />
-                <Skeleton className="mt-2 h-3 w-full" />
-                <Skeleton className="mt-2 h-3 w-5/6" />
-                <Skeleton className="mt-3 h-9 w-36 rounded-full" />
+              <div
+                key={index}
+                className="flex flex-col items-center rounded-2xl border-2 border-border bg-card p-4 text-center sm:block sm:p-5 sm:text-left"
+              >
+                <Skeleton className="size-12 rounded-xl sm:hidden" />
+                <Skeleton className="hidden h-24 w-full rounded-xl sm:block" />
+                <div className="mt-3 w-full min-w-0 sm:mt-0">
+                  <Skeleton className="mx-auto h-5 w-40 sm:mx-0 sm:mt-3" />
+                  <Skeleton className="mx-auto mt-2 h-3 w-full max-w-xs sm:mx-0" />
+                  <Skeleton className="mx-auto mt-2 h-3 w-5/6 sm:mx-0" />
+                  <Skeleton className="mx-auto mt-3 h-8 w-36 rounded-full sm:mx-0" />
+                </div>
               </div>
             ))}
           </div>

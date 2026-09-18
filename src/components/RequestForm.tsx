@@ -129,12 +129,14 @@ export function RequestForm() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
+    <div className="mx-auto w-full max-w-5xl px-8 py-5 sm:px-6 sm:py-8">
       {ticket ? (
-        <div className="mx-auto max-w-3xl rounded-2xl border-2 border-border bg-card p-5 sm:p-8">
+        <div className="mx-auto max-w-3xl text-center sm:rounded-2xl sm:border-2 sm:border-border sm:bg-card sm:p-8 sm:text-left">
           <div className="space-y-4">
             <p className="text-sm font-medium text-primary">Request submitted</p>
-            <h1 className="text-xl font-semibold break-words">Your ticket number is {ticket}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight break-words sm:text-xl">
+              Your ticket number is <span className="tabular-nums">{ticket}</span>
+            </h1>
             <p className="text-sm leading-relaxed text-muted-foreground">
               Save this number. Use it with your email on the status page to follow progress.
             </p>
@@ -142,7 +144,7 @@ export function RequestForm() {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 w-full gap-2 rounded-full sm:w-auto"
+                className="h-12 w-full gap-2 rounded-full sm:h-10 sm:w-auto"
                 onClick={async () => {
                   await navigator.clipboard.writeText(ticket);
                   setCopied(true);
@@ -152,7 +154,7 @@ export function RequestForm() {
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 Copy ticket number
               </Button>
-              <Button asChild className="h-10 w-full rounded-full sm:w-auto">
+              <Button asChild className="h-12 w-full rounded-full sm:h-10 sm:w-auto">
                 <Link to="/request/status" search={{ ticket }}>
                   Check status
                 </Link>
@@ -160,7 +162,7 @@ export function RequestForm() {
               <Button
                 type="button"
                 variant="ghost"
-                className="h-10 w-full rounded-full sm:w-auto"
+                className="h-12 w-full rounded-full sm:h-10 sm:w-auto"
                 onClick={() => {
                   setTicket(null);
                   setDraft(emptyDraft());
@@ -174,11 +176,11 @@ export function RequestForm() {
           </div>
         </div>
       ) : (
-        <div className="space-y-5">
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">Submit an IT request</h1>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              No account needed. You will receive a ticket number to check status later.
+        <div className="space-y-5 max-lg:pb-24">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-xl">Submit an IT request</h1>
+            <p className="mt-1.5 w-full text-sm leading-relaxed text-muted-foreground">
+              Tell us what you need and how to reach you. You’ll get a ticket number after you submit.
             </p>
           </div>
 
@@ -203,10 +205,10 @@ export function RequestForm() {
                   ))}
                 </ul>
                 <div className="flex flex-col gap-2 sm:flex-row">
-                  <Button type="button" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => setSimilar([])}>
+                  <Button type="button" variant="outline" className="h-12 w-full rounded-full sm:h-10 sm:w-auto sm:rounded-md" onClick={() => setSimilar([])}>
                     Edit my request
                   </Button>
-                  <Button type="button" className="h-10 w-full sm:w-auto" disabled={busy} onClick={() => void submit(true)}>
+                  <Button type="button" className="h-12 w-full rounded-full sm:h-10 sm:w-auto sm:rounded-md" disabled={busy} onClick={() => void submit(true)}>
                     Continue anyway
                   </Button>
                 </div>
@@ -221,14 +223,14 @@ export function RequestForm() {
               void submit(false);
             }}
           >
-            <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-4 sm:p-6">
+            <div className="space-y-4 sm:rounded-2xl sm:border-2 sm:border-border sm:bg-card sm:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Type" htmlFor="req-type">
                   <Select
                     value={draft.type}
                     onValueChange={(type) => setDraft({ ...draft, type: type as Draft["type"] })}
                   >
-                    <SelectTrigger id="req-type">
+                    <SelectTrigger id="req-type" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -245,7 +247,7 @@ export function RequestForm() {
                     value={draft.urgency}
                     onValueChange={(urgency) => setDraft({ ...draft, urgency: urgency as Draft["urgency"] })}
                   >
-                    <SelectTrigger id="req-urgency">
+                    <SelectTrigger id="req-urgency" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
                       <SelectValue placeholder="Select urgency" />
                     </SelectTrigger>
                     <SelectContent>
@@ -262,6 +264,7 @@ export function RequestForm() {
               <Field label="Title" htmlFor="req-title">
                 <Input
                   id="req-title"
+                  className="h-12 rounded-lg sm:h-9 sm:rounded-md"
                   value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                   placeholder="Brief summary of your request"
@@ -273,7 +276,8 @@ export function RequestForm() {
               <Field label="Note" htmlFor="req-note">
                 <Textarea
                   id="req-note"
-                  rows={5}
+                  rows={4}
+                  className="min-h-24 rounded-lg sm:min-h-[7.5rem] sm:rounded-md"
                   value={draft.note}
                   onChange={(e) => setDraft({ ...draft, note: e.target.value })}
                   placeholder="Describe what you need"
@@ -288,7 +292,8 @@ export function RequestForm() {
                   <Field label="Steps to reproduce" htmlFor="req-steps">
                     <Textarea
                       id="req-steps"
-                      rows={4}
+                      rows={3}
+                      className="rounded-lg sm:rounded-md"
                       value={draft.stepsToReproduce}
                       onChange={(e) => setDraft({ ...draft, stepsToReproduce: e.target.value })}
                       placeholder="List the steps to reproduce the issue"
@@ -299,6 +304,7 @@ export function RequestForm() {
                     <Textarea
                       id="req-expected"
                       rows={3}
+                      className="rounded-lg sm:rounded-md"
                       value={draft.expectedBehavior}
                       onChange={(e) => setDraft({ ...draft, expectedBehavior: e.target.value })}
                       placeholder="What should happen"
@@ -309,6 +315,7 @@ export function RequestForm() {
                     <Textarea
                       id="req-actual"
                       rows={3}
+                      className="rounded-lg sm:rounded-md"
                       value={draft.actualBehavior}
                       onChange={(e) => setDraft({ ...draft, actualBehavior: e.target.value })}
                       placeholder="What happens instead"
@@ -321,13 +328,13 @@ export function RequestForm() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Affected module" htmlFor="req-module">
                   {catalog.isPending ? (
-                    <Skeleton id="req-module" className="h-9 w-full" />
+                    <Skeleton id="req-module" className="h-12 w-full rounded-lg sm:h-9 sm:rounded-md" />
                   ) : (
                   <Select
                     {...(draft.module ? { value: draft.module } : {})}
                     onValueChange={(module) => setDraft({ ...draft, module })}
                   >
-                    <SelectTrigger id="req-module">
+                    <SelectTrigger id="req-module" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
                       <SelectValue placeholder="Select module" />
                     </SelectTrigger>
                     <SelectContent>
@@ -342,13 +349,13 @@ export function RequestForm() {
                 </Field>
                 <Field label="Department" htmlFor="req-department">
                   {catalog.isPending ? (
-                    <Skeleton id="req-department" className="h-9 w-full" />
+                    <Skeleton id="req-department" className="h-12 w-full rounded-lg sm:h-9 sm:rounded-md" />
                   ) : (
                   <Select
                     {...(draft.department ? { value: draft.department } : {})}
                     onValueChange={(department) => setDraft({ ...draft, department })}
                   >
-                    <SelectTrigger id="req-department">
+                    <SelectTrigger id="req-department" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
@@ -367,6 +374,8 @@ export function RequestForm() {
                 <Field label="Full Name" htmlFor="req-full-name">
                   <Input
                     id="req-full-name"
+                    className="h-12 rounded-lg sm:h-9 sm:rounded-md"
+                    autoComplete="name"
                     value={draft.requesterName}
                     onChange={(e) => setDraft({ ...draft, requesterName: e.target.value })}
                     placeholder="Your full name"
@@ -377,6 +386,11 @@ export function RequestForm() {
                   <Input
                     id="req-email"
                     type="email"
+                    className="h-12 rounded-lg sm:h-9 sm:rounded-md"
+                    autoComplete="email"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                     value={draft.requesterEmail}
                     onChange={(e) => setDraft({ ...draft, requesterEmail: e.target.value })}
                     placeholder="you@company.com"
@@ -387,14 +401,14 @@ export function RequestForm() {
 
               <Button
                 type="submit"
-                className="h-10 w-full rounded-full sm:w-auto"
+                className="hidden h-10 rounded-full lg:inline-flex"
                 disabled={busy || !draft.module || !draft.department}
               >
                 {busy ? "Submitting…" : "Submit request"}
               </Button>
             </div>
 
-            <div className="flex min-h-0 flex-col rounded-2xl border-2 border-border bg-card p-4 sm:min-h-[18rem] sm:p-6 lg:min-h-full">
+            <div className="flex min-h-0 flex-col sm:min-h-[18rem] sm:rounded-2xl sm:border-2 sm:border-border sm:bg-card sm:p-6 lg:min-h-full">
               <h2 className="text-sm font-semibold tracking-tight">Attachments</h2>
               <p className="mt-1 text-xs text-muted-foreground">Optional. Up to 5 files, 4 MB each.</p>
 
@@ -417,19 +431,21 @@ export function RequestForm() {
                   htmlFor="req-files"
                   className={
                     files.length
-                      ? "mt-3 flex min-h-11 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary focus-within:border-primary"
-                      : "mt-4 flex min-h-32 flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-6 text-center transition-colors hover:border-primary focus-within:border-primary sm:min-h-0 sm:py-8"
+                      ? "mt-3 flex min-h-12 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary focus-within:border-primary"
+                      : "mt-4 flex min-h-16 cursor-pointer items-center justify-start gap-3 rounded-xl border-2 border-dashed border-border px-4 py-4 text-left transition-colors hover:border-primary focus-within:border-primary sm:min-h-0 sm:flex-1 sm:flex-col sm:items-center sm:justify-center sm:py-8 sm:text-center"
                   }
                 >
                   {files.length ? (
                     "Add more files"
                   ) : (
                     <>
-                      <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                         <Upload className="size-5" />
                       </span>
-                      <span className="mt-3 text-sm font-medium">Click to add files</span>
-                      <span className="mt-1 text-xs text-muted-foreground">Screenshots, PDF, or Office files</span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium">Click to add files</span>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">Screenshots, PDF, or Office files</span>
+                      </span>
                     </>
                   )}
                   <input
@@ -445,6 +461,16 @@ export function RequestForm() {
                   />
                 </label>
               )}
+            </div>
+
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/70 bg-white/95 px-8 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md dark:bg-background/95 lg:hidden sm:px-6">
+              <Button
+                type="submit"
+                className="h-12 w-full rounded-full"
+                disabled={busy || !draft.module || !draft.department}
+              >
+                {busy ? "Submitting…" : "Submit request"}
+              </Button>
             </div>
           </form>
         </div>
@@ -554,7 +580,7 @@ function AttachmentCard({
           trigger={
             <button
               type="button"
-              className="shrink-0 cursor-pointer rounded-md p-1 text-muted-foreground hover:bg-transparent hover:text-destructive"
+              className="shrink-0 cursor-pointer rounded-md p-2 text-muted-foreground hover:bg-transparent hover:text-destructive sm:p-1"
               aria-label={`Remove ${file.name}`}
             >
               <Trash2 className="size-4" />

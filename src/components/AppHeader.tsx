@@ -68,10 +68,17 @@ export function AppHeader() {
   const { theme, toggleTheme } = useTheme();
   const [busy, setBusy] = useState<"xlsx" | "pdf" | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [signOutConfirm, setSignOutConfirm] = useState(false);
   const [backupConfirm, setBackupConfirm] = useState<
     { kind: "restore"; payload: BackupPayload } | { kind: "legacy" } | { kind: "sample" } | null
   >(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const requestSignOut = () => {
+    if (signingOut) return;
+    setMenuOpen(false);
+    setSignOutConfirm(true);
+  };
 
   const signOut = async () => {
     if (signingOut) return;
@@ -207,7 +214,7 @@ export function AppHeader() {
             name={user?.displayName ?? "IT"}
             role={user?.role ?? "staff"}
             signingOut={signingOut}
-            onLogout={signOut}
+            onLogout={requestSignOut}
           />
           <Button
             type="button"
@@ -261,7 +268,7 @@ export function AppHeader() {
               variant="outline"
               className="w-full justify-center gap-2"
               disabled={signingOut}
-              onClick={() => void signOut()}
+              onClick={requestSignOut}
             >
               {signingOut ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
               {signingOut ? "Signing out…" : "Sign out"}
@@ -284,6 +291,17 @@ export function AppHeader() {
         </div>
       )}
     </header>
+
+    <ConfirmDialog
+      open={signOutConfirm}
+      onOpenChange={setSignOutConfirm}
+      icon={LogOut}
+      title="Sign Out"
+      description="You’re going to sign out of TrackHub. Are you sure?"
+      confirmLabel="Confirm sign out"
+      confirmDisabled={signingOut}
+      onConfirm={() => void signOut()}
+    />
 
     <ConfirmDialog
       open={backupConfirm !== null}
@@ -360,7 +378,7 @@ function UserMenu({
   name: string;
   role: string;
   signingOut: boolean;
-  onLogout: () => Promise<void>;
+  onLogout: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -387,7 +405,7 @@ function UserMenu({
             Settings
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="gap-2" disabled={signingOut} onSelect={() => void onLogout()}>
+        <DropdownMenuItem className="gap-2" disabled={signingOut} onSelect={onLogout}>
           {signingOut ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
           {signingOut ? "Signing out…" : "Sign out"}
         </DropdownMenuItem>

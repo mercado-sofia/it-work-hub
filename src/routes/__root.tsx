@@ -143,7 +143,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function ResponsiveToaster() {
   const isMobile = useIsMobile();
-  return <Toaster position={isMobile ? "bottom-center" : "top-right"} />;
+  return (
+    <Toaster
+      position={isMobile ? "bottom-center" : "top-right"}
+      offset={16}
+      mobileOffset={{ top: 16, right: 20, bottom: 84, left: 20 }}
+    />
+  );
 }
 
 function NavigationProgress() {

@@ -42,29 +42,29 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
   };
 
   return (
-    <div className="flex min-h-full items-center justify-center px-3 py-5 sm:px-6 sm:py-16">
-      <div className="w-full max-w-none rounded-2xl border-2 border-border bg-card p-5 sm:max-w-[26rem] sm:p-8">
+    <div className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-8 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto w-full sm:max-w-[26rem] sm:rounded-2xl sm:border-2 sm:border-border sm:bg-card sm:p-8">
         <div className="text-center">
-          <span className="mx-auto flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-12">
-            <Shield className="size-5 sm:size-6" />
+          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-12">
+            <Shield className="size-6" />
           </span>
-          <h1 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4">
+          <h1 className="mt-4 text-2xl font-semibold tracking-tight sm:text-xl">
             {needsBootstrap ? "Create the first IT Admin" : "IT Department"}
           </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
             {needsBootstrap
               ? "No IT accounts exist yet. Create the administrator who can add the rest of the team."
               : "Sign in with your IT account to open the dashboard, requests, and tracker."}
           </p>
         </div>
 
-        <form className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4" onSubmit={(event) => void submit(event)}>
+        <form className="mt-6 space-y-4 sm:mt-7" onSubmit={(event) => void submit(event)}>
           {needsBootstrap && (
             <div className="space-y-1.5">
               <Label htmlFor="it-name">Full name</Label>
               <Input
                 id="it-name"
-                className="h-10"
+                className="h-12 rounded-lg sm:h-10 sm:rounded-md"
                 autoComplete="name"
                 placeholder="Your name"
                 value={name}
@@ -78,8 +78,11 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
             <Input
               id="it-email"
               type="email"
-              className="h-10"
+              className="h-12 rounded-lg sm:h-10 sm:rounded-md"
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               placeholder="you@company.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -90,7 +93,7 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
             <Label htmlFor="it-password">Password</Label>
             <PasswordInput
               id="it-password"
-              className="h-10"
+              className="h-12 rounded-lg sm:h-10 sm:rounded-md"
               autoComplete={needsBootstrap ? "new-password" : "current-password"}
               placeholder="Password"
               value={password}
@@ -100,7 +103,7 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
             />
             {needsBootstrap ? <p className="text-xs text-muted-foreground">At least 10 characters.</p> : null}
           </div>
-          <Button type="submit" className="mt-2 h-10 w-full rounded-full" disabled={busy}>
+          <Button type="submit" className="mt-2 h-12 w-full rounded-full sm:h-10" disabled={busy}>
             {busy ? "Please wait…" : needsBootstrap ? "Create admin" : "Sign in"}
           </Button>
         </form>

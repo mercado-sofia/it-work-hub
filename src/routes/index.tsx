@@ -1,6 +1,5 @@
 import { Link, createFileRoute, redirect } from "@tanstack/react-router";
 import {
-  ArrowDownLeft,
   ArrowDownRight,
   ArrowRight,
   CircleHelp,
@@ -90,8 +89,8 @@ function LandingPage() {
 
   return (
     <div className="relative min-h-svh overflow-x-hidden bg-white font-sans text-foreground dark:bg-background">
-      <header className="sticky top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
-        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-3 sm:gap-3 sm:px-6">
+      <header className="sticky top-0 z-40 bg-white print:hidden dark:bg-card">
+        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-8 sm:gap-3 sm:px-6">
           {current !== "start" && <BackButton className="shrink-0 px-2 sm:px-2.5" />}
           <Link to="/" search={{}} className="flex min-w-0 items-center gap-2 sm:gap-3">
             <img src="/it-logo.png" alt="" className="size-8 shrink-0 rounded-full object-cover sm:size-9" />
@@ -135,7 +134,7 @@ function LandingPage() {
         <div className="bootstrap-stage">
           <section
             className={cn(
-              "bootstrap-panel flex flex-col justify-center px-3 py-5 sm:px-6 sm:py-6",
+              "bootstrap-panel flex flex-col items-center justify-center px-8 py-5 sm:px-6 sm:py-6",
               panelClass("start", current),
             )}
             aria-hidden={current !== "start"}
@@ -151,7 +150,10 @@ function LandingPage() {
             <RequestForm />
           </section>
           <section
-            className={cn("bootstrap-panel", panelClass("login", current))}
+            className={cn(
+              "bootstrap-panel sm:flex sm:items-center sm:justify-center",
+              panelClass("login", current),
+            )}
             aria-hidden={current !== "login"}
             inert={current !== "login"}
           >
@@ -180,7 +182,7 @@ function StartChooser() {
             How it works
           </p>
         </div>
-        <h1 className="mt-4 text-xl font-semibold tracking-tight sm:mt-6 sm:text-3xl">
+        <h1 className="mt-3 text-xl font-semibold tracking-tight sm:mt-6 sm:text-3xl">
           Get started in <span className="text-primary">2 simple steps</span>
         </h1>
         <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
@@ -188,9 +190,9 @@ function StartChooser() {
         </p>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-5">
-        <div className="relative">
-          <p className="mb-1.5 flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground sm:justify-start">
+      <div className="mt-5 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:items-stretch sm:gap-5">
+        <div className="relative flex flex-col sm:h-full">
+          <p className="mb-1.5 hidden items-center gap-1 text-xs font-medium text-muted-foreground sm:flex">
             Submit a request
             <ArrowDownRight className="size-3.5 shrink-0" strokeWidth={1.75} />
           </p>
@@ -199,21 +201,23 @@ function StartChooser() {
             title="I need to submit a request"
             description="No account needed. Send a problem, access, or support request and get a ticket number to track status."
             cta="Open request form"
+            icon={<ClipboardList className="size-5" />}
           >
             <RequestPreview />
           </ChoiceCard>
         </div>
 
-        <div className="relative">
-          <p className="mb-1.5 flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground sm:justify-end">
-            <ArrowDownLeft className="size-3.5 shrink-0" strokeWidth={1.75} />
+        <div className="relative flex flex-col sm:h-full">
+          <p className="mb-1.5 hidden items-center gap-1 text-xs font-medium text-muted-foreground sm:flex">
             IT Department
+            <ArrowDownRight className="size-3.5 shrink-0" strokeWidth={1.75} />
           </p>
           <ChoiceCard
             view="login"
             title="I am part of the IT department"
             description="Sign in to triage incoming tickets, update the tracker, and work from the IT dashboard."
             cta="Continue to sign in"
+            icon={<Shield className="size-5" />}
           >
             <ItPreview />
           </ChoiceCard>
@@ -347,47 +351,58 @@ function ChoiceCard({
   title,
   description,
   cta,
+  icon,
   children,
 }: {
   view: "request" | "login";
   title: string;
   description: string;
   cta: string;
+  icon: ReactNode;
   children: ReactNode;
 }) {
   return (
     <Link
       to="/"
       search={{ view }}
-      className="landing-choice-card flex h-full min-h-11 flex-col overflow-hidden rounded-2xl border-2 bg-card p-3 outline-none sm:p-4"
+      className="landing-choice-card flex h-full flex-col items-center overflow-hidden rounded-2xl border-2 bg-card p-4 text-center outline-none sm:items-stretch sm:text-left"
     >
-      <div className="rounded-lg border border-border/80 bg-muted/40 p-2 sm:rounded-xl sm:p-3">{children}</div>
-      <h2 className="mt-2.5 text-base font-semibold tracking-tight sm:mt-3">{title}</h2>
-      <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground sm:mt-1.5">{description}</p>
-      <span className="mt-2.5 inline-flex min-h-9 items-center text-sm font-medium text-primary sm:mt-3">
-        {cta}
-        <span className="landing-choice-arrow ml-1">→</span>
+      <span className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary sm:hidden">
+        {icon}
       </span>
+      <div className="hidden h-36 shrink-0 items-center rounded-xl border border-border/80 bg-muted/40 p-3 sm:flex">
+        {children}
+      </div>
+      <div className="flex min-w-0 w-full flex-col">
+        <h2 className="mt-3 text-[15px] font-semibold tracking-tight sm:mt-3 sm:text-base">{title}</h2>
+        <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground sm:mx-0 sm:mt-2 sm:max-w-none">
+          {description}
+        </p>
+        <span className="mt-2 inline-flex min-h-8 items-center justify-center text-sm font-medium text-primary sm:mt-3 sm:min-h-9 sm:justify-start">
+          {cta}
+          <span className="landing-choice-arrow ml-1">→</span>
+        </span>
+      </div>
     </Link>
   );
 }
 
 function RequestPreview() {
   return (
-    <div className="space-y-1.5 sm:space-y-2">
+    <div className="flex h-full w-full flex-col justify-center gap-2">
       <div className="flex items-start gap-2">
-        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground sm:size-6">
+        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
           <ClipboardList className="size-3" />
         </span>
-        <div className="line-clamp-2 max-w-[85%] rounded-2xl rounded-tl-sm bg-primary px-2 py-1 text-[11px] leading-snug text-primary-foreground sm:line-clamp-none sm:px-2.5 sm:py-1.5">
+        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-primary px-2.5 py-1.5 text-left text-[11px] leading-snug text-primary-foreground">
           Payroll overtime is not posting to the payslip. Can IT take a look?
         </div>
       </div>
       <div className="flex items-start justify-end gap-2">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-card px-2 py-1 text-[11px] leading-snug text-foreground sm:px-2.5 sm:py-1.5">
+        <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-card px-2.5 py-1.5 text-left text-[11px] leading-snug text-foreground">
           Request received. Your ticket is R-0001.
         </div>
-        <img src="/it-logo.png" alt="" className="mt-0.5 size-5 rounded-full object-cover sm:size-6" />
+        <img src="/it-logo.png" alt="" className="mt-0.5 size-6 rounded-full object-cover" />
       </div>
     </div>
   );
@@ -395,14 +410,14 @@ function RequestPreview() {
 
 function ItPreview() {
   return (
-    <div className="flex min-h-0 flex-col items-center justify-center gap-1.5 py-0.5 sm:min-h-[5.25rem] sm:gap-2 sm:py-1">
-      <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-10 sm:rounded-xl">
-        <Shield className="size-4 sm:size-5" />
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2">
+      <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Shield className="size-5" />
       </span>
-      <div className="w-full max-w-[9.5rem] space-y-1 sm:space-y-1.5">
+      <div className="w-full max-w-[9.5rem] space-y-1.5">
         <div className="h-1.5 rounded-full bg-muted-foreground/20" />
         <div className="h-1.5 w-3/4 rounded-full bg-muted-foreground/20" />
-        <div className="h-5 rounded-md bg-primary/90 sm:h-6" />
+        <div className="h-6 rounded-md bg-primary/90" />
       </div>
     </div>
   );
