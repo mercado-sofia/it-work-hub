@@ -116,6 +116,12 @@
   --sidebar-ring: oklch(0.75 0.1 264);
 }
 
+@media (max-width: 1023px) {
+  :root {
+    --background: oklch(1 0 0);
+  }
+}
+
 .dark {
   color-scheme: dark;
   --background: oklch(0.12 0.025 270);

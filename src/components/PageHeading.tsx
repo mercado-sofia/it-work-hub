@@ -31,6 +31,7 @@ export function PageHeading({
   hideSubtitleOnMobile,
   greeting = false,
   accent = true,
+  compact = false,
   actions,
   className,
 }: {
@@ -41,6 +42,7 @@ export function PageHeading({
   hideSubtitleOnMobile?: boolean;
   greeting?: boolean;
   accent?: boolean;
+  compact?: boolean;
   actions?: ReactNode;
   className?: string;
 }) {
@@ -58,7 +60,10 @@ export function PageHeading({
         ) : null}
         <h1
           className={cn(
-            "font-display tracking-tight text-foreground max-lg:text-[1.85rem] max-lg:font-bold max-lg:leading-[1.15] lg:text-xl lg:font-semibold",
+            "font-display tracking-tight text-foreground lg:text-xl lg:font-semibold",
+            compact
+              ? "text-lg font-semibold leading-snug"
+              : "max-lg:text-[1.85rem] max-lg:font-bold max-lg:leading-[1.15]",
             greeting && "max-lg:mt-1",
           )}
         >

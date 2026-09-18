@@ -308,6 +308,7 @@ function RequestDetailPage() {
             className="mt-1"
             title={request.title}
             accent={false}
+            compact
             subtitle={`${request.ticket} · ${displayRequestType(request.type)} · ${request.department} · ${request.module}`}
           />
         </div>

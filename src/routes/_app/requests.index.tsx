@@ -135,7 +135,7 @@ function RequestsPage() {
         accent={false}
         subtitle={
           <>
-            <span className="block text-sm lg:hidden">Incoming tickets from the form.</span>
+            <span className="block lg:hidden">Incoming tickets from the form.</span>
             <span className="hidden lg:inline">
               Incoming tickets from the submit form. Open a request to read the note, details, and attached files.
             </span>
@@ -351,7 +351,7 @@ function RequestCard({ row }: { row: IntakeRequestListItem }) {
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-xs font-medium tabular-nums text-muted-foreground">{row.ticket}</p>
+            <p className="truncate text-xs font-medium tabular-nums text-primary">{row.ticket}</p>
             <RequestStatusBadge className="shrink-0" status={row.status} />
           </div>
           <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">

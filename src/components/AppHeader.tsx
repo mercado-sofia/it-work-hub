@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Loader2, LogOut, Moon, Settings, Sun, User, X } from "lucide-react";
+import { Loader2, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { toastError } from "@/lib/user-facing-error";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,7 +25,7 @@ const nav = [
 ] as const;
 
 export function AppHeader() {
-  const { mode, needsExportReminder, dismissExportReminder } = useTasks();
+  const { mode } = useTasks();
   const { user, logout, signingOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [signOutConfirm, setSignOutConfirm] = useState(false);
@@ -47,26 +47,6 @@ export function AppHeader() {
   return (
     <>
     <header className="sticky top-0 z-40 border-b border-border/70 bg-card text-foreground print:hidden">
-      {needsExportReminder && (
-        <div className="flex items-start justify-center gap-3 border-b border-border bg-warning-soft px-4 py-1.5 text-xs text-foreground sm:items-center sm:px-6">
-          <p className="min-w-0 flex-1 text-center sm:flex-none">
-            <span className="sm:hidden">Backup reminder: download Excel or JSON. Data stays in this browser.</span>
-            <span className="hidden sm:inline">
-              Backup reminder: download Excel or JSON. Data lives in this browser and is not stored on a
-              server.
-            </span>
-          </p>
-          <button
-            type="button"
-            className="shrink-0 cursor-pointer rounded p-0.5 text-muted-foreground hover:text-foreground"
-            aria-label="Dismiss backup reminder"
-            onClick={dismissExportReminder}
-          >
-            <X className="size-3.5" />
-          </button>
-        </div>
-      )}
-
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link to="/dashboard" className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <img src="/it-logo.png" alt="TrackHub" className="size-9 rounded-full object-cover" />
