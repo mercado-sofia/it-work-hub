@@ -536,36 +536,36 @@ export function LandingSkeleton() {
   return (
     <BusyRegion
       label="Loading portal"
-      className="relative h-svh overflow-hidden bg-white font-sans text-foreground dark:bg-background"
+      className="relative min-h-svh overflow-x-hidden bg-white font-sans text-foreground dark:bg-background"
     >
-      <header className="absolute inset-x-0 top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
-        <div className="mx-auto flex h-14 max-w-4xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
-          <Skeleton className="size-9 rounded-full" />
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
+        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-3 sm:gap-3 sm:px-6">
+          <Skeleton className="size-8 rounded-full sm:size-9" />
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="hidden h-3 w-20 sm:block" />
           </div>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <Skeleton className="size-8 rounded-full" />
             <Skeleton className="size-8 rounded-full" />
           </div>
         </div>
       </header>
-      <main className="flex h-full items-center justify-center px-4 pt-14">
+      <main className="flex min-h-[calc(100svh-3.5rem)] items-center justify-center px-3 py-5 sm:px-6">
         <div className="mx-auto w-full max-w-3xl">
           <div className="flex flex-col items-center">
             <Skeleton className="h-5 w-28 rounded-full" />
-            <Skeleton className="mt-6 h-8 w-72 sm:w-96" />
+            <Skeleton className="mt-4 h-7 w-56 sm:mt-6 sm:h-8 sm:w-96" />
             <Skeleton className="mt-3 h-4 w-64 sm:w-80" />
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5">
+          <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-5">
             {times(2).map((index) => (
-              <div key={index} className="rounded-2xl border-2 border-border bg-card p-5">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="mt-3 h-3 w-full" />
+              <div key={index} className="rounded-2xl border-2 border-border bg-card p-3 sm:p-5">
+                <Skeleton className="h-16 w-full rounded-lg sm:h-24 sm:rounded-xl" />
+                <Skeleton className="mt-2.5 h-5 w-40 sm:mt-3" />
+                <Skeleton className="mt-2 h-3 w-full" />
                 <Skeleton className="mt-2 h-3 w-5/6" />
-                <Skeleton className="mt-6 h-24 w-full rounded-xl" />
-                <Skeleton className="mt-4 h-9 w-36 rounded-full" />
+                <Skeleton className="mt-3 h-9 w-36 rounded-full" />
               </div>
             ))}
           </div>
@@ -579,8 +579,8 @@ export function RequestStatusResultSkeleton() {
   return (
     <BusyRegion label="Looking up request" className="space-y-4">
       <Card>
-        <CardContent className="space-y-3 p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <CardContent className="space-y-3 p-4 sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-2">
             <div className="space-y-2">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-5 w-56" />
@@ -592,8 +592,8 @@ export function RequestStatusResultSkeleton() {
         </CardContent>
       </Card>
       <Card>
-        <CardContent className="p-5">
-          <div className="mb-4 flex items-baseline justify-between gap-3">
+        <CardContent className="p-4 sm:p-5">
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 sm:gap-3">
             <Skeleton className="h-4 w-28" />
             <Skeleton className="h-3 w-16" />
           </div>
@@ -611,7 +611,7 @@ export function RequestStatusResultSkeleton() {
         </CardContent>
       </Card>
       <Card>
-        <CardContent className="space-y-3 p-5">
+        <CardContent className="space-y-3 p-4 sm:p-5">
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-16 w-full" />
           <Skeleton className="h-16 w-full" />

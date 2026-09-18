@@ -458,7 +458,7 @@ export const setResolutionNotesFn = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       ticket: z.string().trim().min(3),
-      resolutionNotes: z.string().trim().max(8000),
+      resolutionNotes: z.string().trim().min(1).max(8000),
     }),
   )
   .handler(async ({ data }) => {

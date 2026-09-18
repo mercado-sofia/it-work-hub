@@ -89,22 +89,29 @@ function LandingPage() {
   const { needsBootstrap } = Route.useLoaderData();
 
   return (
-    <div className="relative h-svh overflow-hidden bg-white font-sans text-foreground dark:bg-background">
-      <header className="absolute inset-x-0 top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
-        <div className="mx-auto flex h-14 max-w-4xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
-          {current !== "start" && <BackButton />}
-          <Link to="/" search={{}} className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-            <img src="/it-logo.png" alt="" className="size-9 rounded-full object-cover" />
+    <div className="relative min-h-svh overflow-x-hidden bg-white font-sans text-foreground dark:bg-background">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-white print:hidden dark:bg-card">
+        <div className="mx-auto flex h-14 min-w-0 max-w-4xl items-center gap-1 px-3 sm:gap-3 sm:px-6">
+          {current !== "start" && <BackButton className="shrink-0 px-2 sm:px-2.5" />}
+          <Link to="/" search={{}} className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <img src="/it-logo.png" alt="" className="size-8 shrink-0 rounded-full object-cover sm:size-9" />
             <div className="min-w-0 leading-tight">
-              <p className="text-sm font-semibold tracking-tight">TrackHub</p>
+              <p
+                className={cn(
+                  "text-sm font-semibold tracking-tight",
+                  current === "request" ? "sr-only sm:not-sr-only sm:block sm:truncate" : "truncate",
+                )}
+              >
+                TrackHub
+              </p>
               <p className="hidden text-xs text-muted-foreground sm:block">IT Department</p>
             </div>
           </Link>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             {current === "request" && (
               <Link
                 to="/request/status"
-                className="rounded-full px-3 py-1.5 text-sm font-medium text-muted-foreground hover:text-primary"
+                className="inline-flex h-9 items-center rounded-full px-2 text-sm font-medium text-muted-foreground hover:text-primary sm:px-3"
               >
                 Check status
               </Link>
@@ -114,7 +121,7 @@ function LandingPage() {
               type="button"
               variant="outline"
               size="sm"
-              className="rounded-full px-2.5"
+              className="rounded-full px-2 sm:px-2.5"
               onClick={toggleTheme}
               aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
@@ -124,10 +131,13 @@ function LandingPage() {
         </div>
       </header>
 
-      <main className="h-full">
+      <main>
         <div className="bootstrap-stage">
           <section
-            className={cn("bootstrap-panel flex flex-col justify-center px-4 py-4 sm:px-6", panelClass("start", current))}
+            className={cn(
+              "bootstrap-panel flex flex-col justify-center px-3 py-5 sm:px-6 sm:py-6",
+              panelClass("start", current),
+            )}
             aria-hidden={current !== "start"}
             inert={current !== "start"}
           >
@@ -170,15 +180,15 @@ function StartChooser() {
             How it works
           </p>
         </div>
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="mt-4 text-xl font-semibold tracking-tight sm:mt-6 sm:text-3xl">
           Get started in <span className="text-primary">2 simple steps</span>
         </h1>
-        <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+        <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
           Submit a request if you need IT help, or sign in if you are part of the IT department.
         </p>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 sm:gap-5">
+      <div className="mt-4 grid gap-3 sm:mt-6 sm:grid-cols-2 sm:gap-5">
         <div className="relative">
           <p className="mb-1.5 flex items-center justify-center gap-1 text-xs font-medium text-muted-foreground sm:justify-start">
             Submit a request
@@ -217,13 +227,13 @@ function HelpDialog() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="rounded-full px-2.5 sm:px-3">
+        <Button type="button" variant="outline" size="sm" className="rounded-full px-2 sm:px-3">
           <CircleHelp className="size-4" />
           <span className="hidden sm:inline">Help</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-[38rem] gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-border/70 bg-muted/40 px-6 py-5 pr-14 text-left sm:px-8 sm:py-6">
+        <DialogHeader className="border-b border-border/70 bg-muted/40 px-5 py-4 pr-14 text-left sm:px-8 sm:py-6">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
               <CircleHelp className="size-5" />
@@ -237,7 +247,7 @@ function HelpDialog() {
           </div>
         </DialogHeader>
 
-        <div className="grid gap-4 px-6 py-6 sm:grid-cols-2 sm:gap-5 sm:px-8 sm:py-7">
+        <div className="grid gap-4 px-5 py-5 sm:grid-cols-2 sm:gap-5 sm:px-8 sm:py-7">
           <HelpPathCard
             eyebrow="For everyone"
             title="Submit a request"
@@ -265,7 +275,7 @@ function HelpDialog() {
           />
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-border/70 bg-muted/30 px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
+        <div className="flex flex-col-reverse gap-2 border-t border-border/70 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
           <p className="text-xs leading-snug text-muted-foreground">
             There is no public signup. IT accounts are invited by an Admin.
           </p>
@@ -349,12 +359,12 @@ function ChoiceCard({
     <Link
       to="/"
       search={{ view }}
-      className="landing-choice-card flex h-full flex-col overflow-hidden rounded-2xl border-2 bg-card p-4 outline-none"
+      className="landing-choice-card flex h-full min-h-11 flex-col overflow-hidden rounded-2xl border-2 bg-card p-3 outline-none sm:p-4"
     >
-      <div className="rounded-xl border border-border/80 bg-muted/40 p-3">{children}</div>
-      <h2 className="mt-3 text-base font-semibold tracking-tight">{title}</h2>
-      <p className="mt-1.5 flex-1 text-xs leading-relaxed text-muted-foreground">{description}</p>
-      <span className="mt-3 inline-flex items-center text-sm font-medium text-primary">
+      <div className="rounded-lg border border-border/80 bg-muted/40 p-2 sm:rounded-xl sm:p-3">{children}</div>
+      <h2 className="mt-2.5 text-base font-semibold tracking-tight sm:mt-3">{title}</h2>
+      <p className="mt-1 flex-1 text-xs leading-relaxed text-muted-foreground sm:mt-1.5">{description}</p>
+      <span className="mt-2.5 inline-flex min-h-9 items-center text-sm font-medium text-primary sm:mt-3">
         {cta}
         <span className="landing-choice-arrow ml-1">→</span>
       </span>
@@ -364,20 +374,20 @@ function ChoiceCard({
 
 function RequestPreview() {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5 sm:space-y-2">
       <div className="flex items-start gap-2">
-        <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+        <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground sm:size-6">
           <ClipboardList className="size-3" />
         </span>
-        <div className="max-w-[85%] rounded-2xl rounded-tl-sm bg-primary px-2.5 py-1.5 text-[11px] leading-snug text-primary-foreground">
+        <div className="line-clamp-2 max-w-[85%] rounded-2xl rounded-tl-sm bg-primary px-2 py-1 text-[11px] leading-snug text-primary-foreground sm:line-clamp-none sm:px-2.5 sm:py-1.5">
           Payroll overtime is not posting to the payslip. Can IT take a look?
         </div>
       </div>
       <div className="flex items-start justify-end gap-2">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-card px-2.5 py-1.5 text-[11px] leading-snug text-foreground">
+        <div className="max-w-[85%] rounded-2xl rounded-tr-sm border border-border bg-card px-2 py-1 text-[11px] leading-snug text-foreground sm:px-2.5 sm:py-1.5">
           Request received. Your ticket is R-0001.
         </div>
-        <img src="/it-logo.png" alt="" className="mt-0.5 size-6 rounded-full object-cover" />
+        <img src="/it-logo.png" alt="" className="mt-0.5 size-5 rounded-full object-cover sm:size-6" />
       </div>
     </div>
   );
@@ -385,14 +395,14 @@ function RequestPreview() {
 
 function ItPreview() {
   return (
-    <div className="flex min-h-[5.25rem] flex-col items-center justify-center gap-2 py-1">
-      <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-        <Shield className="size-5" />
+    <div className="flex min-h-0 flex-col items-center justify-center gap-1.5 py-0.5 sm:min-h-[5.25rem] sm:gap-2 sm:py-1">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary sm:size-10 sm:rounded-xl">
+        <Shield className="size-4 sm:size-5" />
       </span>
-      <div className="w-full max-w-[9.5rem] space-y-1.5">
+      <div className="w-full max-w-[9.5rem] space-y-1 sm:space-y-1.5">
         <div className="h-1.5 rounded-full bg-muted-foreground/20" />
         <div className="h-1.5 w-3/4 rounded-full bg-muted-foreground/20" />
-        <div className="h-6 rounded-md bg-primary/90" />
+        <div className="h-5 rounded-md bg-primary/90 sm:h-6" />
       </div>
     </div>
   );

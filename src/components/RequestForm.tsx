@@ -129,20 +129,20 @@ export function RequestForm() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 pb-8 pt-20 sm:px-6">
+    <div className="mx-auto w-full max-w-5xl px-3 py-5 sm:px-6 sm:py-8">
       {ticket ? (
-        <div className="mx-auto max-w-3xl rounded-2xl border-2 border-border bg-card p-6 sm:p-8">
+        <div className="mx-auto max-w-3xl rounded-2xl border-2 border-border bg-card p-5 sm:p-8">
           <div className="space-y-4">
             <p className="text-sm font-medium text-primary">Request submitted</p>
-            <h1 className="text-xl font-semibold">Your ticket number is {ticket}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl font-semibold break-words">Your ticket number is {ticket}</h1>
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Save this number. Use it with your email on the status page to follow progress.
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               <Button
                 type="button"
                 variant="outline"
-                className="gap-2 rounded-full"
+                className="h-10 w-full gap-2 rounded-full sm:w-auto"
                 onClick={async () => {
                   await navigator.clipboard.writeText(ticket);
                   setCopied(true);
@@ -152,7 +152,7 @@ export function RequestForm() {
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 Copy ticket number
               </Button>
-              <Button asChild className="rounded-full">
+              <Button asChild className="h-10 w-full rounded-full sm:w-auto">
                 <Link to="/request/status" search={{ ticket }}>
                   Check status
                 </Link>
@@ -160,7 +160,7 @@ export function RequestForm() {
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-full"
+                className="h-10 w-full rounded-full sm:w-auto"
                 onClick={() => {
                   setTicket(null);
                   setDraft(emptyDraft());
@@ -177,7 +177,7 @@ export function RequestForm() {
         <div className="space-y-5">
           <div>
             <h1 className="text-xl font-semibold tracking-tight">Submit an IT request</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
               No account needed. You will receive a ticket number to check status later.
             </p>
           </div>
@@ -186,9 +186,9 @@ export function RequestForm() {
             <Card className="border-warning/40 bg-warning-soft">
               <CardContent className="space-y-3 p-4">
                 <p className="text-sm font-medium">This looks similar — continue anyway?</p>
-                <ul className="space-y-1 text-sm">
+                <ul className="space-y-2 text-sm">
                   {similar.map((item) => (
-                    <li key={item.ticket}>
+                    <li key={item.ticket} className="min-w-0 break-words">
                       <Link
                         to="/request/status"
                         search={{ ticket: item.ticket }}
@@ -202,11 +202,11 @@ export function RequestForm() {
                     </li>
                   ))}
                 </ul>
-                <div className="flex gap-2">
-                  <Button type="button" variant="outline" onClick={() => setSimilar([])}>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button type="button" variant="outline" className="h-10 w-full sm:w-auto" onClick={() => setSimilar([])}>
                     Edit my request
                   </Button>
-                  <Button type="button" disabled={busy} onClick={() => void submit(true)}>
+                  <Button type="button" className="h-10 w-full sm:w-auto" disabled={busy} onClick={() => void submit(true)}>
                     Continue anyway
                   </Button>
                 </div>
@@ -215,13 +215,13 @@ export function RequestForm() {
           )}
 
           <form
-            className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.85fr)]"
+            className="grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(16rem,0.85fr)]"
             onSubmit={(event) => {
               event.preventDefault();
               void submit(false);
             }}
           >
-            <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-5 sm:p-6">
+            <div className="space-y-4 rounded-2xl border-2 border-border bg-card p-4 sm:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Type" htmlFor="req-type">
                   <Select
@@ -385,12 +385,16 @@ export function RequestForm() {
                 </Field>
               </div>
 
-              <Button type="submit" className="h-10 rounded-full" disabled={busy || !draft.module || !draft.department}>
+              <Button
+                type="submit"
+                className="h-10 w-full rounded-full sm:w-auto"
+                disabled={busy || !draft.module || !draft.department}
+              >
                 {busy ? "Submitting…" : "Submit request"}
               </Button>
             </div>
 
-            <div className="flex min-h-[18rem] flex-col rounded-2xl border-2 border-border bg-card p-5 sm:p-6 lg:min-h-full">
+            <div className="flex min-h-0 flex-col rounded-2xl border-2 border-border bg-card p-4 sm:min-h-[18rem] sm:p-6 lg:min-h-full">
               <h2 className="text-sm font-semibold tracking-tight">Attachments</h2>
               <p className="mt-1 text-xs text-muted-foreground">Optional. Up to 5 files, 4 MB each.</p>
 
@@ -413,8 +417,8 @@ export function RequestForm() {
                   htmlFor="req-files"
                   className={
                     files.length
-                      ? "mt-3 flex cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary focus-within:border-primary"
-                      : "mt-4 flex flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-8 text-center transition-colors hover:border-primary focus-within:border-primary"
+                      ? "mt-3 flex min-h-11 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:border-primary focus-within:border-primary"
+                      : "mt-4 flex min-h-32 flex-1 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-6 text-center transition-colors hover:border-primary focus-within:border-primary sm:min-h-0 sm:py-8"
                   }
                 >
                   {files.length ? (

@@ -78,10 +78,10 @@ function StatusPage() {
 
   return (
     <PublicShell>
-      <div className="space-y-6">
+      <div className="space-y-5 sm:space-y-6">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">Check request status</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
           Enter the ticket number from your confirmation and the email you used on the form.
         </p>
       </div>
@@ -113,7 +113,7 @@ function StatusPage() {
             required
           />
         </div>
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" className="h-10 w-full sm:w-auto" disabled={busy}>
           {busy ? "Looking up…" : "Look up"}
         </Button>
       </form>
@@ -123,18 +123,18 @@ function StatusPage() {
       {result && (
         <div className="space-y-4">
           <Card>
-            <CardContent className="space-y-3 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
+            <CardContent className="space-y-3 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
                   <p className="text-xs font-medium text-muted-foreground">{result.ticket}</p>
-                  <h2 className="text-lg font-semibold">{result.title}</h2>
+                  <h2 className="text-lg font-semibold break-words">{result.title}</h2>
                 </div>
                 <RequestStatusBadge status={result.status} />
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm leading-relaxed break-words text-muted-foreground">
                 {displayRequestType(result.type)} · {result.department} · {result.module} · urgency {result.urgency}
               </p>
-              <p className="whitespace-pre-wrap text-sm">{result.note}</p>
+              <p className="whitespace-pre-wrap break-words text-sm">{result.note}</p>
               {outcome ? (
                 <div className="rounded-md border border-border bg-muted/50 p-3 text-sm">
                   <p className="font-medium">{outcome.heading}</p>
@@ -145,8 +145,8 @@ function StatusPage() {
           </Card>
 
           <Card>
-            <CardContent className="p-5">
-              <div className="mb-4 flex items-baseline justify-between gap-3">
+            <CardContent className="p-4 sm:p-5">
+              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 sm:gap-3">
                 <h3 className="text-sm font-semibold">Status history</h3>
                 <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   {result.history.length} {result.history.length === 1 ? "update" : "updates"}
@@ -157,7 +157,7 @@ function StatusPage() {
           </Card>
 
           <Card>
-            <CardContent className="space-y-3 p-5">
+            <CardContent className="space-y-3 p-4 sm:p-5">
               <h3 className="text-sm font-semibold">Comments</h3>
               {result.comments.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No comments yet.</p>
@@ -168,7 +168,7 @@ function StatusPage() {
                       <p className="text-xs text-muted-foreground">
                         {comment.authorName} · {formatDate(comment.createdAt.slice(0, 10))}
                       </p>
-                      <p className="mt-1 whitespace-pre-wrap text-sm">{comment.body}</p>
+                      <p className="mt-1 whitespace-pre-wrap break-words text-sm">{comment.body}</p>
                     </li>
                   ))}
                 </ul>
@@ -177,7 +177,12 @@ function StatusPage() {
                 <div className="space-y-2">
                   <Label htmlFor="reply">Reply</Label>
                   <Textarea id="reply" rows={3} value={reply} onChange={(e) => setReply(e.target.value)} />
-                  <Button type="button" disabled={busy || !reply.trim()} onClick={() => void sendReply()}>
+                  <Button
+                    type="button"
+                    className="h-10 w-full sm:w-auto"
+                    disabled={busy || !reply.trim()}
+                    onClick={() => void sendReply()}
+                  >
                     Send reply
                   </Button>
                 </div>

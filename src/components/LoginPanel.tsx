@@ -42,23 +42,23 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
   };
 
   return (
-    <div className="flex min-h-full items-center justify-center px-4 py-16">
-      <div className="w-full max-w-[26rem] rounded-2xl border-2 border-border bg-card p-7 sm:p-8">
+    <div className="flex min-h-full items-center justify-center px-3 py-5 sm:px-6 sm:py-16">
+      <div className="w-full max-w-none rounded-2xl border-2 border-border bg-card p-5 sm:max-w-[26rem] sm:p-8">
         <div className="text-center">
-          <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Shield className="size-6" />
+          <span className="mx-auto flex size-10 items-center justify-center rounded-2xl bg-primary/10 text-primary sm:size-12">
+            <Shield className="size-5 sm:size-6" />
           </span>
-          <h1 className="mt-4 text-xl font-semibold tracking-tight">
+          <h1 className="mt-3 text-xl font-semibold tracking-tight sm:mt-4">
             {needsBootstrap ? "Create the first IT Admin" : "IT Department"}
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
             {needsBootstrap
               ? "No IT accounts exist yet. Create the administrator who can add the rest of the team."
               : "Sign in with your IT account to open the dashboard, requests, and tracker."}
           </p>
         </div>
 
-        <form className="mt-7 space-y-4" onSubmit={(event) => void submit(event)}>
+        <form className="mt-5 space-y-3.5 sm:mt-7 sm:space-y-4" onSubmit={(event) => void submit(event)}>
           {needsBootstrap && (
             <div className="space-y-1.5">
               <Label htmlFor="it-name">Full name</Label>

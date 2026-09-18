@@ -40,8 +40,10 @@ function collectMessages(value: unknown, seen: Set<unknown>, depth: number): str
   const record = value as Record<string, unknown>;
   const next: string[] = [];
 
-  if (typeof record.message === "string") next.push(record.message);
-  if (typeof record.error === "string") next.push(record.error);
+  const message = record["message"];
+  if (typeof message === "string") next.push(message);
+  const errorText = record["error"];
+  if (typeof errorText === "string") next.push(errorText);
   if (typeof Error !== "undefined" && value instanceof Error && value.cause) {
     next.push(...collectMessages(value.cause, seen, depth + 1));
   }
@@ -90,21 +92,24 @@ function fromUnknown(value: unknown): string | null {
   if (!value || typeof value !== "object") return null;
 
   const record = value as Record<string, unknown>;
-  if (Array.isArray(record.issues)) {
-    const zod = fromZodIssues(record.issues);
+  const issues = record["issues"];
+  if (Array.isArray(issues)) {
+    const zod = fromZodIssues(issues);
     if (zod) return zod;
   }
 
   const zod = fromZodIssues([record]);
   if (zod && ("code" in record || "path" in record || "format" in record)) return zod;
 
-  if (typeof record.message === "string") return normalizeMessage(record.message);
-  if (record.message && typeof record.message === "object") return fromUnknown(record.message);
-  if (typeof record.s === "string") return normalizeMessage(record.s);
-  if (record.s && typeof record.s === "object") return fromUnknown(record.s);
-  if ("v" in record) return fromUnknown(record.v);
-  if ("p" in record) return fromUnknown(record.p);
-  if ("error" in record) return fromUnknown(record.error);
+  const message = record["message"];
+  if (typeof message === "string") return normalizeMessage(message);
+  if (message && typeof message === "object") return fromUnknown(message);
+  const short = record["s"];
+  if (typeof short === "string") return normalizeMessage(short);
+  if (short && typeof short === "object") return fromUnknown(short);
+  if ("v" in record) return fromUnknown(record["v"]);
+  if ("p" in record) return fromUnknown(record["p"]);
+  if ("error" in record) return fromUnknown(record["error"]);
   return null;
 }
 
@@ -120,32 +125,35 @@ function fromZodIssues(issues: unknown[]): string | null {
 function friendlyZodIssue(value: unknown): string | null {
   if (!value || typeof value !== "object") return null;
   const issue = value as Record<string, unknown>;
-  const path = Array.isArray(issue.path) ? String(issue.path[0] ?? "") : "";
-  const format = typeof issue.format === "string" ? issue.format : "";
-  const code = typeof issue.code === "string" ? issue.code : "";
+  const pathValue = issue["path"];
+  const path = Array.isArray(pathValue) ? String(pathValue[0] ?? "") : "";
+  const format = typeof issue["format"] === "string" ? issue["format"] : "";
+  const code = typeof issue["code"] === "string" ? issue["code"] : "";
+  const issueMessage = issue["message"];
 
   if (path === "email" || format === "email") return "Enter a valid email address.";
   if (path === "ticket") return "Enter a valid ticket number.";
   if (path === "password" || path === "current" || path === "next") {
-    return typeof issue.message === "string" && isHuman(issue.message)
-      ? alias(issue.message)
+    return typeof issueMessage === "string" && isHuman(issueMessage)
+      ? alias(issueMessage)
       : "Enter a valid password.";
   }
   if (code === "too_small" || code === "too_big") {
     if (path === "body") return "Enter a comment.";
     if (path === "title") return "Enter a longer title.";
     if (path === "note") return "Enter a longer description.";
-    if (typeof issue.message === "string" && isHuman(issue.message)) return alias(issue.message);
+    if (typeof issueMessage === "string" && isHuman(issueMessage)) return alias(issueMessage);
     return "Please check the form and try again.";
   }
-  if (typeof issue.message === "string" && isHuman(issue.message)) return alias(issue.message);
+  if (typeof issueMessage === "string" && isHuman(issueMessage)) return alias(issueMessage);
   return null;
 }
 
 function extractZodMessages(raw: string): string | null {
-  const matches = [...raw.matchAll(/"message"\s*:\s*"((?:\\.|[^"\\])*)"/g)].map((match) =>
-    alias(match[1].replaceAll('\\"', '"')),
-  );
+  const matches = [...raw.matchAll(/"message"\s*:\s*"((?:\\.|[^"\\])*)"/g)].flatMap((match) => {
+    const captured = match[1];
+    return captured ? [alias(captured.replaceAll('\\"', '"'))] : [];
+  });
   const unique = [...new Set(matches.filter(isHuman))];
   return unique.length ? unique.join(" ") : null;
 }

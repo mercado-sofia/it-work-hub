@@ -388,13 +388,14 @@ function RequestDetailPage() {
                   <Button
                     type="button"
                     variant="outline"
-                    disabled={busy}
-                    onClick={() =>
+                    disabled={busy || !notesValue.trim()}
+                    onClick={() => {
+                      if (!notesValue.trim()) return;
                       void run(
                         () => setResolutionNotesFn({ data: { ticket, resolutionNotes: notesValue } }),
                         "Resolution notes saved",
-                      )
-                    }
+                      );
+                    }}
                   >
                     Save notes
                   </Button>

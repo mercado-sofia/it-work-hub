@@ -469,8 +469,8 @@ input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
 
   .bootstrap-stage {
     position: relative;
-    height: 100%;
-    overflow: hidden;
+    min-height: calc(100svh - 3.5rem);
+    overflow-x: hidden;
   }
 
   .bootstrap-panel {
@@ -478,6 +478,7 @@ input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
     inset: 0;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
@@ -489,6 +490,10 @@ input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
   }
 
   .bootstrap-panel.is-active {
+    position: relative;
+    inset: auto;
+    min-height: calc(100svh - 3.5rem);
+    overflow: visible;
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
