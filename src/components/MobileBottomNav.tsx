@@ -131,7 +131,7 @@ function NavIcon({
       activeProps={{
         className: "flex h-11 w-14 items-center justify-center rounded-2xl bg-muted text-primary",
       }}
-      activeOptions={{ exact }}
+      activeOptions={{ exact: Boolean(exact) }}
     >
       <Icon className="size-5" strokeWidth={1.75} />
     </Link>
