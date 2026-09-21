@@ -244,7 +244,7 @@ function Accomplishments() {
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="sm" className="shrink-0 gap-2 rounded-full print:hidden" disabled={!canExport}>
+            <Button size="sm" className="min-w-28 shrink-0 justify-center gap-2 self-start rounded-full print:hidden lg:self-auto" disabled={!canExport}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
               Export
             </Button>
