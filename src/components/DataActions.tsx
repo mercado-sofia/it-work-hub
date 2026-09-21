@@ -75,7 +75,7 @@ export function BackupControls({ className, fullWidth }: { className?: string; f
         exportBackup={exportBackup}
         onRequestLegacyImport={() => setBackupConfirm({ kind: "legacy" })}
         onRequestSampleData={() => setBackupConfirm({ kind: "sample" })}
-        fullWidth={fullWidth}
+        fullWidth={Boolean(fullWidth)}
       />
       <ConfirmDialog
         open={backupConfirm !== null}

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
+  Download,
   FileSpreadsheet,
   FileText,
   Layers,
@@ -19,6 +20,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Sheet,
@@ -233,29 +242,38 @@ function Accomplishments() {
           hideSubtitleOnMobile
           subtitle={hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
         />
-        <div className="flex min-w-0 flex-wrap gap-2 print:hidden">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 max-lg:rounded-full"
-            disabled={!canExport}
-            onClick={() => void runExport("xlsx")}
-          >
-            {busy === "xlsx" ? <Loader2 className="size-4 animate-spin" /> : <FileSpreadsheet className="size-4" />}
-            <span className="sm:hidden">Excel</span>
-            <span className="hidden sm:inline">Download Excel</span>
-          </Button>
-          <Button
-            size="sm"
-            className="gap-2 max-lg:rounded-full"
-            disabled={!canExport}
-            onClick={() => void runExport("pdf")}
-          >
-            {busy === "pdf" ? <Loader2 className="size-4 animate-spin" /> : <FileText className="size-4" />}
-            <span className="sm:hidden">PDF</span>
-            <span className="hidden sm:inline">Download PDF</span>
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" className="shrink-0 gap-2 rounded-full print:hidden" disabled={!canExport}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+              Export
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="flex w-56 flex-col gap-1.5 p-1.5">
+            <DropdownMenuLabel className="text-xs">Accomplishments report</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
+              onSelect={() => void runExport("xlsx")}
+            >
+              <FileSpreadsheet />
+              <div>
+                <p className="text-xs font-medium">Excel workbook (.xlsx)</p>
+                <p className="text-xs text-muted-foreground">Filtered accomplishment details</p>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
+              onSelect={() => void runExport("pdf")}
+            >
+              <FileText />
+              <div>
+                <p className="text-xs font-medium">PDF report</p>
+                <p className="text-xs text-muted-foreground">Leadership-ready period brief</p>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <Card className="min-w-0 border-border print:hidden max-lg:rounded-3xl max-lg:shadow-sm">

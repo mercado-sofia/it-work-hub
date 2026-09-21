@@ -231,7 +231,7 @@ export function RequestForm() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Type" htmlFor="req-type">
                   <Select
-                    value={draft.type || undefined}
+                    value={draft.type}
                     onValueChange={(type) => setDraft({ ...draft, type: type as Draft["type"] })}
                   >
                     <SelectTrigger id="req-type" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
@@ -248,7 +248,7 @@ export function RequestForm() {
                 </Field>
                 <Field label="Your urgency" htmlFor="req-urgency">
                   <Select
-                    value={draft.urgency || undefined}
+                    value={draft.urgency}
                     onValueChange={(urgency) => setDraft({ ...draft, urgency: urgency as Draft["urgency"] })}
                   >
                     <SelectTrigger id="req-urgency" className="h-12 rounded-lg sm:h-9 sm:rounded-md">
