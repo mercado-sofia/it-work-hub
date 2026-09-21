@@ -13,8 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RequestRouteImport } from './routes/request'
-import { Route as AppAccomplishmentsRouteImport } from './routes/_app/accomplishments'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppReportsRouteImport } from './routes/_app/reports'
 import { Route as AppRequestsRouteImport } from './routes/_app/requests'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppTrackerRouteImport } from './routes/_app/tracker'
@@ -42,14 +42,14 @@ const RequestRoute = RequestRouteImport.update({
   path: '/request',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppAccomplishmentsRoute = AppAccomplishmentsRouteImport.update({
-  id: '/accomplishments',
-  path: '/accomplishments',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AppRoute,
 } as any)
 const AppRequestsRoute = AppRequestsRouteImport.update({
@@ -92,8 +92,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/request': typeof RequestRouteWithChildren
-  '/accomplishments': typeof AppAccomplishmentsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/reports': typeof AppReportsRoute
   '/requests': typeof AppRequestsRouteWithChildren
   '/settings': typeof AppSettingsRoute
   '/tracker': typeof AppTrackerRoute
@@ -105,8 +105,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/accomplishments': typeof AppAccomplishmentsRoute
   '/dashboard': typeof AppDashboardRoute
+  '/reports': typeof AppReportsRoute
   '/settings': typeof AppSettingsRoute
   '/tracker': typeof AppTrackerRoute
   '/request/status': typeof RequestStatusRoute
@@ -120,8 +120,8 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/request': typeof RequestRouteWithChildren
-  '/_app/accomplishments': typeof AppAccomplishmentsRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/reports': typeof AppReportsRoute
   '/_app/requests': typeof AppRequestsRouteWithChildren
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tracker': typeof AppTrackerRoute
@@ -136,8 +136,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/request'
-    | '/accomplishments'
     | '/dashboard'
+    | '/reports'
     | '/requests'
     | '/settings'
     | '/tracker'
@@ -149,8 +149,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
-    | '/accomplishments'
     | '/dashboard'
+    | '/reports'
     | '/settings'
     | '/tracker'
     | '/request/status'
@@ -163,8 +163,8 @@ export interface FileRouteTypes {
     | '/_app'
     | '/login'
     | '/request'
-    | '/_app/accomplishments'
     | '/_app/dashboard'
+    | '/_app/reports'
     | '/_app/requests'
     | '/_app/settings'
     | '/_app/tracker'
@@ -211,18 +211,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/accomplishments': {
-      id: '/_app/accomplishments'
-      path: '/accomplishments'
-      fullPath: '/accomplishments'
-      preLoaderRoute: typeof AppAccomplishmentsRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/dashboard': {
       id: '/_app/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/requests': {
@@ -292,16 +292,16 @@ const AppRequestsRouteWithChildren = AppRequestsRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
-  AppAccomplishmentsRoute: typeof AppAccomplishmentsRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppRequestsRoute: typeof AppRequestsRouteWithChildren
   AppSettingsRoute: typeof AppSettingsRoute
   AppTrackerRoute: typeof AppTrackerRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
-  AppAccomplishmentsRoute: AppAccomplishmentsRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppReportsRoute: AppReportsRoute,
   AppRequestsRoute: AppRequestsRouteWithChildren,
   AppSettingsRoute: AppSettingsRoute,
   AppTrackerRoute: AppTrackerRoute,

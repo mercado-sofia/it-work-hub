@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight, Download, Eye, FileSpreadsheet, FileText, Loader2, Paperclip, Search, SlidersHorizontal, X } from "lucide-react";
+import { Download, Eye, FileSpreadsheet, FileText, Loader2, Paperclip, Search, SlidersHorizontal, Ticket, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,6 +40,7 @@ import { listCatalogFn, listRequestsFn } from "@/lib/request-functions";
 import { formatDate } from "@/lib/metrics";
 import { RequestsListSkeleton } from "@/components/skeletons";
 import { PageHeading } from "@/components/PageHeading";
+import { MobileItemCard } from "@/components/MobileItemCard";
 
 export const Route = createFileRoute("/_app/requests/")({
   loader: ({ context }) => {
@@ -141,18 +142,12 @@ function RequestsPage() {
       <PageHeading
         title="Requests"
         accent={false}
-        subtitle={
-          <>
-            <span className="block lg:hidden">Incoming tickets from the form.</span>
-            <span className="hidden lg:inline">
-              Incoming tickets from the submit form. Open a request to read the note, details, and attached files.
-            </span>
-          </>
-        }
+        hideSubtitleOnMobile
+        subtitle="Incoming tickets from the submit form. Open a request to read the note, details, and attached files."
         actions={
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size="sm" className="shrink-0 gap-2 rounded-full print:hidden" disabled={!canExport}>
+              <Button size="sm" className="gap-2 rounded-full" disabled={!canExport}>
                 {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
                 Export
               </Button>
@@ -360,36 +355,17 @@ function RequestsPage() {
 
 function RequestCard({ row }: { row: IntakeRequestListItem }) {
   return (
-    <Link
-      to="/requests/$ticket"
-      params={{ ticket: row.ticket }}
-      className="block min-w-0 rounded-3xl border border-border bg-card p-4 shadow-sm"
+    <MobileItemCard
+      asChild
+      icon={Ticket}
+      title={row.title}
+      subtitle={`${row.requesterName} · ${row.department}`}
+      idLabel={<span className="tabular-nums">{row.ticket}</span>}
+      badge={<RequestStatusBadge status={row.status} />}
+      date={formatDate(row.createdAt.slice(0, 10))}
     >
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <p className="truncate text-xs font-medium tabular-nums text-primary">{row.ticket}</p>
-            <RequestStatusBadge className="shrink-0" status={row.status} />
-          </div>
-          <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
-            {row.title}
-          </p>
-          <p className="mt-1 truncate text-xs text-muted-foreground">
-            {row.requesterName} · {row.department}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <PriorityBadge priority={row.itPriority} />
-            <span className="text-xs text-muted-foreground">{displayRequestType(row.type)}</span>
-            <span className="text-xs text-muted-foreground">{formatDate(row.createdAt.slice(0, 10))}</span>
-            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-              <Paperclip className="size-3.5" />
-              {row.attachmentCount}
-            </span>
-          </div>
-        </div>
-        <ChevronRight className="size-5 shrink-0 text-muted-foreground" strokeWidth={1.75} />
-      </div>
-    </Link>
+      <Link to="/requests/$ticket" params={{ ticket: row.ticket }} />
+    </MobileItemCard>
   );
 }
 

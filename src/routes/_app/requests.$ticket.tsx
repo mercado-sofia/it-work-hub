@@ -309,6 +309,7 @@ function RequestDetailPage() {
             title={request.title}
             accent={false}
             compact
+            hideSubtitleOnMobile
             subtitle={`${request.ticket} · ${displayRequestType(request.type)} · ${request.department} · ${request.module}`}
           />
         </div>

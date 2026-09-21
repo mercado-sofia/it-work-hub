@@ -162,8 +162,8 @@ export async function exportWorkbook(tasks: Task[], sprints: Sprint[] = []) {
   autoWidth(s2, 55);
   s2.views = [{ state: "frozen", ySplit: 1 }];
 
-  /* ---------------- Sheet 3: Monthly Accomplishments ---------------- */
-  const s3 = wb.addWorksheet("Monthly Accomplishments");
+  /* ---------------- Sheet 3: Monthly Reports ---------------- */
+  const s3 = wb.addWorksheet("Monthly Reports");
   title(s3, "Completed Activities");
   s3.addRow([]);
   s3.addRow(["Month", "Activity", "Category", "Owner", "Completed On", "Result / Remarks"]);
@@ -189,7 +189,7 @@ export async function exportWorkbook(tasks: Task[], sprints: Sprint[] = []) {
   downloadBlob(blob, `IT-Work-Tracker-${todayISO()}.xlsx`);
 }
 
-export async function exportAccomplishmentsWorkbook(
+export async function exportReportsWorkbook(
   tasks: Task[],
   options: {
     from?: string | undefined;
@@ -202,8 +202,8 @@ export async function exportAccomplishmentsWorkbook(
   wb.creator = "IT Work Monitoring & Tracking System";
   wb.created = new Date();
 
-  const ws = wb.addWorksheet("Accomplishments");
-  const titleRow = ws.addRow(["IT Accomplishments"]);
+  const ws = wb.addWorksheet("Reports");
+  const titleRow = ws.addRow(["IT Reports"]);
   titleRow.font = { bold: true, size: 14, color: { argb: BRAND } };
   titleRow.height = 24;
   ws.addRow([`${formatPeriodLabel(options)}  •  Generated ${new Date().toLocaleString("en-US")}`]);
@@ -250,7 +250,7 @@ export async function exportAccomplishmentsWorkbook(
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const slug = options.all || (!options.from && !options.to) ? "all-time" : `${options.from ?? "start"}-to-${options.to ?? "now"}`;
-  downloadBlob(blob, `IT-Accomplishments-${slug}.xlsx`);
+  downloadBlob(blob, `IT-Reports-${slug}.xlsx`);
 }
 
 export async function exportRequestsWorkbook(rows: IntakeRequestListItem[]) {

@@ -51,26 +51,26 @@ export function ConfirmDialog({
       {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
       <AlertDialogContent
         className={cn(
-          "max-h-none w-[min(100%-1.5rem,22.5rem)] max-w-[22.5rem] gap-5 overflow-visible rounded-[1.75rem] border-0 bg-card px-7 py-8 text-center shadow-[0_24px_60px_rgba(15,23,42,0.16)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)]",
+          "max-h-none gap-5 overflow-visible border-0 bg-card px-7 py-8 text-center shadow-[0_24px_60px_rgba(15,23,42,0.16)] dark:shadow-[0_24px_60px_rgba(0,0,0,0.45)] lg:w-[min(100%-1.5rem,22.5rem)] lg:max-w-[22.5rem] lg:rounded-[1.75rem] max-lg:px-7 max-lg:pt-8 max-lg:pb-[max(2rem,env(safe-area-inset-bottom))]",
           contentClassName,
         )}
       >
         <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10">
           <Icon className="size-5 text-primary" strokeWidth={1.75} />
         </div>
-        <AlertDialogHeader className="space-y-2 text-center sm:text-center">
-          <AlertDialogTitle className="text-[1.35rem] font-bold tracking-tight">{title}</AlertDialogTitle>
+        <AlertDialogHeader className="space-y-0 text-center lg:space-y-2 sm:text-center">
+          <AlertDialogTitle className="text-[1.5rem] font-bold tracking-tight max-lg:text-[1.5rem] lg:text-[1.35rem]">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-[13px] leading-relaxed sm:text-[13px]">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         {children}
         <AlertDialogFooter className="flex flex-row gap-3 sm:justify-stretch sm:space-x-0">
-          <AlertDialogCancel className="mt-0 h-11 flex-1 rounded-full border-0 bg-muted text-foreground shadow-none hover:bg-muted/80">
+          <AlertDialogCancel className="mt-0 h-11 flex-1 rounded-full border-0 bg-muted text-foreground shadow-none hover:bg-muted/80 max-lg:h-12">
             {cancelLabel}
           </AlertDialogCancel>
           <AlertDialogAction
-            className="h-11 flex-1 rounded-full shadow-none"
+            className="h-11 flex-1 rounded-full shadow-none max-lg:h-12"
             disabled={confirmDisabled}
             onClick={(event) => {
               if (confirmDisabled) {

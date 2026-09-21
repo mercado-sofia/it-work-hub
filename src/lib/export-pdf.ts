@@ -14,7 +14,8 @@ import {
 } from "@/lib/metrics";
 import { completionDate, todayISO } from "@/lib/task-rules";
 
-const BRAND: [number, number, number] = [29, 78, 216];
+// Dark-mode canvas (~oklch(0.12 0.025 270)), not the primary accent blue
+const BRAND: [number, number, number] = [16, 17, 32];
 const SLATE: [number, number, number] = [100, 116, 139];
 const LIGHT: [number, number, number] = [239, 244, 252];
 
@@ -33,7 +34,7 @@ export async function exportExecutivePdf(tasks: Task[], departmentName?: string)
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
-  doc.text("IT Status & Accomplishment Brief", margin, 34);
+  doc.text("IT Status Brief", margin, 34);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.text(
@@ -121,7 +122,7 @@ export async function exportExecutivePdf(tasks: Task[], departmentName?: string)
   autoTable(doc, {
     ...tableTheme,
     startY: (doc as any).lastAutoTable.finalY + 20,
-    head: [["Key Project Accomplishments", "Owner", "Completed", "Result"]],
+    head: [["Key Completed Work", "Owner", "Completed", "Result"]],
     body: getCompleted(tasks)
       .slice(0, 6)
       .map((t) => [t.title, t.assignee, formatDate(completionDate(t) || t.lastUpdated), t.remarks]),
@@ -146,7 +147,7 @@ export async function exportExecutivePdf(tasks: Task[], departmentName?: string)
     doc.setFontSize(8);
     doc.setTextColor(...SLATE);
     doc.text(
-      `IT Status & Accomplishment Brief — Page ${i} of ${pages}`,
+      `IT Status Brief — Page ${i} of ${pages}`,
       margin,
       doc.internal.pageSize.getHeight() - 20,
     );
@@ -155,7 +156,7 @@ export async function exportExecutivePdf(tasks: Task[], departmentName?: string)
   doc.save(`IT-Executive-Brief-${todayISO()}.pdf`);
 }
 
-export async function exportAccomplishmentsPdf(
+export async function exportReportsPdf(
   tasks: Task[],
   options: {
     from?: string | undefined;
@@ -179,7 +180,7 @@ export async function exportAccomplishmentsPdf(
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(17);
-  doc.text("IT Accomplishments", margin, 34);
+  doc.text("IT Reports", margin, 34);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.text(`${department}  •  ${period}  •  Generated ${new Date().toLocaleString("en-US")}`, margin, 52);
@@ -247,11 +248,11 @@ export async function exportAccomplishmentsPdf(
     doc.setPage(i);
     doc.setFontSize(8);
     doc.setTextColor(...SLATE);
-    doc.text(`IT Accomplishments — ${period} — Page ${i} of ${pages}`, margin, doc.internal.pageSize.getHeight() - 20);
+    doc.text(`IT Reports — ${period} — Page ${i} of ${pages}`, margin, doc.internal.pageSize.getHeight() - 20);
   }
 
   const slug = options.all || (!options.from && !options.to) ? "all-time" : `${options.from ?? "start"}-to-${options.to ?? "now"}`;
-  doc.save(`IT-Accomplishments-${slug}.pdf`);
+  doc.save(`IT-Reports-${slug}.pdf`);
 }
 
 export async function exportRequestsPdf(rows: IntakeRequestListItem[], departmentName?: string) {

@@ -48,6 +48,26 @@ function KpiCardSkeleton() {
   );
 }
 
+function ItemCardSkeleton() {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <Skeleton className="size-10 shrink-0 rounded-xl" />
+        <div className="min-w-0 flex-1">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="mt-2 h-3 w-32" />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-2 border-t border-dashed border-border pt-3">
+        <Skeleton className="size-3.5 rounded-sm" />
+        <Skeleton className="h-3 w-16" />
+        <Skeleton className="h-5 w-14 rounded-full" />
+        <Skeleton className="ml-auto h-3 w-20" />
+      </div>
+    </div>
+  );
+}
+
 function FilterChipSkeleton() {
   return <Skeleton className="h-8 w-[5.5rem] rounded-md" />;
 }
@@ -116,14 +136,20 @@ export function DashboardSkeleton() {
         <CardContent className="p-0">
           <div className="space-y-3 p-4 lg:hidden">
             {times(3).map((index) => (
-              <div key={index} className="rounded-lg border border-border p-3">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="mt-2 h-3 w-40" />
-                <div className="mt-3 flex gap-2">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-20" />
+              <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="size-10 shrink-0 rounded-xl" />
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="mt-2 h-3 w-32" />
+                  </div>
                 </div>
-                <Skeleton className="mt-3 h-2 w-full rounded-full" />
+                <div className="mt-3 flex items-center gap-2 border-t border-dashed border-border pt-3">
+                  <Skeleton className="size-3.5 rounded-sm" />
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-14 rounded-full" />
+                  <Skeleton className="ml-auto h-3 w-20" />
+                </div>
               </div>
             ))}
           </div>
@@ -160,17 +186,21 @@ export function DashboardSkeleton() {
           <Skeleton className="mt-3 h-6 w-32 rounded-full" />
         </CardHeader>
         <CardContent className="p-0">
-          <div className="space-y-0 lg:hidden">
+          <div className="space-y-3 p-4 lg:hidden">
             {times(2).map((index) => (
-              <div key={index} className="flex gap-3 border-b border-border/70 px-4 py-3 last:border-0">
-                <Skeleton className="h-5 w-8 rounded-md" />
-                <div className="min-w-0 flex-1">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="mt-2 h-3 w-40" />
-                  <div className="mt-2 flex justify-between">
-                    <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-8 w-12" />
+              <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <Skeleton className="size-10 shrink-0 rounded-xl" />
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="mt-2 h-3 w-24" />
                   </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2 border-t border-dashed border-border pt-3">
+                  <Skeleton className="size-3.5 rounded-sm" />
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-5 w-14 rounded-full" />
+                  <Skeleton className="ml-auto h-3 w-20" />
                 </div>
               </div>
             ))}
@@ -209,18 +239,7 @@ export function DashboardSkeleton() {
         <CardContent className="p-0">
           <div className="space-y-3 p-4 lg:hidden">
             {times(2).map((index) => (
-              <div key={index} className="rounded-lg border border-border p-3">
-                <div className="flex items-start gap-2">
-                  <Skeleton className="h-5 w-8 rounded-md" />
-                  <div className="min-w-0 flex-1">
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="mt-2 h-3 w-40" />
-                  </div>
-                </div>
-                <Skeleton className="mt-2 h-5 w-16" />
-                <Skeleton className="mt-2 h-3 w-full" />
-                <Skeleton className="mt-2 h-3 w-28" />
-              </div>
+              <ItemCardSkeleton key={index} />
             ))}
           </div>
           <div className="hidden overflow-x-auto lg:block">
@@ -269,19 +288,7 @@ export function TrackerSkeleton() {
 
       <div className="space-y-2.5 md:hidden">
         {times(4).map((index) => (
-          <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-5 w-20 rounded-full" />
-            </div>
-            <Skeleton className="mt-2 h-4 w-3/4" />
-            <Skeleton className="mt-2 h-3 w-40" />
-            <div className="mt-3 flex gap-2">
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-3 w-16" />
-            </div>
-            <Skeleton className="mt-3 h-2 w-full rounded-full" />
-          </div>
+          <ItemCardSkeleton key={index} />
         ))}
       </div>
 
@@ -320,9 +327,9 @@ export function TrackerSkeleton() {
   );
 }
 
-export function AccomplishmentsSkeleton() {
+export function ReportsSkeleton() {
   return (
-    <BusyRegion label="Loading accomplishments" className="space-y-6">
+    <BusyRegion label="Loading reports" className="space-y-6">
       <div className="grid grid-cols-3 gap-3 lg:gap-4">
         {times(3).map((index) => (
           <KpiCardSkeleton key={index} />
@@ -342,15 +349,7 @@ export function AccomplishmentsSkeleton() {
           <Skeleton className="h-3 w-20" />
         </div>
         {times(3).map((index) => (
-          <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-            <Skeleton className="mt-2 h-4 w-3/4" />
-            <Skeleton className="mt-2 h-3 w-40" />
-            <Skeleton className="mt-3 h-5 w-14 rounded-full" />
-          </div>
+          <ItemCardSkeleton key={index} />
         ))}
       </div>
       <Card className="hidden border-border lg:block">
@@ -378,15 +377,18 @@ export function RequestsListSkeleton() {
       <div className="space-y-2.5 md:hidden">
         {times(5).map((index) => (
           <div key={index} className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-2">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-5 w-20 rounded-full" />
+            <div className="flex items-start gap-3">
+              <Skeleton className="size-10 shrink-0 rounded-xl" />
+              <div className="min-w-0 flex-1">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="mt-2 h-3 w-40" />
+              </div>
             </div>
-            <Skeleton className="mt-2 h-4 w-3/4" />
-            <Skeleton className="mt-2 h-3 w-40" />
-            <div className="mt-3 flex gap-2">
-              <Skeleton className="h-5 w-14 rounded-full" />
+            <div className="mt-3 flex items-center gap-2 border-t border-dashed border-border pt-3">
+              <Skeleton className="size-3.5 rounded-sm" />
               <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+              <Skeleton className="ml-auto h-3 w-20" />
             </div>
           </div>
         ))}
@@ -667,6 +669,38 @@ export function RequestStatusResultSkeleton() {
           <Skeleton className="h-16 w-full" />
         </CardContent>
       </Card>
+    </BusyRegion>
+  );
+}
+
+function PageHeadingSkeleton() {
+  return (
+    <div className="space-y-2">
+      <Skeleton className="h-8 w-44 max-lg:h-10 max-lg:w-52" />
+      <Skeleton className="hidden h-3 w-72 lg:block" />
+    </div>
+  );
+}
+
+export function AppPageSkeleton({ pathname }: { pathname: string }) {
+  const body = pathname.startsWith("/tracker") ? (
+    <TrackerSkeleton />
+  ) : pathname.startsWith("/reports") ? (
+    <ReportsSkeleton />
+  ) : /^\/requests\/[^/]+/.test(pathname) ? (
+    <RequestDetailSkeleton />
+  ) : pathname.startsWith("/requests") ? (
+    <RequestsListSkeleton />
+  ) : pathname.startsWith("/settings") ? (
+    <AccountCardSkeleton />
+  ) : (
+    <DashboardSkeleton />
+  );
+
+  return (
+    <BusyRegion label="Loading page" className="flex flex-col gap-6 max-lg:gap-5">
+      <PageHeadingSkeleton />
+      {body}
     </BusyRegion>
   );
 }

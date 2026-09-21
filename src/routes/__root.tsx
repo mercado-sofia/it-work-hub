@@ -15,6 +15,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider } from "@/lib/theme";
 import { Toaster } from "@/components/ui/sonner";
+import { CircleSplash } from "@/components/CircleSplash";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { peekSessionFn } from "@/lib/request-functions";
 import type { SessionUser } from "@/data/requests";
@@ -118,6 +119,7 @@ export const Route = createRootRouteWithContext<{
   }),
   shellComponent: RootShell,
   component: RootComponent,
+  pendingComponent: CircleSplash,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });

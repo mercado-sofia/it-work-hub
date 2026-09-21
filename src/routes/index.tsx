@@ -22,8 +22,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { CircleSplash } from "@/components/CircleSplash";
 import { getAuthBootstrap } from "@/lib/request-functions";
-import { LandingSkeleton } from "@/components/skeletons";
 import { useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
       return { needsBootstrap: false };
     }
   },
-  pendingComponent: LandingSkeleton,
+  pendingComponent: CircleSplash,
   head: ({ match }) => {
     const view = match.search.view;
     if (view === "login") {
@@ -236,15 +236,15 @@ function HelpDialog() {
           <span className="hidden sm:inline">Help</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-[38rem] gap-0 overflow-hidden p-0">
-        <DialogHeader className="border-b border-border/70 bg-muted/40 px-5 py-4 pr-14 text-left sm:px-8 sm:py-6">
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+      <DialogContent className="gap-0 overflow-hidden p-0 lg:max-w-[38rem]">
+        <DialogHeader className="border-b border-border/70 bg-muted/40 px-5 py-4 pr-14 text-left max-lg:pt-5 max-lg:pb-5 sm:px-8 sm:py-6">
+          <div className="flex items-center gap-3 lg:items-start">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary lg:mt-0.5">
               <CircleHelp className="size-5" />
             </span>
             <div className="min-w-0 space-y-1.5">
               <DialogTitle>How to use TrackHub</DialogTitle>
-              <DialogDescription className="text-[13px] leading-snug sm:text-[13px]">
+              <DialogDescription className="text-[13px] leading-snug max-lg:sr-only sm:text-[13px]">
                 Select how you want to continue. Requests do not require an account.
               </DialogDescription>
             </div>
@@ -279,12 +279,12 @@ function HelpDialog() {
           />
         </div>
 
-        <div className="flex flex-col-reverse gap-2 border-t border-border/70 bg-muted/30 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
+        <div className="flex flex-col-reverse gap-2 border-t border-border/70 bg-muted/30 px-5 py-4 max-lg:gap-3 max-lg:pt-5 max-lg:pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:flex-row sm:items-center sm:justify-between sm:px-8 sm:py-5">
           <p className="text-xs leading-snug text-muted-foreground">
             There is no public signup. IT accounts are invited by an Admin.
           </p>
           <DialogClose asChild>
-            <Button type="button" variant="ghost" size="sm" className="shrink-0 rounded-full">
+            <Button type="button" variant="ghost" size="sm" className="h-11 shrink-0 rounded-full max-lg:h-12">
               Got it
             </Button>
           </DialogClose>

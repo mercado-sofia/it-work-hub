@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   ChevronDown,
+  ClipboardList,
   Download,
   FileSpreadsheet,
   FileText,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { AccomplishmentsSkeleton } from "@/components/skeletons";
+import { ReportsSkeleton } from "@/components/skeletons";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -36,9 +37,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { PriorityBadge } from "@/components/status-badges";
+import { PriorityBadge, StatusBadge } from "@/components/status-badges";
 import { ActivityIdLink, WorkId } from "@/components/activity-refs";
 import { PageHeading } from "@/components/PageHeading";
+import { MobileItemCard } from "@/components/MobileItemCard";
 import { useTasks } from "@/lib/task-store";
 import {
   detectPeriodPreset,
@@ -60,7 +62,7 @@ import { completionDate } from "@/lib/task-rules";
 import { cn } from "@/lib/utils";
 import type { Task } from "@/data/tasks";
 
-type AccomplishmentsSearch = {
+type ReportsSearch = {
   from?: string | undefined;
   to?: string | undefined;
   all?: boolean | undefined;
@@ -78,34 +80,34 @@ function parseAllParam(value: unknown): boolean {
   return value === true || value === "true" || value === "1";
 }
 
-export const Route = createFileRoute("/_app/accomplishments")({
-  validateSearch: (search: Record<string, unknown>): AccomplishmentsSearch => {
+export const Route = createFileRoute("/_app/reports")({
+  validateSearch: (search: Record<string, unknown>): ReportsSearch => {
     if (parseAllParam(search["all"])) return { all: true };
     const from = parseISODateParam(search["from"]);
     const to = parseISODateParam(search["to"]);
-    const next: AccomplishmentsSearch = {};
+    const next: ReportsSearch = {};
     if (from) next.from = from;
     if (to) next.to = to;
     return next;
   },
   head: () => ({
     meta: [
-      { title: "Accomplishments & Reports | IT Work Monitoring & Tracking" },
+      { title: "Reports | IT Work Monitoring & Tracking" },
       {
         name: "description",
         content: "Period briefing of completed tracker activities, ready for executive reporting.",
       },
-      { property: "og:title", content: "Accomplishments & Reports | IT Work Monitoring" },
+      { property: "og:title", content: "Reports | IT Work Monitoring" },
       {
         property: "og:description",
         content: "Completed tracker activities grouped by month for a selected reporting window.",
       },
     ],
   }),
-  component: Accomplishments,
+  component: Reports,
 });
 
-function Accomplishments() {
+function Reports() {
   const { tasks, hydrated } = useTasks();
   const search = Route.useSearch();
   const navigate = useNavigate();
@@ -127,8 +129,8 @@ function Accomplishments() {
     all: allTime,
   });
 
-  const setWindow = (next: AccomplishmentsSearch) => {
-    void navigate({ to: "/accomplishments", search: next, replace: true });
+  const setWindow = (next: ReportsSearch) => {
+    void navigate({ to: "/reports", search: next, replace: true });
   };
 
   const applyPreset = (id: Exclude<PeriodPreset, "custom">) => {
@@ -211,15 +213,15 @@ function Accomplishments() {
         all: allTime,
       };
       if (kind === "xlsx") {
-        const { exportAccomplishmentsWorkbook } = await import("@/lib/export-excel");
-        await exportAccomplishmentsWorkbook(visible, period);
-        toast.success("Accomplishments workbook downloaded");
+        const { exportReportsWorkbook } = await import("@/lib/export-excel");
+        await exportReportsWorkbook(visible, period);
+        toast.success("Reports workbook downloaded");
       } else {
-        const { exportAccomplishmentsPdf } = await import("@/lib/export-pdf");
+        const { exportReportsPdf } = await import("@/lib/export-pdf");
         const { getSettingsFn } = await import("@/lib/request-functions");
         const settings = await getSettingsFn();
-        await exportAccomplishmentsPdf(visible, { ...period, departmentName: settings.departmentName });
-        toast.success("Accomplishments PDF downloaded");
+        await exportReportsPdf(visible, { ...period, departmentName: settings.departmentName });
+        toast.success("Reports PDF downloaded");
       }
     } catch (error) {
       console.error(error);
@@ -233,48 +235,48 @@ function Accomplishments() {
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-6 overflow-x-hidden max-lg:space-y-5">
-      <div className="flex min-w-0 flex-col gap-3 max-lg:gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <PageHeading
-          className="min-w-0 flex-1"
-          title="Accomplishments"
-          desktopTitle="Accomplishments & Reports"
-          accent={false}
-          hideSubtitleOnMobile
-          subtitle={hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
-        />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" className="min-w-28 shrink-0 justify-center gap-2 self-start rounded-full print:hidden lg:self-auto" disabled={!canExport}>
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
-              Export
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="flex w-56 flex-col gap-1.5 p-1.5">
-            <DropdownMenuLabel className="text-xs">Accomplishments report</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
-              onSelect={() => void runExport("xlsx")}
-            >
-              <FileSpreadsheet />
-              <div>
-                <p className="text-xs font-medium">Excel workbook (.xlsx)</p>
-                <p className="text-xs text-muted-foreground">Filtered accomplishment details</p>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
-              onSelect={() => void runExport("pdf")}
-            >
-              <FileText />
-              <div>
-                <p className="text-xs font-medium">PDF report</p>
-                <p className="text-xs text-muted-foreground">Leadership-ready period brief</p>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <PageHeading
+        className="min-w-0"
+        title="Reports"
+        desktopTitle="Reports"
+        accent={false}
+        hideSubtitleOnMobile
+        subtitle={hydrated ? `Completed tracker activities for ${periodText}.` : "\u00a0"}
+        actions={
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" className="gap-2 rounded-full" disabled={!canExport}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />}
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="flex w-56 flex-col gap-1.5 p-1.5">
+              <DropdownMenuLabel className="text-xs">Reports</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
+                onSelect={() => void runExport("xlsx")}
+              >
+                <FileSpreadsheet />
+                <div>
+                  <p className="text-xs font-medium">Excel workbook (.xlsx)</p>
+                  <p className="text-xs text-muted-foreground">Filtered completed work</p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="items-start gap-2 py-1 text-xs [&>svg]:mt-0.5 [&>svg]:size-3.5"
+                onSelect={() => void runExport("pdf")}
+              >
+                <FileText />
+                <div>
+                  <p className="text-xs font-medium">PDF report</p>
+                  <p className="text-xs text-muted-foreground">Leadership-ready period brief</p>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        }
+      />
 
       <Card className="min-w-0 border-border print:hidden max-lg:rounded-3xl max-lg:shadow-sm">
         <CardContent className="space-y-4 overflow-x-hidden p-4 sm:p-5 max-lg:p-3">
@@ -408,7 +410,7 @@ function Accomplishments() {
       </Sheet>
 
       {!hydrated ? (
-        <AccomplishmentsSkeleton />
+        <ReportsSkeleton />
       ) : !rangeValid ? null : completedAll.length === 0 ? (
         <Card className="border-border">
           <CardContent className="space-y-3 p-6 text-center sm:p-10">
@@ -521,7 +523,7 @@ function MonthGroup({
   return (
     <>
       <details
-        className="accomplishment-month group lg:hidden"
+        className="report-month group lg:hidden"
         open={open}
         onToggle={(event) => setOpen(event.currentTarget.open)}
       >
@@ -534,14 +536,14 @@ function MonthGroup({
         </summary>
         <div className="mt-2.5 space-y-2.5">
           {items.map((task) => (
-            <AccomplishmentRow key={task.id} task={task} />
+            <ReportRow key={task.id} task={task} />
           ))}
         </div>
       </details>
 
       <Card className="hidden min-w-0 border-border lg:block">
         <details
-          className="accomplishment-month group"
+          className="report-month group"
           open={open}
           onToggle={(event) => setOpen(event.currentTarget.open)}
         >
@@ -556,7 +558,7 @@ function MonthGroup({
           </summary>
           <div className="min-w-0 space-y-3 px-4 pb-4 sm:px-6 sm:pb-6">
             {items.map((task) => (
-              <AccomplishmentRow key={task.id} task={task} />
+              <ReportRow key={task.id} task={task} />
             ))}
           </div>
         </details>
@@ -565,7 +567,7 @@ function MonthGroup({
   );
 }
 
-function AccomplishmentRow({ task }: { task: Task }) {
+function ReportRow({ task }: { task: Task }) {
   const ticket = task.requestRef?.trim();
   const result = task.remarks.trim();
   const completed = formatReportDate(completionDate(task));
@@ -573,27 +575,15 @@ function AccomplishmentRow({ task }: { task: Task }) {
 
   return (
     <>
-      <div className="rounded-3xl border border-border bg-card p-4 shadow-sm lg:hidden">
-        <div className="flex items-center justify-between gap-2">
-          <p className="min-w-0 truncate text-xs font-medium tabular-nums text-muted-foreground">{idEl}</p>
-          <span className="shrink-0 text-xs text-muted-foreground">{completed}</span>
-        </div>
-        <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">{task.title}</p>
-        <p className="mt-1 truncate text-xs text-muted-foreground">
-          {task.assignee} · {task.category}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <PriorityBadge priority={task.priority} />
-        </div>
-        <p className="mt-2 line-clamp-2 text-xs leading-relaxed">
-          <span className="font-medium text-foreground">Result </span>
-          {result ? (
-            <span className="break-words">{result}</span>
-          ) : (
-            <span className="text-muted-foreground">No result recorded</span>
-          )}
-        </p>
-      </div>
+      <MobileItemCard
+        className="lg:hidden"
+        icon={ClipboardList}
+        title={task.title}
+        subtitle={`${task.assignee} · ${task.category}`}
+        idLabel={idEl}
+        badge={<StatusBadge status={task.status} />}
+        date={completed}
+      />
 
       <div className="hidden min-w-0 rounded-lg border border-border p-3 sm:p-4 lg:block">
         <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-3">

@@ -634,15 +634,15 @@ input[type="time"]::-webkit-datetime-edit-ampm-field:focus {
 }
 
 @media print {
-  details.accomplishment-month:not([open]) > *:not(summary) {
+  details.report-month:not([open]) > *:not(summary) {
     display: block !important;
   }
 
-  details.accomplishment-month > summary {
+  details.report-month > summary {
     list-style: none;
   }
 
-  details.accomplishment-month .month-chevron {
+  details.report-month .month-chevron {
     display: none;
   }
 }

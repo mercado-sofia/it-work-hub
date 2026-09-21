@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2, Clock, ListChecks, PauseCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardList, Clock, ListChecks, PauseCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardSkeleton } from "@/components/skeletons";
@@ -19,6 +19,7 @@ import {
 } from "@/lib/metrics";
 import { calendarDaysBetween, isOverdue, todayISO } from "@/lib/task-rules";
 import { cn } from "@/lib/utils";
+import { MobileItemCard } from "@/components/MobileItemCard";
 
 export const Route = createFileRoute("/_app/dashboard")({
   head: () => ({
@@ -185,31 +186,16 @@ function Dashboard() {
               </p>
             )}
             {priorities.map((task) => (
-              <div
+              <MobileItemCard
                 key={task.id}
-                className="rounded-lg border border-border p-3 max-lg:rounded-3xl max-lg:bg-card max-lg:p-4 max-lg:shadow-sm"
-              >
-                <p className="font-medium leading-snug">{task.title}</p>
-                <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                  <WorkId work={task} />
-                  {task.category} • {task.assignee}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <PriorityBadge priority={task.priority} />
-                  <StatusBadge status={task.status} />
-                </div>
-                <ProgressBar value={task.progress} className="mt-3" />
-                <p className="mt-1 text-xs tabular-nums text-muted-foreground">{task.progress}%</p>
-                <p
-                  className={cn(
-                    "mt-2 text-xs",
-                    isOverdue(task) ? "font-medium text-destructive" : "text-muted-foreground",
-                  )}
-                >
-                  Target {formatDate(task.targetDate)}
-                  {isOverdue(task) ? " · overdue" : ""}
-                </p>
-              </div>
+                icon={ClipboardList}
+                title={task.title}
+                subtitle={`${task.category} · ${task.assignee}`}
+                idLabel={<WorkId work={task} />}
+                badge={<StatusBadge status={task.status} />}
+                date={formatDate(task.targetDate)}
+                dateClassName={isOverdue(task) ? "font-medium text-destructive" : undefined}
+              />
             ))}
           </div>
           <div className="hidden overflow-x-auto lg:block">
@@ -278,32 +264,18 @@ function Dashboard() {
           chip={`Past target (${overdue.length})`}
         >
           <div className="space-y-3 p-4 lg:hidden max-lg:px-0 max-lg:pt-1">
-            {overdue.map((task, index) => {
-              const late = daysPastTarget(task);
-              return (
-                <div
-                  key={task.id}
-                  className="flex gap-3 rounded-3xl border border-border bg-card p-4 shadow-sm"
-                >
-                  <RankBadge rank={index + 1} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium leading-snug">{task.title}</p>
-                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                      <WorkId work={task} />
-                      {task.assignee}
-                    </p>
-                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <StatusBadge status={task.status} />
-                      <MetricValue
-                        value={late}
-                        hint={late === 1 ? "day late" : "days late"}
-                        tone="danger"
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {overdue.map((task) => (
+              <MobileItemCard
+                key={task.id}
+                icon={ClipboardList}
+                title={task.title}
+                subtitle={task.assignee}
+                idLabel={<WorkId work={task} />}
+                badge={<StatusBadge status={task.status} />}
+                date={formatDate(task.targetDate)}
+                dateClassName="font-medium text-destructive"
+              />
+            ))}
           </div>
           <div className="hidden overflow-x-auto lg:block">
             <table className="w-full text-sm">
@@ -369,31 +341,17 @@ function Dashboard() {
         ) : (
           <>
             <div className="space-y-3 p-4 lg:hidden max-lg:px-0 max-lg:pt-1">
-              {blockers.map((task, index) => (
-                <div
+              {blockers.map((task) => (
+                <MobileItemCard
                   key={task.id}
-                  className="min-w-0 rounded-3xl border border-border bg-card p-4 shadow-sm"
-                >
-                  <div className="flex items-start gap-2">
-                    <RankBadge rank={index + 1} />
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words text-sm font-medium leading-snug">{task.title}</p>
-                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                        <WorkId work={task} />
-                        <span className="min-w-0 break-words">{task.assignee}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <PriorityBadge priority={task.priority} />
-                  </div>
-                  <p className="mt-2 break-words text-xs leading-relaxed text-muted-foreground">
-                    {task.remarks || "—"}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Target {formatDate(task.targetDate)}
-                  </p>
-                </div>
+                  icon={ClipboardList}
+                  title={task.title}
+                  subtitle={task.assignee}
+                  idLabel={<WorkId work={task} />}
+                  badge={<StatusBadge status={task.status} />}
+                  date={formatDate(task.targetDate)}
+                  dateClassName={isOverdue(task) ? "font-medium text-destructive" : undefined}
+                />
               ))}
             </div>
             <div className="hidden overflow-x-auto lg:block">

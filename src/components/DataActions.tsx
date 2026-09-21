@@ -201,7 +201,7 @@ export function ExportMenu({ className, fullWidth }: { className?: string; fullW
             <FileSpreadsheet />
             <div>
               <p className="text-xs font-medium">Export to Excel (.xlsx)</p>
-              <p className="text-xs text-muted-foreground">Summary, tracker, and monthly accomplishments</p>
+              <p className="text-xs text-muted-foreground">Summary, tracker, and monthly reports</p>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => void runExport("pdf")} className={itemClass}>

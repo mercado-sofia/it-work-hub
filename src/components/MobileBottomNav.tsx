@@ -1,25 +1,62 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Inbox, LayoutDashboard, Layers, Plus, Settings, Trophy, type LucideIcon } from "lucide-react";
+import { FileText, Inbox, LayoutDashboard, Layers, Plus, Settings, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const primaryNav = [
+const pinnedNav = [
   { to: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
   { to: "/tracker", label: "Master Tracker", icon: Layers },
-  { to: "/requests", label: "Requests", icon: Inbox },
 ] as const;
 
+const defaultLastNav = { to: "/requests", label: "Requests", icon: Inbox } as const;
+
 const moreNav = [
-  { to: "/accomplishments", label: "Accomplishments", icon: Trophy },
+  { to: "/reports", label: "Reports", icon: FileText },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
-type NavTo = (typeof primaryNav)[number]["to"] | (typeof moreNav)[number]["to"];
+type NavItem =
+  | (typeof pinnedNav)[number]
+  | typeof defaultLastNav
+  | (typeof moreNav)[number];
+
+type NavTo = NavItem["to"];
+
+function pathMatches(to: NavTo, pathname: string, exact?: boolean) {
+  if (exact) return pathname === to;
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
 
 export function MobileBottomNav() {
   const [moreOpen, setMoreOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const moreActive = moreNav.some((item) => pathname === item.to || pathname.startsWith(`${item.to}/`));
+  const activeMore = moreNav.find((item) => pathMatches(item.to, pathname));
+  const lastSlot: NavItem = activeMore ?? defaultLastNav;
+  const overflowNav: NavItem[] = activeMore
+    ? [defaultLastNav, ...moreNav.filter((item) => item.to !== activeMore.to)]
+    : [...moreNav];
+
+  const railRef = useRef<HTMLDivElement>(null);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const [boxWidth, setBoxWidth] = useState<number>();
+
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    const more = moreRef.current;
+    if (!rail) return;
+
+    const update = () => {
+      const railWidth = rail.scrollWidth;
+      const moreWidth = moreOpen ? (more?.scrollWidth ?? 0) : 0;
+      setBoxWidth(Math.max(railWidth, moreWidth));
+    };
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(rail);
+    if (more) observer.observe(more);
+    return () => observer.disconnect();
+  }, [moreOpen, lastSlot.to]);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -49,12 +86,13 @@ export function MobileBottomNav() {
           <div
             className={cn(
               "overflow-hidden border border-border/70 bg-white shadow-lg dark:bg-card",
-              "transition-[border-radius] duration-300 ease-out",
+              "transition-[border-radius,width] duration-300 ease-out",
               moreOpen ? "rounded-[1.75rem]" : "rounded-full",
             )}
+            style={boxWidth ? { width: boxWidth } : undefined}
           >
-            <div className="flex items-center gap-1.5 px-3 py-2.5">
-              {primaryNav.map((item) => (
+            <div ref={railRef} className="flex w-max items-center gap-1.5 px-3 py-2.5">
+              {[...pinnedNav, lastSlot].map((item) => (
                 <NavIcon
                   key={item.to}
                   to={item.to}
@@ -73,8 +111,8 @@ export function MobileBottomNav() {
               )}
             >
               <div className="min-h-0 overflow-hidden" inert={!moreOpen}>
-                <div className="grid grid-cols-3 gap-1.5 px-3 pb-1.5">
-                  {moreNav.map((item) => (
+                <div ref={moreRef} className="flex w-max items-center gap-1.5 px-3 pb-1.5">
+                  {overflowNav.map((item) => (
                     <NavIcon
                       key={item.to}
                       to={item.to}
@@ -93,10 +131,7 @@ export function MobileBottomNav() {
             aria-label={moreOpen ? "Close more" : "More"}
             aria-expanded={moreOpen}
             onClick={() => setMoreOpen((open) => !open)}
-            className={cn(
-              "flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-full border border-border/70 bg-white shadow-lg transition-colors dark:bg-card",
-              moreActive || moreOpen ? "text-primary" : "text-foreground",
-            )}
+            className="flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 bg-primary text-white shadow-lg"
           >
             <Plus
               className={cn("size-5 transition-transform duration-300 ease-out", moreOpen && "rotate-45")}
@@ -127,13 +162,13 @@ function NavIcon({
       to={to}
       onClick={onNavigate}
       aria-label={label}
-      className="flex h-11 w-14 items-center justify-center rounded-2xl text-foreground transition-colors"
-      activeProps={{
-        className: "flex h-11 w-14 items-center justify-center rounded-2xl bg-muted text-primary",
-      }}
+      className="group flex h-10 w-10 items-center justify-center rounded-2xl text-foreground transition-[width,padding,gap,background-color,color] duration-200 data-[status=active]:w-auto data-[status=active]:gap-1.5 data-[status=active]:bg-muted data-[status=active]:px-2.5 data-[status=active]:text-primary"
       activeOptions={{ exact: Boolean(exact) }}
     >
-      <Icon className="size-5" strokeWidth={1.75} />
+      <Icon className="size-5 shrink-0" strokeWidth={1.75} />
+      <span className="hidden text-xs font-medium whitespace-nowrap group-data-[status=active]:inline">
+        {label}
+      </span>
     </Link>
   );
 }

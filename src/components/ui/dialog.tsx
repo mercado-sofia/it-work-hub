@@ -38,8 +38,9 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 flex max-h-[min(90dvh,720px)] w-[calc(100%-1.5rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl border border-border bg-background p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-lg",
+        "fixed z-50 flex max-h-[min(90dvh,720px)] flex-col gap-4 overflow-y-auto overscroll-contain border border-border bg-background p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-lg lg:left-[50%] lg:top-[50%] lg:w-[calc(100%-1.5rem)] lg:max-w-lg lg:translate-x-[-50%] lg:translate-y-[-50%] lg:rounded-xl",
         className,
+        "max-lg:inset-x-0 max-lg:bottom-0 max-lg:top-auto max-lg:w-full max-lg:max-w-none max-lg:translate-x-0 max-lg:translate-y-0 max-lg:rounded-b-none max-lg:rounded-t-2xl max-lg:duration-300 max-lg:data-[state=closed]:animate-out max-lg:data-[state=closed]:slide-out-to-bottom max-lg:data-[state=open]:animate-in max-lg:data-[state=open]:slide-in-from-bottom",
       )}
       {...props}
     >
@@ -72,7 +73,7 @@ const DialogTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    className={cn("text-lg font-semibold leading-none tracking-tight max-lg:text-xl", className)}
     {...props}
   />
 ));
@@ -84,7 +85,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-xs text-muted-foreground sm:text-sm", className)}
+    className={cn("text-xs text-muted-foreground max-lg:sr-only sm:text-sm", className)}
     {...props}
   />
 ));

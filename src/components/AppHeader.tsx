@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, LogOut, Moon, Settings, Sun, User } from "lucide-react";
 import { toastError } from "@/lib/user-facing-error";
@@ -16,12 +16,13 @@ import { BackupControls, ExportMenu } from "@/components/DataActions";
 import { useTasks } from "@/lib/task-store";
 import { useAuth } from "@/lib/auth";
 import { useTheme } from "@/lib/theme";
+import { cn } from "@/lib/utils";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/tracker", label: "Master Tracker" },
   { to: "/requests", label: "Requests" },
-  { to: "/accomplishments", label: "Accomplishments" },
+  { to: "/reports", label: "Reports" },
 ] as const;
 
 export function AppHeader() {
@@ -29,6 +30,8 @@ export function AppHeader() {
   const { user, logout, signingOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [signOutConfirm, setSignOutConfirm] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isOverview = pathname === "/dashboard";
 
   const requestSignOut = () => {
     if (signingOut) return;
@@ -47,7 +50,15 @@ export function AppHeader() {
   return (
     <>
     <header className="sticky top-0 z-40 bg-card text-foreground lg:border-b lg:border-border/70 print:hidden">
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
+      <div
+        className={cn(
+          "grid transition-[grid-template-rows] duration-300 ease-out motion-reduce:transition-none",
+          "lg:grid-rows-[1fr]",
+          isOverview ? "grid-rows-[1fr]" : "max-lg:grid-rows-[0fr]",
+        )}
+      >
+        <div className="min-h-0 overflow-hidden">
+          <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
         <Link to="/dashboard" className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
           <img src="/it-logo.png" alt="TrackHub" className="size-9 rounded-full object-cover" />
           <div className="min-w-0 leading-tight">
@@ -88,11 +99,12 @@ export function AppHeader() {
       </div>
 
       {mode === "management" && (
-        <div className="border-t border-[#060d28] bg-[#0B1438] px-4 py-1.5 text-center text-xs font-medium text-white sm:px-6">
-          <span className="sm:hidden">Management — read-only view.</span>
-          <span className="hidden sm:inline">Management — read-only executive view.</span>
+        <div className="hidden border-t border-[#060d28] bg-[#0B1438] px-4 py-1.5 text-center text-xs font-medium text-white lg:block sm:px-6">
+          <span>Management — read-only executive view.</span>
         </div>
       )}
+        </div>
+      </div>
     </header>
 
     <ConfirmDialog
@@ -113,7 +125,7 @@ function NavLink({
   to,
   label,
 }: {
-  to: "/dashboard" | "/tracker" | "/requests" | "/accomplishments";
+  to: "/dashboard" | "/tracker" | "/requests" | "/reports";
   label: string;
 }) {
   return (

@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   CalendarRange,
+  ClipboardList,
   KanbanSquare,
   Pencil,
   Plus,
@@ -42,7 +43,8 @@ import { CategoryField } from "@/components/CategoryField";
 import { TrackerSkeleton } from "@/components/skeletons";
 import { BackupControls } from "@/components/DataActions";
 import { PageHeading } from "@/components/PageHeading";
-import { PriorityBadge, ProgressBar, StatusBadge } from "@/components/status-badges";
+import { MobileItemCard } from "@/components/MobileItemCard";
+import { PriorityBadge, StatusBadge } from "@/components/status-badges";
 import { ActivityId, WorkId } from "@/components/activity-refs";
 import { KanbanView } from "@/components/KanbanView";
 import { SprintView } from "@/components/SprintView";
@@ -57,7 +59,7 @@ import {
 } from "@/data/tasks";
 import { useTasks } from "@/lib/task-store";
 import { formatDate } from "@/lib/metrics";
-import { activityDisplayId } from "@/lib/task-rules";
+import { activityDisplayId, isOverdue } from "@/lib/task-rules";
 import { cn } from "@/lib/utils";
 
 type TrackerSearch = { q?: string };
@@ -601,6 +603,7 @@ function Tracker() {
           className="min-w-0 flex-1"
           title="Master Tracker"
           desktopTitle="Master Task Tracker"
+          hideSubtitleOnMobile
           subtitle={
             hydrated
               ? `${filtered.length} of ${tasks.length} activities shown${readOnly ? " • read-only" : ""}.`
@@ -792,22 +795,21 @@ function TrackerTaskCard({
   onUpdate,
   onEdit,
   onDelete,
-  sprintName,
 }: {
   task: Task;
   readOnly: boolean;
   onUpdate: (id: string, patch: Partial<Task>) => void;
   onEdit: (task: Task) => void;
   onDelete: () => void;
-  sprintName: string;
 }) {
   return (
-    <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
-      <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 truncate text-xs font-medium tabular-nums text-muted-foreground">
-          <WorkId work={task} className="text-xs" />
-        </p>
-        {readOnly ? (
+    <MobileItemCard
+      icon={ClipboardList}
+      title={task.title}
+      subtitle={`${task.assignee} · ${task.category}`}
+      idLabel={<WorkId work={task} />}
+      badge={
+        readOnly ? (
           <StatusBadge className="shrink-0" status={task.status} />
         ) : (
           <Select
@@ -828,53 +830,35 @@ function TrackerTaskCard({
               ))}
             </SelectContent>
           </Select>
-        )}
-      </div>
-      <p className="mt-1.5 line-clamp-2 text-[15px] font-semibold leading-snug text-foreground">
-        {task.title}
-      </p>
-      <p className="mt-1 truncate text-xs text-muted-foreground">
-        {task.assignee} · {task.category}
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <PriorityBadge priority={task.priority} />
-        <span className="text-xs text-muted-foreground">{sprintName}</span>
-        <span className="text-xs text-muted-foreground">{formatDate(task.targetDate)}</span>
-      </div>
-      <div className="mt-3 flex items-center gap-2">
-        <ProgressBar value={task.progress} className="min-w-0 flex-1" />
-        <span className="w-9 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
-          {task.progress}%
-        </span>
-      </div>
-      {task.remarks ? (
-        <p className="mt-2 line-clamp-1 text-xs leading-relaxed text-muted-foreground">
-          {task.remarks}
-        </p>
-      ) : null}
-      {!readOnly ? (
-        <div className="mt-3 flex items-center justify-end gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-            onClick={() => onEdit(task)}
-          >
-            <Pencil className="size-3.5" />
-            Edit
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:bg-transparent hover:text-destructive"
-            onClick={onDelete}
-            aria-label="Delete activity"
-          >
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
-      ) : null}
-    </div>
+        )
+      }
+      date={formatDate(task.targetDate)}
+      dateClassName={isOverdue(task) ? "font-medium text-destructive" : undefined}
+      actions={
+        readOnly ? undefined : (
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+              onClick={() => onEdit(task)}
+            >
+              <Pencil className="size-3.5" />
+              Edit
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:bg-transparent hover:text-destructive"
+              onClick={onDelete}
+              aria-label="Delete activity"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </>
+        )
+      }
+    />
   );
 }
 
@@ -909,7 +893,6 @@ function TableView({
           onUpdate={onUpdate}
           onEdit={onEdit}
           onDelete={() => setPendingDelete(task)}
-          sprintName={task.sprintId ? (sprintNameById.get(task.sprintId) ?? "Unknown") : "Backlog"}
         />
       ))}
     </div>

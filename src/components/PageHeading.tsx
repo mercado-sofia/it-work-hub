@@ -89,7 +89,7 @@ export function PageHeading({
           </div>
         ) : null}
       </div>
-      {actions ? <div className="shrink-0">{actions}</div> : null}
+      {actions ? <div className="shrink-0 lg:hidden print:hidden">{actions}</div> : null}
     </div>
   );
 }

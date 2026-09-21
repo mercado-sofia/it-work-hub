@@ -9,7 +9,7 @@ Internal IT work hub for the department: a public request portal for the rest of
 TrackHub has two sides:
 
 - **Public intake** — anyone in the company can submit a bug, feature, access, or support request and look up status with their ticket number and email. No IT account required.
-- **IT workspace** — signed-in staff and leadership see the executive dashboard, master tracker, incoming tickets, and monthly accomplishments.
+- **IT workspace** — signed-in staff and leadership see the executive dashboard, master tracker, incoming tickets, and monthly reports.
 
 Incoming tickets can be triaged, assigned, and converted into tracker activities. Activity data lives in the browser on this device. Requests, team accounts, and settings use Lovable Cloud (Supabase) when it is configured, or a local file store during development.
 
@@ -46,8 +46,8 @@ You can add categories and staff names as the team grows.
 
 Use **Export** in the header:
 
-- **Excel** — management summary, full tracker, and monthly accomplishments
-- **PDF** — a short IT status and accomplishment brief for leadership
+- **Excel** — management summary, full tracker, and monthly reports
+- **PDF** — a short IT status brief for leadership
 
 Use **Backup** to download or restore a JSON copy of tracker data, import older browser data, or load sample activities.
 

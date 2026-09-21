@@ -1,5 +1,5 @@
 import { useNavigate, useRouter } from "@tanstack/react-router";
-import { Shield } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { toastError } from "@/lib/user-facing-error";
@@ -103,7 +103,8 @@ export function LoginPanel({ needsBootstrap }: { needsBootstrap: boolean }) {
             />
             {needsBootstrap ? <p className="text-xs text-muted-foreground">At least 10 characters.</p> : null}
           </div>
-          <Button type="submit" className="mt-2 h-12 w-full rounded-full sm:h-10" disabled={busy}>
+          <Button type="submit" className="mt-2 h-12 w-full gap-2 rounded-full sm:h-10" disabled={busy}>
+            {busy ? <Loader2 className="size-4 animate-spin" /> : null}
             {busy ? "Please wait…" : needsBootstrap ? "Create admin" : "Sign in"}
           </Button>
         </form>
